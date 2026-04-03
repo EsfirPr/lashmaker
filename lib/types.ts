@@ -1,0 +1,37 @@
+export type BookingStatus = "confirmed" | "cancelled";
+
+export type TimeSlot = {
+  id: string;
+  slot_date: string;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+};
+
+export type Booking = {
+  id: string;
+  name: string;
+  phone: string;
+  style: string;
+  notes: string | null;
+  slot_id: string;
+  status: BookingStatus;
+  public_token: string;
+  reminder_sent: boolean;
+  created_at: string;
+};
+
+export type BookingWithSlot = Booking & {
+  time_slots: TimeSlot | null;
+};
+
+export type AdminSlotView = TimeSlot & {
+  activeBooking: Booking | null;
+  cancelledBookings: Booking[];
+};
+
+export type DaySchedule = {
+  date: string;
+  slots: AdminSlotView[];
+};
+
