@@ -17,7 +17,7 @@ export default function HomePage() {
         <section className="hero">
           <div className="panel hero-copy">
             <span className="eyebrow">MVP для записи на ресницы</span>
-            <h1>Запись на наращивание ресниц без переписок и ручного учета.</h1>
+            <h1>Добро пожаловать</h1>
             <p className="lead">
               Клиент видит понятную страницу услуги, выбирает только свободные окна и получает
               персональную ссылку на свою запись. Мастер управляет расписанием в одном месте.
@@ -68,4 +68,3 @@ export default function HomePage() {
     </main>
   );
 }
-

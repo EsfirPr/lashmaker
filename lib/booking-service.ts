@@ -34,8 +34,41 @@ type CreateSlotInput = {
   endTime: string;
 };
 
+type BookingWithMaybeSlotArray = Booking & {
+  time_slots: TimeSlot | TimeSlot[] | null;
+};
+
 function generateToken() {
   return randomBytes(18).toString("base64url");
+}
+
+function normalizeBookingWithSlot(
+  booking: BookingWithMaybeSlotArray | null
+): BookingWithSlot | null {
+  if (!booking) {
+    return null;
+  }
+
+  const timeSlot = Array.isArray(booking.time_slots)
+    ? (booking.time_slots[0] ?? null)
+    : booking.time_slots;
+
+  return {
+    ...booking,
+    time_slots: timeSlot
+  };
+}
+
+function normalizeBookingsWithSlot(
+  bookings: BookingWithMaybeSlotArray[] | null | undefined
+): BookingWithSlot[] {
+  if (!bookings) {
+    return [];
+  }
+
+  return bookings
+    .map((booking) => normalizeBookingWithSlot(booking))
+    .filter((booking): booking is BookingWithSlot => booking !== null);
 }
 
 function buildConfirmationMessage(booking: BookingWithSlot) {
@@ -168,11 +201,15 @@ export async function createBooking(input: CreateBookingInput) {
   }
 
   if (env.sendConfirmationOnBooking) {
+    const booking = normalizeBookingWithSlot(data as BookingWithMaybeSlotArray | null);
+
     try {
-      await smsProvider.send({
-        to: data.phone,
-        message: buildConfirmationMessage(data as BookingWithSlot)
-      });
+      if (booking) {
+        await smsProvider.send({
+          to: booking.phone,
+          message: buildConfirmationMessage(booking)
+        });
+      }
     } catch (smsError) {
       console.error("Failed to send booking confirmation SMS", smsError);
     }
@@ -183,7 +220,7 @@ export async function createBooking(input: CreateBookingInput) {
   revalidatePath(`/booking/${data.public_token}`);
 
   return {
-    token: (data as BookingWithSlot).public_token
+    token: data.public_token
   };
 }
 
@@ -220,7 +257,7 @@ export async function getBookingByToken(token: string) {
     throw new Error(error.message);
   }
 
-  return (data as BookingWithSlot | null) || null;
+  return normalizeBookingWithSlot(data as BookingWithMaybeSlotArray | null);
 }
 
 export async function cancelBookingByToken(token: string) {
@@ -273,7 +310,13 @@ export async function cancelBookingByToken(token: string) {
   revalidatePath("/admin");
   revalidatePath(`/booking/${parsed.token}`);
 
-  return data as BookingWithSlot;
+  const normalizedBooking = normalizeBookingWithSlot(data as BookingWithMaybeSlotArray | null);
+
+  if (!normalizedBooking) {
+    throw new Error("Не удалось получить обновленную запись");
+  }
+
+  return normalizedBooking;
 }
 
 export async function listScheduleDays(daysAhead = 14) {
@@ -424,7 +467,7 @@ export async function sendTomorrowReminders() {
 
   let sent = 0;
 
-  for (const booking of ((data || []) as BookingWithSlot[])) {
+  for (const booking of normalizeBookingsWithSlot(data as BookingWithMaybeSlotArray[] | null)) {
     await smsProvider.send({
       to: booking.phone,
       message: buildReminderMessage(booking)
