@@ -440,19 +440,365 @@ main {
   gap: 20px;
 }
 
+.account-hero {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 22px;
+  padding: 28px;
+  margin-bottom: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(210, 118, 93, 0.12), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(250, 238, 230, 0.82));
+}
+
+.account-hero__copy {
+  display: grid;
+  gap: 10px;
+}
+
+.account-hero__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.account-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.account-section__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.account-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.account-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.account-bookings-list {
+  display: grid;
+  gap: 16px;
+}
+
+.account-booking-card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(252, 246, 242, 0.88)),
+    rgba(255, 255, 255, 0.8);
+  box-shadow: 0 16px 30px rgba(71, 44, 31, 0.06);
+}
+
+.account-booking-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.account-booking-card__header h3 {
+  margin: 8px 0 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.account-booking-card__eyebrow {
+  margin: 0;
+  color: var(--accent-dark);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.account-booking-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.account-booking-card__meta,
+.account-booking-card__notes {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(65, 43, 32, 0.1);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.account-booking-card__meta strong,
+.account-booking-card__notes strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.account-booking-card__notes p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.status-completed {
+  color: #46678c;
+  background: rgba(70, 103, 140, 0.12);
+}
+
+.account-booking-card.status-cancelled {
+  opacity: 0.9;
+  background: linear-gradient(180deg, rgba(255, 250, 250, 0.92), rgba(251, 240, 240, 0.9));
+}
+
+.account-booking-card.status-completed {
+  background: linear-gradient(180deg, rgba(248, 250, 253, 0.92), rgba(239, 244, 250, 0.88));
+}
+
+.account-empty {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  padding: 28px;
+  border-radius: 22px;
+  border: 1px dashed rgba(210, 118, 93, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(251, 242, 236, 0.8));
+}
+
+.account-empty h3 {
+  margin: 0;
+}
+
+.account-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(210, 118, 93, 0.12);
+  color: var(--accent-dark);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.account-loading-block {
+  display: grid;
+  gap: 14px;
+}
+
+.master-hero {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 22px;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(210, 118, 93, 0.16), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(247, 238, 232, 0.84));
+}
+
+.master-hero__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.master-hero__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.master-dashboard-nav,
+.master-stats-grid,
+.master-upcoming-list,
+.master-bookings-list,
+.master-schedule-list,
+.master-clients-list,
+.master-cancellations-list {
+  display: grid;
+  gap: 16px;
+}
+
+.master-dashboard-nav {
+  grid-template-columns: repeat(5, minmax(0, max-content));
+  align-items: start;
+}
+
+.master-stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.master-section {
+  scroll-margin-top: 24px;
+}
+
+.master-upcoming-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.master-upcoming-card,
+.master-client-card,
+.master-booking-item,
+.master-slot-card {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.master-upcoming-card,
+.master-client-card,
+.master-booking-item {
+  padding: 18px;
+}
+
+.master-upcoming-card strong,
+.master-client-card strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.master-filters {
+  display: grid;
+  grid-template-columns: 180px 180px minmax(220px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.master-booking-item {
+  display: grid;
+  gap: 16px;
+}
+
+.master-booking-item__header,
+.master-client-card__head,
+.master-day-card__header,
+.master-slot-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.master-booking-item__header h3,
+.master-day-card__header h2 {
+  margin: 6px 0 0;
+}
+
+.master-booking-item__grid,
+.master-slot-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.master-day-card {
+  display: grid;
+  gap: 18px;
+}
+
+.master-slot-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.master-slot-card--busy {
+  background: linear-gradient(180deg, rgba(246, 252, 248, 0.92), rgba(237, 247, 241, 0.9));
+}
+
+.master-slot-card--free {
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.92), rgba(251, 246, 234, 0.9));
+}
+
+.master-cancelled-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.master-clients-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.loading-line {
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.45), rgba(233, 214, 202, 0.92), rgba(255, 255, 255, 0.45));
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+.loading-line--short {
+  width: 28%;
+}
+
+.loading-line--medium {
+  width: 62%;
+}
+
+.loading-line--title {
+  width: 78%;
+  height: 28px;
+}
+
+.loading-line--full {
+  width: 100%;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 960px) {
   .hero,
   .admin-grid,
   .booking-layout,
-  .page-columns {
+  .page-columns,
+  .account-hero,
+  .master-hero {
     grid-template-columns: 1fr;
   }
 
   .feature-grid,
   .stats-grid,
   .meta-grid,
-  .two-columns {
+  .two-columns,
+  .account-profile-grid,
+  .account-booking-card__grid,
+  .account-hero__stats,
+  .master-stats-grid,
+  .master-upcoming-list,
+  .master-booking-item__grid,
+  .master-slot-card__grid,
+  .master-clients-list {
     grid-template-columns: 1fr;
+  }
+
+  .master-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .master-dashboard-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -472,8 +818,25 @@ main {
   .top-nav,
   .slot-item header,
   .cancelled-item header,
-  .booking-card header {
+  .booking-card header,
+  .account-booking-card__header,
+  .account-section__heading,
+  .master-booking-item__header,
+  .master-client-card__head,
+  .master-day-card__header,
+  .master-slot-card__header,
+  .master-hero__actions {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .account-hero,
+  .auth-card,
+  .master-hero {
+    padding: 22px;
+  }
+
+  .master-dashboard-nav {
+    grid-template-columns: 1fr;
   }
 }

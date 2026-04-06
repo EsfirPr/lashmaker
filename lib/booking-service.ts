@@ -16,7 +16,9 @@ import {
   createPublicBookingUrl,
   formatDateLabel,
   formatSlotRange,
-  getRelativeDate
+  getRelativeDate,
+  getSlotEndDate,
+  getSlotStartDate
 } from "@/lib/utils";
 
 type CreateBookingInput = {
@@ -35,12 +37,26 @@ type CreateSlotInput = {
   endTime: string;
 };
 
+type CreateManySlotsInput = {
+  slotDate: string;
+  ranges: Array<{
+    startTime: string;
+    endTime: string;
+  }>;
+};
+
+type MasterBookingsFilters = {
+  status?: string;
+  date?: string;
+  query?: string;
+};
+
 type BookingWithMaybeSlotArray = Booking & {
   time_slots: TimeSlot | TimeSlot[] | null;
 };
 
-const reminderWindowMinutes = 5;
-const oneHourInMs = 60 * 60 * 1000;
+const reminderWindowStartInMs = 23 * 60 * 60 * 1000;
+const reminderWindowEndInMs = 25 * 60 * 60 * 1000;
 const appTimeZone = process.env.APP_TIMEZONE || "Europe/Moscow";
 
 function generateToken() {
@@ -82,55 +98,21 @@ function toDateKey(parts: { year: number; month: number; day: number }) {
   ).padStart(2, "0")}`;
 }
 
-function zonedDateTimeToUtc(date: string, time: string) {
-  const [year, month, day] = date.split("-").map(Number);
-  const [hour, minute] = time.slice(0, 5).split(":").map(Number);
-
-  let utcMs = Date.UTC(year, month - 1, day, hour, minute, 0);
-
-  for (let index = 0; index < 3; index += 1) {
-    const parts = getZonedDateParts(new Date(utcMs));
-    const expectedUtcMs = Date.UTC(year, month - 1, day, hour, minute, 0);
-    const actualUtcMs = Date.UTC(
-      parts.year,
-      parts.month - 1,
-      parts.day,
-      parts.hour,
-      parts.minute,
-      parts.second
-    );
-
-    const diff = expectedUtcMs - actualUtcMs;
-
-    if (diff === 0) {
-      break;
-    }
-
-    utcMs += diff;
-  }
-
-  return new Date(utcMs);
-}
-
-function getBookingStartDate(slot: Pick<TimeSlot, "slot_date" | "start_time">) {
-  return zonedDateTimeToUtc(slot.slot_date, slot.start_time);
-}
-
-function buildOneHourReminderMessage(booking: BookingWithSlot) {
+function buildDayBeforeReminderMessage(booking: BookingWithSlot) {
   if (!booking.time_slots) {
-    return "Напоминаем: у вас запись на наращивание ресниц сегодня.";
+    return "Напоминаем: у вас запись на наращивание ресниц завтра.";
   }
 
-  return `Напоминаем: у вас запись на наращивание ресниц сегодня в ${booking.time_slots.start_time.slice(
+  return `Напоминаем: у вас запись на наращивание ресниц завтра в ${booking.time_slots.start_time.slice(
     0,
     5
   )}`;
 }
 
 function getUpcomingReminderWindow() {
-  const target = new Date(Date.now() + oneHourInMs);
-  const windowStart = new Date(target.getTime() - reminderWindowMinutes * 60 * 1000);
-  const windowEnd = new Date(target.getTime() + reminderWindowMinutes * 60 * 1000);
+  const now = Date.now();
+  const windowStart = new Date(now + reminderWindowStartInMs);
+  const windowEnd = new Date(now + reminderWindowEndInMs);
 
   return {
     windowStart,
@@ -492,6 +474,37 @@ export async function createTimeSlot(input: CreateSlotInput) {
   revalidatePath("/admin");
 }
 
+export async function createTimeSlots(input: CreateManySlotsInput) {
+  const supabase = getSupabaseAdminClient();
+  const validRanges = input.ranges.map((range) =>
+    createSlotSchema.parse({
+      slotDate: input.slotDate,
+      startTime: range.startTime,
+      endTime: range.endTime
+    })
+  );
+
+  const { error } = await supabase.from("time_slots").insert(
+    validRanges.map((range) => ({
+      slot_date: range.slotDate,
+      start_time: range.startTime,
+      end_time: range.endTime
+    }))
+  );
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("Одно из окон уже существует");
+    }
+
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/master/dashboard");
+}
+
 export async function deleteFreeTimeSlot(slotId: string) {
   const payload = deleteSlotSchema.parse({ slotId });
   const supabase = getSupabaseAdminClient();
@@ -564,7 +577,7 @@ export async function sendUpcomingReminders() {
         return false;
       }
 
-      const appointmentDate = getBookingStartDate(booking.time_slots);
+      const appointmentDate = getSlotStartDate(booking.time_slots);
       return appointmentDate >= windowStart && appointmentDate <= windowEnd;
     }
   );
@@ -574,7 +587,7 @@ export async function sendUpcomingReminders() {
 
   for (const booking of bookings) {
     try {
-      await sendSms(booking.phone, buildOneHourReminderMessage(booking));
+      await sendSms(booking.phone, buildDayBeforeReminderMessage(booking));
 
       const { data: updatedRows, error: updateError } = await supabase
         .from("bookings")
@@ -650,6 +663,84 @@ export async function listBookingsForClient(userId: string) {
   }
 
   return normalizeBookingsWithSlot(data as BookingWithMaybeSlotArray[] | null);
+}
+
+export async function listBookingsForMaster(filters: MasterBookingsFilters = {}) {
+  const supabase = getSupabaseAdminClient();
+  let query = supabase
+    .from("bookings")
+    .select(
+      `
+      id,
+      name,
+      phone,
+      style,
+      notes,
+      user_id,
+      slot_id,
+      status,
+      public_token,
+      reminder_sent,
+      created_at,
+      time_slots!bookings_slot_id_fkey (
+        id,
+        slot_date,
+        start_time,
+        end_time,
+        created_at
+      )
+    `
+    )
+    .order("created_at", { ascending: false });
+
+  if (filters.date) {
+    query = query.eq("time_slots.slot_date", filters.date);
+  }
+
+  if (filters.status === "confirmed" || filters.status === "cancelled") {
+    query = query.eq("status", filters.status);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const normalized = normalizeBookingsWithSlot(data as BookingWithMaybeSlotArray[] | null).sort(
+    (left, right) => {
+      const leftDate = left.time_slots ? getSlotStartDate(left.time_slots).getTime() : 0;
+      const rightDate = right.time_slots ? getSlotStartDate(right.time_slots).getTime() : 0;
+      return leftDate - rightDate;
+    }
+  );
+
+  const queryTerm = filters.query?.trim().toLowerCase();
+
+  return normalized.filter((booking) => {
+    const isCompleted =
+      booking.status === "confirmed" &&
+      booking.time_slots &&
+      getSlotEndDate(booking.time_slots) < new Date();
+
+    if (filters.status === "completed" && !isCompleted) {
+      return false;
+    }
+
+    if (filters.status === "active" && booking.status !== "confirmed") {
+      return false;
+    }
+
+    if (!queryTerm) {
+      return true;
+    }
+
+    return (
+      booking.name.toLowerCase().includes(queryTerm) ||
+      booking.phone.toLowerCase().includes(queryTerm) ||
+      booking.style.toLowerCase().includes(queryTerm)
+    );
+  });
 }
 
 export async function cancelBookingForClient(bookingId: string, userId: string) {

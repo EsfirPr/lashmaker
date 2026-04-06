@@ -2,8 +2,9 @@ import "server-only";
 import { env } from "@/lib/env";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import type { ClientOverview, SafeUser, User } from "@/lib/types";
+import type { ClientOverview, SafeUser, TimeSlot, User } from "@/lib/types";
 import { clientLoginSchema, clientRegisterSchema, masterLoginSchema } from "@/lib/validators";
+import { formatDateLabel, formatSlotRange, getSlotStartDate } from "@/lib/utils";
 
 function toSafeUser(user: User): SafeUser {
   const { password_hash: _passwordHash, ...safeUser } = user;
@@ -189,7 +190,20 @@ export async function listClientsForMaster() {
   const clientIds = clientList.map((client) => client.id);
   const { data: bookings, error: bookingsError } = await supabase
     .from("bookings")
-    .select("user_id")
+    .select(
+      `
+      user_id,
+      name,
+      status,
+      time_slots!bookings_slot_id_fkey (
+        id,
+        slot_date,
+        start_time,
+        end_time,
+        created_at
+      )
+    `
+    )
     .in("user_id", clientIds);
 
   if (bookingsError) {
@@ -197,6 +211,8 @@ export async function listClientsForMaster() {
   }
 
   const counts = new Map<string, number>();
+  const names = new Map<string, string>();
+  const nextBookings = new Map<string, { startsAt: Date; label: string }>();
 
   for (const booking of bookings || []) {
     const userId = booking.user_id as string | null;
@@ -206,11 +222,36 @@ export async function listClientsForMaster() {
     }
 
     counts.set(userId, (counts.get(userId) || 0) + 1);
+
+    if (!names.has(userId) && typeof booking.name === "string" && booking.name.trim()) {
+      names.set(userId, booking.name.trim());
+    }
+
+    const relation = booking.time_slots as TimeSlot | TimeSlot[] | null;
+    const slot = Array.isArray(relation) ? (relation[0] ?? null) : relation;
+
+    if (!slot || booking.status !== "confirmed") {
+      continue;
+    }
+
+    const startsAt = getSlotStartDate(slot);
+
+    if (startsAt < new Date()) {
+      continue;
+    }
+
+    const current = nextBookings.get(userId);
+    const label = `${formatDateLabel(slot.slot_date)}, ${formatSlotRange(slot)}`;
+
+    if (!current || startsAt < current.startsAt) {
+      nextBookings.set(userId, { startsAt, label });
+    }
   }
 
   return clientList.map<ClientOverview>((client) => ({
     ...client,
-    bookingsCount: counts.get(client.id) || 0
+    bookingsCount: counts.get(client.id) || 0,
+    displayName: names.get(client.id) || null,
+    nextBookingLabel: nextBookings.get(client.id)?.label || null
   }));
 }
-

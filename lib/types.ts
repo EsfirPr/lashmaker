@@ -50,4 +50,6 @@ export type DaySchedule = {
 
 export type ClientOverview = SafeUser & {
   bookingsCount: number;
+  displayName: string | null;
+  nextBookingLabel: string | null;
 };
