@@ -17,6 +17,8 @@ export const env = {
   smsSenderName: process.env.SMS_SENDER_NAME || "LashMaker",
   sendConfirmationOnBooking:
     process.env.SMS_SEND_CONFIRMATION_ON_BOOKING !== "false",
-  cronSecret: process.env.CRON_SECRET || ""
+  cronSecret: process.env.CRON_SECRET || "",
+  masterNickname: process.env.MASTER_NICKNAME || "",
+  masterPassword: process.env.MASTER_PASSWORD || "",
+  authSecret: process.env.AUTH_SECRET || ""
 };
-

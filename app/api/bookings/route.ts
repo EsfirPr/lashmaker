@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth/server";
 import { createBooking } from "@/lib/booking-service";
 
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
-    const result = await createBooking(payload);
+    const user = await getCurrentUser();
+    const result = await createBooking({
+      ...payload,
+      userId: user?.role === "client" ? user.id : null
+    });
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
@@ -16,4 +21,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

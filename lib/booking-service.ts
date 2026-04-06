@@ -6,6 +6,7 @@ import { sendSms, smsProvider } from "@/lib/sms";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { AdminSlotView, Booking, BookingWithSlot, DaySchedule, TimeSlot } from "@/lib/types";
 import {
+  bookingIdSchema,
   bookingInputSchema,
   createSlotSchema,
   deleteSlotSchema,
@@ -25,6 +26,7 @@ type CreateBookingInput = {
   notes?: string;
   date: string;
   slotId: string;
+  userId?: string | null;
 };
 
 type CreateSlotInput = {
@@ -231,6 +233,7 @@ export async function listAvailableSlots(date: string) {
 }
 
 export async function createBooking(input: CreateBookingInput) {
+  const userId = typeof input.userId === "string" ? input.userId : null;
   const payload = bookingInputSchema.parse(input);
   const supabase = getSupabaseAdminClient();
   const slot = await getSlotById(payload.slotId);
@@ -248,6 +251,7 @@ export async function createBooking(input: CreateBookingInput) {
       phone: payload.phone,
       style: payload.style,
       notes: payload.notes || null,
+      user_id: userId,
       slot_id: payload.slotId,
       status: "confirmed",
       public_token: token,
@@ -260,6 +264,7 @@ export async function createBooking(input: CreateBookingInput) {
       phone,
       style,
       notes,
+      user_id,
       slot_id,
       status,
       public_token,
@@ -320,6 +325,7 @@ export async function getBookingByToken(token: string) {
       phone,
       style,
       notes,
+      user_id,
       slot_id,
       status,
       public_token,
@@ -370,6 +376,7 @@ export async function cancelBookingByToken(token: string) {
       phone,
       style,
       notes,
+      user_id,
       slot_id,
       status,
       public_token,
@@ -527,6 +534,7 @@ export async function sendUpcomingReminders() {
       phone,
       style,
       notes,
+      user_id,
       slot_id,
       status,
       public_token,
@@ -606,4 +614,89 @@ export async function sendUpcomingReminders() {
     sent,
     failed
   };
+}
+
+export async function listBookingsForClient(userId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(
+      `
+      id,
+      name,
+      phone,
+      style,
+      notes,
+      user_id,
+      slot_id,
+      status,
+      public_token,
+      reminder_sent,
+      created_at,
+      time_slots!bookings_slot_id_fkey (
+        id,
+        slot_date,
+        start_time,
+        end_time,
+        created_at
+      )
+    `
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return normalizeBookingsWithSlot(data as BookingWithMaybeSlotArray[] | null);
+}
+
+export async function cancelBookingForClient(bookingId: string, userId: string) {
+  const payload = bookingIdSchema.parse({ bookingId });
+  const supabase = getSupabaseAdminClient();
+
+  const { data, error } = await supabase
+    .from("bookings")
+    .update({ status: "cancelled" })
+    .eq("id", payload.bookingId)
+    .eq("user_id", userId)
+    .eq("status", "confirmed")
+    .select(
+      `
+      id,
+      name,
+      phone,
+      style,
+      notes,
+      user_id,
+      slot_id,
+      status,
+      public_token,
+      reminder_sent,
+      created_at,
+      time_slots!bookings_slot_id_fkey (
+        id,
+        slot_date,
+        start_time,
+        end_time,
+        created_at
+      )
+    `
+    )
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Запись не найдена или уже отменена");
+  }
+
+  revalidatePath("/account");
+  revalidatePath("/master/dashboard");
+  revalidatePath("/admin");
+
+  return normalizeBookingWithSlot(data as BookingWithMaybeSlotArray | null);
 }

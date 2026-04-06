@@ -8,7 +8,7 @@ export const STYLE_OPTIONS = [
   "Мокрый эффект"
 ] as const;
 
-const phonePattern = /^[+0-9()\-\s]{10,20}$/;
+export const phonePattern = /^[+0-9()\-\s]{10,20}$/;
 
 export const bookingInputSchema = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(100, "Слишком длинное имя"),
@@ -46,3 +46,21 @@ export const tokenSchema = z.object({
   token: z.string().min(8).max(128)
 });
 
+export const clientRegisterSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .regex(phonePattern, "Укажите корректный номер телефона"),
+  password: z.string().min(6, "Пароль должен быть не короче 6 символов")
+});
+
+export const clientLoginSchema = clientRegisterSchema;
+
+export const masterLoginSchema = z.object({
+  nickname: z.string().trim().min(3, "Введите nickname мастера"),
+  password: z.string().min(6, "Введите пароль")
+});
+
+export const bookingIdSchema = z.object({
+  bookingId: z.string().uuid("Некорректный идентификатор записи")
+});

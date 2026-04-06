@@ -1,8 +1,10 @@
 "use server";
 
+import { requireUserRole } from "@/lib/auth/server";
 import { createTimeSlot, deleteFreeTimeSlot } from "@/lib/booking-service";
 
 export async function addTimeSlotAction(formData: FormData) {
+  await requireUserRole("master", "/master/login");
   await createTimeSlot({
     slotDate: String(formData.get("slotDate") || ""),
     startTime: String(formData.get("startTime") || ""),
@@ -11,6 +13,6 @@ export async function addTimeSlotAction(formData: FormData) {
 }
 
 export async function deleteTimeSlotAction(formData: FormData) {
+  await requireUserRole("master", "/master/login");
   await deleteFreeTimeSlot(String(formData.get("slotId") || ""));
 }
-

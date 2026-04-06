@@ -8,6 +8,12 @@ export default function HomePage() {
         <nav className="top-nav">
           <div className="brand">LashMaker</div>
           <div className="nav-links">
+            <Link className="ghost-button" href="/login">
+              Кабинет клиента
+            </Link>
+            <Link className="ghost-button" href="/master/login">
+              Вход мастера
+            </Link>
             <Link className="ghost-button" href="/admin">
               Расписание мастера
             </Link>

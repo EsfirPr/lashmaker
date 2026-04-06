@@ -1,4 +1,5 @@
 export type BookingStatus = "confirmed" | "cancelled";
+export type UserRole = "master" | "client";
 
 export type TimeSlot = {
   id: string;
@@ -14,12 +15,24 @@ export type Booking = {
   phone: string;
   style: string;
   notes: string | null;
+  user_id: string | null;
   slot_id: string;
   status: BookingStatus;
   public_token: string;
   reminder_sent: boolean;
   created_at: string;
 };
+
+export type User = {
+  id: string;
+  phone: string | null;
+  nickname: string | null;
+  password_hash: string;
+  role: UserRole;
+  created_at: string;
+};
+
+export type SafeUser = Omit<User, "password_hash">;
 
 export type BookingWithSlot = Booking & {
   time_slots: TimeSlot | null;
@@ -35,3 +48,6 @@ export type DaySchedule = {
   slots: AdminSlotView[];
 };
 
+export type ClientOverview = SafeUser & {
+  bookingsCount: number;
+};
