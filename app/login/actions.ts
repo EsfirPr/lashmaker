@@ -1,11 +1,12 @@
 "use server";
 
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { authenticateClient } from "@/lib/auth/service";
 import { createUserSession } from "@/lib/auth/server";
 
-function toErrorRedirect(message: string) {
-  return `/login?error=${encodeURIComponent(message)}`;
+function toErrorRedirect(message: string): Route {
+  return `/login?error=${encodeURIComponent(message)}` as Route;
 }
 
 export async function loginClientAction(formData: FormData) {
@@ -21,4 +22,3 @@ export async function loginClientAction(formData: FormData) {
     redirect(toErrorRedirect(error instanceof Error ? error.message : "Не удалось войти"));
   }
 }
-

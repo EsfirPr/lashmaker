@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { createSessionCookieValue, getSessionCookieOptions, SESSION_COOKIE_NAME, verifySessionCookieValue } from "@/lib/auth/session";
 import { getUserById } from "@/lib/auth/service";
@@ -34,7 +35,7 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function requireUserRole(role: UserRole, redirectTo: string) {
+export async function requireUserRole(role: UserRole, redirectTo: Route) {
   const user = await getCurrentUser();
 
   if (!user || user.role !== role) {
@@ -43,4 +44,3 @@ export async function requireUserRole(role: UserRole, redirectTo: string) {
 
   return user;
 }
-
