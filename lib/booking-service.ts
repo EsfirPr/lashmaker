@@ -2,7 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { env } from "@/lib/env";
-import { smsProvider } from "@/lib/sms";
+import { sendSms, smsProvider } from "@/lib/sms";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { AdminSlotView, Booking, BookingWithSlot, DaySchedule, TimeSlot } from "@/lib/types";
 import {
@@ -15,8 +15,7 @@ import {
   createPublicBookingUrl,
   formatDateLabel,
   formatSlotRange,
-  getRelativeDate,
-  getTomorrowDate
+  getRelativeDate
 } from "@/lib/utils";
 
 type CreateBookingInput = {
@@ -38,8 +37,105 @@ type BookingWithMaybeSlotArray = Booking & {
   time_slots: TimeSlot | TimeSlot[] | null;
 };
 
+const reminderWindowMinutes = 5;
+const oneHourInMs = 60 * 60 * 1000;
+const appTimeZone = process.env.APP_TIMEZONE || "Europe/Moscow";
+
 function generateToken() {
   return randomBytes(18).toString("base64url");
+}
+
+function getZonedDateParts(value: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: appTimeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(value);
+
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+  const month = Number(parts.find((part) => part.type === "month")?.value);
+  const day = Number(parts.find((part) => part.type === "day")?.value);
+  const hour = Number(parts.find((part) => part.type === "hour")?.value);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value);
+  const second = Number(parts.find((part) => part.type === "second")?.value);
+
+  return {
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second
+  };
+}
+
+function toDateKey(parts: { year: number; month: number; day: number }) {
+  return `${String(parts.year).padStart(4, "0")}-${String(parts.month).padStart(2, "0")}-${String(
+    parts.day
+  ).padStart(2, "0")}`;
+}
+
+function zonedDateTimeToUtc(date: string, time: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.slice(0, 5).split(":").map(Number);
+
+  let utcMs = Date.UTC(year, month - 1, day, hour, minute, 0);
+
+  for (let index = 0; index < 3; index += 1) {
+    const parts = getZonedDateParts(new Date(utcMs));
+    const expectedUtcMs = Date.UTC(year, month - 1, day, hour, minute, 0);
+    const actualUtcMs = Date.UTC(
+      parts.year,
+      parts.month - 1,
+      parts.day,
+      parts.hour,
+      parts.minute,
+      parts.second
+    );
+
+    const diff = expectedUtcMs - actualUtcMs;
+
+    if (diff === 0) {
+      break;
+    }
+
+    utcMs += diff;
+  }
+
+  return new Date(utcMs);
+}
+
+function getBookingStartDate(slot: Pick<TimeSlot, "slot_date" | "start_time">) {
+  return zonedDateTimeToUtc(slot.slot_date, slot.start_time);
+}
+
+function buildOneHourReminderMessage(booking: BookingWithSlot) {
+  if (!booking.time_slots) {
+    return "Напоминаем: у вас запись на наращивание ресниц сегодня.";
+  }
+
+  return `Напоминаем: у вас запись на наращивание ресниц сегодня в ${booking.time_slots.start_time.slice(
+    0,
+    5
+  )}`;
+}
+
+function getUpcomingReminderWindow() {
+  const target = new Date(Date.now() + oneHourInMs);
+  const windowStart = new Date(target.getTime() - reminderWindowMinutes * 60 * 1000);
+  const windowEnd = new Date(target.getTime() + reminderWindowMinutes * 60 * 1000);
+
+  return {
+    windowStart,
+    windowEnd,
+    startDate: toDateKey(getZonedDateParts(windowStart)),
+    endDate: toDateKey(getZonedDateParts(windowEnd))
+  };
 }
 
 function normalizeBookingWithSlot(
@@ -81,18 +177,6 @@ function buildConfirmationMessage(booking: BookingWithSlot) {
     `${formatDateLabel(booking.time_slots.slot_date)}, ${formatSlotRange(booking.time_slots)}.`,
     `Стиль: ${booking.style}.`,
     `Детали: ${createPublicBookingUrl(booking.public_token)}`
-  ].join(" ");
-}
-
-function buildReminderMessage(booking: BookingWithSlot) {
-  if (!booking.time_slots) {
-    return `${env.smsSenderName}: напоминаем о вашей записи завтра.`;
-  }
-
-  return [
-    `${env.smsSenderName}: напоминаем о записи завтра.`,
-    `${formatDateLabel(booking.time_slots.slot_date)}, ${formatSlotRange(booking.time_slots)}.`,
-    `Стиль: ${booking.style}.`
   ].join(" ");
 }
 
@@ -430,9 +514,9 @@ export async function deleteFreeTimeSlot(slotId: string) {
   revalidatePath("/admin");
 }
 
-export async function sendTomorrowReminders() {
+export async function sendUpcomingReminders() {
   const supabase = getSupabaseAdminClient();
-  const tomorrow = getTomorrowDate();
+  const { windowStart, windowEnd, startDate, endDate } = getUpcomingReminderWindow();
 
   const { data, error } = await supabase
     .from("bookings")
@@ -459,34 +543,67 @@ export async function sendTomorrowReminders() {
     )
     .eq("status", "confirmed")
     .eq("reminder_sent", false)
-    .eq("time_slots.slot_date", tomorrow);
+    .gte("time_slots.slot_date", startDate)
+    .lte("time_slots.slot_date", endDate);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  let sent = 0;
+  const bookings = normalizeBookingsWithSlot(data as BookingWithMaybeSlotArray[] | null).filter(
+    (booking) => {
+      if (!booking.time_slots) {
+        return false;
+      }
 
-  for (const booking of normalizeBookingsWithSlot(data as BookingWithMaybeSlotArray[] | null)) {
-    await smsProvider.send({
-      to: booking.phone,
-      message: buildReminderMessage(booking)
-    });
-
-    const { error: updateError } = await supabase
-      .from("bookings")
-      .update({ reminder_sent: true })
-      .eq("id", booking.id);
-
-    if (updateError) {
-      throw new Error(updateError.message);
+      const appointmentDate = getBookingStartDate(booking.time_slots);
+      return appointmentDate >= windowStart && appointmentDate <= windowEnd;
     }
+  );
 
-    sent += 1;
+  let sent = 0;
+  let failed = 0;
+
+  for (const booking of bookings) {
+    try {
+      await sendSms(booking.phone, buildOneHourReminderMessage(booking));
+
+      const { data: updatedRows, error: updateError } = await supabase
+        .from("bookings")
+        .update({ reminder_sent: true })
+        .eq("id", booking.id)
+        .eq("reminder_sent", false)
+        .select("id");
+
+      if (updateError) {
+        console.error("Failed to update reminder_sent", {
+          bookingId: booking.id,
+          error: updateError.message
+        });
+        failed += 1;
+        continue;
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        continue;
+      }
+
+      sent += 1;
+    } catch (sendError) {
+      console.error("Failed to send reminder SMS", {
+        bookingId: booking.id,
+        phone: booking.phone,
+        error: sendError instanceof Error ? sendError.message : "Unknown error"
+      });
+      failed += 1;
+    }
   }
 
   return {
-    date: tomorrow,
-    sent
+    windowStart: windowStart.toISOString(),
+    windowEnd: windowEnd.toISOString(),
+    checked: bookings.length,
+    sent,
+    failed
   };
 }

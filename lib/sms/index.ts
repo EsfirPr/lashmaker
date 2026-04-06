@@ -15,3 +15,10 @@ function createSmsProvider(): SmsProvider {
 }
 
 export const smsProvider = createSmsProvider();
+
+export async function sendSms(to: string, text: string) {
+  await smsProvider.send({
+    to,
+    message: text
+  });
+}

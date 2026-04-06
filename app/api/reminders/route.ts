@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
-import { sendTomorrowReminders } from "@/lib/booking-service";
+import { sendUpcomingReminders } from "@/lib/booking-service";
 
-export async function POST(request: Request) {
-  const secret = request.headers.get("x-cron-secret");
+function isAuthorized(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  const legacySecret = request.headers.get("x-cron-secret");
 
-  if (env.cronSecret && secret !== env.cronSecret) {
+  if (!env.cronSecret) {
+    return true;
+  }
+
+  return authHeader === `Bearer ${env.cronSecret}` || legacySecret === env.cronSecret;
+}
+
+export async function GET(request: Request) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const result = await sendTomorrowReminders();
+    const result = await sendUpcomingReminders();
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(
@@ -21,4 +30,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
