@@ -25,6 +25,7 @@ export type Booking = {
 
 export type User = {
   id: string;
+  name: string | null;
   phone: string | null;
   nickname: string | null;
   password_hash: string;

@@ -32,7 +32,7 @@ function getBookingVisualState(booking: Awaited<ReturnType<typeof listBookingsFo
 export default async function MasterDashboardPage({ searchParams }: MasterDashboardPageProps) {
   noStore();
   await createMasterIfNotExists();
-  const master = await requireUserRole("master", "/master/login");
+  const master = await requireUserRole("master", "/login");
   const filters = (await searchParams) || {};
 
   const [days, clients, allBookings, bookings] = await Promise.all([

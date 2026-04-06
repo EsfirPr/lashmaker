@@ -3,12 +3,34 @@ import { env } from "@/lib/env";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { ClientOverview, SafeUser, TimeSlot, User } from "@/lib/types";
-import { clientLoginSchema, clientRegisterSchema, masterLoginSchema } from "@/lib/validators";
+import {
+  clientLoginSchema,
+  clientRegisterSchema,
+  loginSchema,
+  masterLoginSchema,
+  phonePattern
+} from "@/lib/validators";
 import { formatDateLabel, formatSlotRange, getSlotStartDate } from "@/lib/utils";
 
 function toSafeUser(user: User): SafeUser {
   const { password_hash: _passwordHash, ...safeUser } = user;
   return safeUser;
+}
+
+async function getMasterUserByNickname(nickname: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("role", "master")
+    .eq("nickname", nickname)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as User | null) || null;
 }
 
 function getMasterCredentials() {
@@ -74,7 +96,7 @@ export async function createMasterIfNotExists() {
   return toSafeUser(data as User);
 }
 
-export async function registerClient(input: { phone: string; password: string }) {
+export async function registerClient(input: { name: string; phone: string; password: string }) {
   const payload = clientRegisterSchema.parse(input);
   const supabase = getSupabaseAdminClient();
   const passwordHash = await hashPassword(payload.password);
@@ -82,6 +104,7 @@ export async function registerClient(input: { phone: string; password: string })
   const { data, error } = await supabase
     .from("users")
     .insert({
+      name: payload.name,
       phone: payload.phone,
       password_hash: passwordHash,
       role: "client"
@@ -128,21 +151,37 @@ export async function authenticateClient(input: { phone: string; password: strin
   return toSafeUser(user);
 }
 
+export async function authenticateUser(input: { identifier: string; password: string }) {
+  const payload = loginSchema.parse(input);
+  const identifier = payload.identifier.trim();
+  await createMasterIfNotExists();
+
+  const masterUser = await getMasterUserByNickname(identifier);
+
+  if (masterUser) {
+    const isValidPassword = await verifyPassword(payload.password, masterUser.password_hash);
+
+    if (!isValidPassword) {
+      throw new Error("Неверный пароль");
+    }
+
+    return toSafeUser(masterUser);
+  }
+
+  if (!phonePattern.test(identifier)) {
+    throw new Error("Клиент с таким номером не найден");
+  }
+
+  return authenticateClient({
+    phone: identifier,
+    password: payload.password
+  });
+}
+
 export async function authenticateMaster(input: { nickname: string; password: string }) {
   const payload = masterLoginSchema.parse(input);
   await createMasterIfNotExists();
-
-  const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("role", "master")
-    .eq("nickname", payload.nickname)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
-  }
+  const data = await getMasterUserByNickname(payload.nickname);
 
   if (!data) {
     throw new Error("Мастер с таким nickname не найден");
@@ -173,7 +212,7 @@ export async function listClientsForMaster() {
   const supabase = getSupabaseAdminClient();
   const { data: clients, error: clientsError } = await supabase
     .from("users")
-    .select("id, phone, nickname, role, created_at")
+    .select("id, name, phone, nickname, role, created_at")
     .eq("role", "client")
     .order("created_at", { ascending: false });
 
@@ -251,7 +290,7 @@ export async function listClientsForMaster() {
   return clientList.map<ClientOverview>((client) => ({
     ...client,
     bookingsCount: counts.get(client.id) || 0,
-    displayName: names.get(client.id) || null,
+    displayName: client.name || names.get(client.id) || null,
     nextBookingLabel: nextBookings.get(client.id)?.label || null
   }));
 }

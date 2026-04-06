@@ -6,7 +6,7 @@ import { createUserSession } from "@/lib/auth/server";
 import { authenticateMaster, createMasterIfNotExists } from "@/lib/auth/service";
 
 function toErrorRedirect(message: string): Route {
-  return `/master/login?error=${encodeURIComponent(message)}` as Route;
+  return `/login?error=${encodeURIComponent(message)}` as Route;
 }
 
 export async function loginMasterAction(formData: FormData) {

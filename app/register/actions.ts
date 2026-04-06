@@ -12,6 +12,7 @@ function toErrorRedirect(message: string): Route {
 export async function registerClientAction(formData: FormData) {
   try {
     const user = await registerClient({
+      name: String(formData.get("name") || ""),
       phone: String(formData.get("phone") || ""),
       password: String(formData.get("password") || "")
     });

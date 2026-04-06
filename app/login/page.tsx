@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { loginClientAction } from "./actions";
+import { loginUserAction } from "./actions";
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -13,14 +13,22 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="page-shell auth-shell">
       <section className="panel auth-card">
-        <span className="eyebrow">Кабинет клиента</span>
+        <span className="eyebrow">Единый вход</span>
         <h1 className="page-title">Вход</h1>
-        <p className="muted">Войдите по номеру телефона и паролю, чтобы видеть свои записи.</p>
+        <p className="muted">
+          Войдите по телефону клиента или nickname мастера. После авторизации мы сами откроем
+          нужный кабинет.
+        </p>
 
-        <form className="form-grid section-space" action={loginClientAction}>
+        <form className="form-grid section-space" action={loginUserAction}>
           <div className="field">
-            <label htmlFor="phone">Телефон</label>
-            <input id="phone" name="phone" placeholder="+7 999 123-45-67" required />
+            <label htmlFor="identifier">Телефон или nickname</label>
+            <input
+              id="identifier"
+              name="identifier"
+              placeholder="+7 999 123-45-67 или SulamitaMaster"
+              required
+            />
           </div>
           <div className="field">
             <label htmlFor="password">Пароль</label>
@@ -44,4 +52,3 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     </main>
   );
 }
-

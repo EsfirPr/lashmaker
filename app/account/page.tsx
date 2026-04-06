@@ -10,7 +10,7 @@ export default async function AccountPage() {
   const user = await requireUserRole("client", "/login");
   const bookings = await listBookingsForClient(user.id);
   const nextBooking = bookings.find((booking) => booking.status === "confirmed" && booking.time_slots);
-  const profileName = bookings.find((booking) => booking.name.trim())?.name || null;
+  const profileName = user.name || bookings.find((booking) => booking.name.trim())?.name || null;
   const displayIdentity = profileName || user.phone || "гостья";
 
   return (

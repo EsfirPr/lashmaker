@@ -47,6 +47,7 @@ export const tokenSchema = z.object({
 });
 
 export const clientRegisterSchema = z.object({
+  name: z.string().trim().min(2, "Укажите имя").max(100, "Слишком длинное имя"),
   phone: z
     .string()
     .trim()
@@ -54,7 +55,18 @@ export const clientRegisterSchema = z.object({
   password: z.string().min(6, "Пароль должен быть не короче 6 символов")
 });
 
-export const clientLoginSchema = clientRegisterSchema;
+export const clientLoginSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .regex(phonePattern, "Укажите корректный номер телефона"),
+  password: z.string().min(6, "Введите пароль")
+});
+
+export const loginSchema = z.object({
+  identifier: z.string().trim().min(2, "Введите телефон или nickname"),
+  password: z.string().min(6, "Введите пароль")
+});
 
 export const masterLoginSchema = z.object({
   nickname: z.string().trim().min(3, "Введите nickname мастера"),

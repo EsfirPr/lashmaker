@@ -14,11 +14,11 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/admin") {
     return session?.role === "master"
       ? redirectTo(request, "/master/dashboard")
-      : redirectTo(request, "/master/login");
+      : redirectTo(request, "/login");
   }
 
   if (pathname.startsWith("/master/dashboard")) {
-    return session?.role === "master" ? NextResponse.next() : redirectTo(request, "/master/login");
+    return session?.role === "master" ? NextResponse.next() : redirectTo(request, "/login");
   }
 
   if (pathname.startsWith("/account")) {
@@ -39,4 +39,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/admin", "/master/:path*", "/account/:path*", "/login", "/register"]
 };
-

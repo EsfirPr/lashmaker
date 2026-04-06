@@ -15,9 +15,13 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
       <section className="panel auth-card">
         <span className="eyebrow">Новый клиент</span>
         <h1 className="page-title">Регистрация</h1>
-        <p className="muted">Создайте аккаунт по номеру телефона, чтобы хранить свои записи.</p>
+        <p className="muted">Создайте аккаунт по имени, номеру телефона и паролю, чтобы хранить свои записи.</p>
 
         <form className="form-grid section-space" action={registerClientAction}>
+          <div className="field">
+            <label htmlFor="name">Имя</label>
+            <input id="name" name="name" placeholder="Например, Алина" required />
+          </div>
           <div className="field">
             <label htmlFor="phone">Телефон</label>
             <input id="phone" name="phone" placeholder="+7 999 123-45-67" required />
@@ -44,4 +48,3 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
     </main>
   );
 }
-
