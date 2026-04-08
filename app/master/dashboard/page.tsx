@@ -2,11 +2,13 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { logoutAction } from "@/app/auth-actions";
 import { AdminSlotForm } from "@/components/admin-slot-form";
+import { MasterPortfolioManager } from "@/components/master-portfolio-manager";
 import { MasterBookingListItem } from "@/components/master-booking-list-item";
 import { MasterScheduleDay } from "@/components/master-schedule-day";
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
+import { getPortfolioDashboardData, resolveMasterProfile } from "@/lib/portfolio-service";
 import { formatDateLabel, formatSlotRange, getSlotEndDate } from "@/lib/utils";
 
 type MasterDashboardPageProps = {
@@ -35,12 +37,14 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
   const master = await requireUserRole("master", "/login");
   const filters = (await searchParams) || {};
 
-  const [days, clients, allBookings, bookings] = await Promise.all([
+  const [days, clients, allBookings, bookings, portfolioData] = await Promise.all([
     listScheduleDays(),
     listClientsForMaster(),
     listBookingsForMaster(),
-    listBookingsForMaster(filters)
+    listBookingsForMaster(filters),
+    getPortfolioDashboardData(master.id)
   ]);
+  const portfolioProfile = resolveMasterProfile(master, portfolioData.profile);
 
   const allSlots = days.flatMap((day) => day.slots);
   const activeCount = allBookings.filter((booking) => getBookingVisualState(booking) === "confirmed").length;
@@ -74,6 +78,9 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               </a>
               <a className="ghost-button" href="#slots">
                 Добавить окна
+              </a>
+              <a className="ghost-button" href="#portfolio-manager">
+                Портфолио
               </a>
               <a className="ghost-button" href="#cancellations">
                 Отмены
@@ -119,6 +126,13 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
             <div className="stat section-space">
               <strong>{clients.length}</strong>
               <span className="muted">клиентов в базе</span>
+            </div>
+          </article>
+          <article className="panel stack-card">
+            <span className="eyebrow">Портфолио</span>
+            <div className="stat section-space">
+              <strong>{portfolioData.items.length}</strong>
+              <span className="muted">работ на главной</span>
             </div>
           </article>
         </section>
@@ -266,6 +280,10 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="section-space">
+          <MasterPortfolioManager items={portfolioData.items} profile={portfolioProfile} />
         </section>
 
         <section className="panel stack-card section-space master-section" id="cancellations">

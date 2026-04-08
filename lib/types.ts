@@ -54,3 +54,21 @@ export type ClientOverview = SafeUser & {
   displayName: string | null;
   nextBookingLabel: string | null;
 };
+
+export type MasterProfile = {
+  user_id: string;
+  display_name: string | null;
+  headline: string | null;
+  bio: string | null;
+  years_experience: number | null;
+  updated_at: string;
+};
+
+export type PortfolioItem = {
+  id: string;
+  owner_id: string;
+  image_path: string;
+  image_url: string;
+  caption: string | null;
+  created_at: string;
+};

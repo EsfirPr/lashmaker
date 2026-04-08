@@ -88,6 +88,9 @@ export default async function AccountPage() {
               <Link className="button" href="#new-booking">
                 Новая запись
               </Link>
+              <Link className="ghost-button" href="/#portfolio">
+                Портфолио
+              </Link>
               <Link
                 className="ghost-button"
                 href={bookings[0] ? `/booking/${bookings[0].public_token}` : "/"}

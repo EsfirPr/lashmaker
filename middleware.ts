@@ -11,7 +11,11 @@ export async function middleware(request: NextRequest) {
   const sessionValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = await verifySessionCookieValue(sessionValue);
   const isPublicPage =
-    pathname === "/login" || pathname === "/register" || pathname === "/privacy";
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/privacy" ||
+    pathname.startsWith("/booking/");
 
   if (!session && !isPublicPage) {
     return redirectTo(request, "/login");
