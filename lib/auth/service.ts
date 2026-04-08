@@ -10,6 +10,7 @@ import {
   masterLoginSchema,
   phonePattern
 } from "@/lib/validators";
+import { normalizePhone } from "@/lib/utils/phone";
 import { formatDateLabel, formatSlotRange, getSlotStartDate } from "@/lib/utils";
 
 function toSafeUser(user: User): SafeUser {
@@ -34,12 +35,13 @@ async function getMasterUserByNickname(nickname: string) {
 }
 
 async function getClientUserByPhone(phone: string) {
+  const normalizedPhone = normalizePhone(phone);
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("users")
     .select("*")
     .eq("role", "client")
-    .eq("phone", phone)
+    .eq("phone", normalizedPhone)
     .maybeSingle();
 
   if (error) {
@@ -190,7 +192,7 @@ export async function authenticateUser(input: { identifier: string; password: st
   }
 
   return authenticateClient({
-    phone: identifier,
+    phone: normalizePhone(identifier),
     password: payload.password
   });
 }

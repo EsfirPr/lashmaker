@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizePhone } from "@/lib/utils/phone";
 
 export const STYLE_OPTIONS = [
   "Классика",
@@ -10,12 +11,21 @@ export const STYLE_OPTIONS = [
 
 export const phonePattern = /^[+0-9()\-\s]{10,20}$/;
 
+const phoneSchema = z.string().trim().transform((value, context) => {
+  try {
+    return normalizePhone(value);
+  } catch {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Введите корректный номер телефона"
+    });
+    return z.NEVER;
+  }
+});
+
 export const bookingInputSchema = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(100, "Слишком длинное имя"),
-  phone: z
-    .string()
-    .trim()
-    .regex(phonePattern, "Укажите корректный номер телефона"),
+  phone: phoneSchema,
   style: z
     .string()
     .trim()
@@ -48,10 +58,7 @@ export const tokenSchema = z.object({
 
 export const clientRegisterSchema = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(100, "Слишком длинное имя"),
-  phone: z
-    .string()
-    .trim()
-    .regex(phonePattern, "Укажите корректный номер телефона"),
+  phone: phoneSchema,
   password: z.string().min(6, "Пароль должен быть не короче 6 символов"),
   privacyAccepted: z.literal(true, {
     errorMap: () => ({
@@ -61,10 +68,7 @@ export const clientRegisterSchema = z.object({
 });
 
 export const clientLoginSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .regex(phonePattern, "Укажите корректный номер телефона"),
+  phone: phoneSchema,
   password: z.string().min(6, "Введите пароль")
 });
 
