@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { logoutAction } from "@/app/auth-actions";
+import { AccountBookingForm } from "@/components/account-booking-form";
 import { AccountBookingCard } from "@/components/account-booking-card";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForClient } from "@/lib/booking-service";
@@ -84,8 +85,8 @@ export default async function AccountPage() {
               </div>
             </div>
             <div className="account-actions section-space">
-              <Link className="button" href="/">
-                Записаться
+              <Link className="button" href="#new-booking">
+                Новая запись
               </Link>
               <Link
                 className="ghost-button"
@@ -112,6 +113,23 @@ export default async function AccountPage() {
           </aside>
         </section>
 
+        <section className="panel stack-card section-space account-section" id="new-booking">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Новая запись</span>
+              <h2>Запишитесь прямо в кабинете</h2>
+            </div>
+          </div>
+          <p className="muted">
+            Выберите стиль, дату и свободное время. Имя и номер телефона подставятся автоматически
+            из вашего аккаунта.
+          </p>
+          <AccountBookingForm
+            phone={user.phone || "Телефон не указан"}
+            profileName={profileName || "Имя не указано"}
+          />
+        </section>
+
         <section className="panel stack-card section-space account-section">
           <div className="account-section__heading">
             <div>
@@ -127,8 +145,8 @@ export default async function AccountPage() {
                 <p className="empty-state">
                   Когда вы оформите первую запись, здесь появятся дата, время, статус и пожелания.
                 </p>
-                <Link className="button" href="/">
-                  Записаться
+                <Link className="button" href="#new-booking">
+                  Создать запись
                 </Link>
               </div>
             ) : null}

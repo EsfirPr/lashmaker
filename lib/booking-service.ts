@@ -287,7 +287,9 @@ export async function createBooking(input: CreateBookingInput) {
   }
 
   revalidatePath("/");
+  revalidatePath("/account");
   revalidatePath("/admin");
+  revalidatePath("/master/dashboard");
   revalidatePath(`/booking/${data.public_token}`);
 
   return {

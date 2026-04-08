@@ -6,9 +6,25 @@ export async function POST(request: Request) {
   try {
     const payload = await request.json();
     const user = await getCurrentUser();
+
+     if (user?.role === "client") {
+      if (!user.name?.trim() || !user.phone?.trim()) {
+        throw new Error("Профиль клиента заполнен не полностью");
+      }
+
+      const result = await createBooking({
+        ...payload,
+        name: user.name,
+        phone: user.phone,
+        userId: user.id
+      });
+
+      return NextResponse.json(result, { status: 201 });
+    }
+
     const result = await createBooking({
       ...payload,
-      userId: user?.role === "client" ? user.id : null
+      userId: null
     });
 
     return NextResponse.json(result, { status: 201 });

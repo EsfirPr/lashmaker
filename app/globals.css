@@ -578,6 +578,12 @@ main {
   gap: 16px;
 }
 
+.account-booking-form__identity {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
 .account-booking-card {
   display: grid;
   gap: 16px;
@@ -871,6 +877,7 @@ main {
   .meta-grid,
   .two-columns,
   .account-profile-grid,
+  .account-booking-form__identity,
   .account-booking-card__grid,
   .account-hero__stats,
   .master-stats-grid,
