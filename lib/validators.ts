@@ -52,7 +52,12 @@ export const clientRegisterSchema = z.object({
     .string()
     .trim()
     .regex(phonePattern, "Укажите корректный номер телефона"),
-  password: z.string().min(6, "Пароль должен быть не короче 6 символов")
+  password: z.string().min(6, "Пароль должен быть не короче 6 символов"),
+  privacyAccepted: z.literal(true, {
+    errorMap: () => ({
+      message: "Необходимо согласиться с Политикой конфиденциальности"
+    })
+  })
 });
 
 export const clientLoginSchema = z.object({

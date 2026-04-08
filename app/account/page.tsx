@@ -102,6 +102,13 @@ export default async function AccountPage() {
             <p className="helper">
               Если нужно отменить визит, сделайте это прямо в карточке записи ниже.
             </p>
+            <p className="helper">
+              Подробнее об обработке персональных данных можно прочитать в{" "}
+              <Link href="/privacy">
+                Политике конфиденциальности
+              </Link>
+              .
+            </p>
           </aside>
         </section>
 

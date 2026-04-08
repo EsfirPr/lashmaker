@@ -64,6 +64,12 @@ export default function HomePage() {
             </div>
           </section>
         </section>
+
+        <footer className="site-footer">
+          <Link className="footer-link" href="/privacy">
+            Политика конфиденциальности
+          </Link>
+        </footer>
       </div>
     </main>
   );

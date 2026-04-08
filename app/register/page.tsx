@@ -30,11 +30,28 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
             <label htmlFor="password">Пароль</label>
             <input id="password" name="password" type="password" required />
           </div>
+          <label className="consent-row">
+            <input name="privacyAccepted" type="checkbox" required />
+            <span>
+              Я соглашаюсь с{" "}
+              <Link href="/privacy">
+                Политикой конфиденциальности
+              </Link>
+            </span>
+          </label>
           {params.error ? <div className="message-error">{params.error}</div> : null}
           <button className="button" type="submit">
             Создать аккаунт
           </button>
         </form>
+
+        <p className="helper section-space">
+          Продолжая регистрацию, вы подтверждаете согласие с{" "}
+          <Link href="/privacy">
+            Политикой конфиденциальности
+          </Link>
+          .
+        </p>
 
         <div className="inline-actions section-space">
           <Link className="ghost-button" href="/login">

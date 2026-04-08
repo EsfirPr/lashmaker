@@ -33,6 +33,22 @@ async function getMasterUserByNickname(nickname: string) {
   return (data as User | null) || null;
 }
 
+async function getClientUserByPhone(phone: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("role", "client")
+    .eq("phone", phone)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as User | null) || null;
+}
+
 function getMasterCredentials() {
   if (!env.masterNickname || !env.masterPassword) {
     throw new Error("MASTER_NICKNAME and MASTER_PASSWORD must be configured");
@@ -96,9 +112,20 @@ export async function createMasterIfNotExists() {
   return toSafeUser(data as User);
 }
 
-export async function registerClient(input: { name: string; phone: string; password: string }) {
+export async function registerClient(input: {
+  name: string;
+  phone: string;
+  password: string;
+  privacyAccepted: boolean;
+}) {
   const payload = clientRegisterSchema.parse(input);
   const supabase = getSupabaseAdminClient();
+  const existingUser = await getClientUserByPhone(payload.phone);
+
+  if (existingUser) {
+    throw new Error("Пользователь с таким номером уже существует");
+  }
+
   const passwordHash = await hashPassword(payload.password);
 
   const { data, error } = await supabase
@@ -125,17 +152,7 @@ export async function registerClient(input: { name: string; phone: string; passw
 
 export async function authenticateClient(input: { phone: string; password: string }) {
   const payload = clientLoginSchema.parse(input);
-  const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("role", "client")
-    .eq("phone", payload.phone)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
-  }
+  const data = await getClientUserByPhone(payload.phone);
 
   if (!data) {
     throw new Error("Клиент с таким номером не найден");

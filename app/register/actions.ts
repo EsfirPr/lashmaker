@@ -14,7 +14,8 @@ export async function registerClientAction(formData: FormData) {
     const user = await registerClient({
       name: String(formData.get("name") || ""),
       phone: String(formData.get("phone") || ""),
-      password: String(formData.get("password") || "")
+      password: String(formData.get("password") || ""),
+      privacyAccepted: formData.get("privacyAccepted") === "on"
     });
 
     await createUserSession(user);

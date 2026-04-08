@@ -40,6 +40,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </button>
         </form>
 
+        <p className="helper section-space">
+          Продолжая использование сайта, вы соглашаетесь с{" "}
+          <Link href="/privacy">
+            Политикой конфиденциальности
+          </Link>
+          .
+        </p>
+
         <div className="inline-actions section-space">
           <Link className="ghost-button" href="/register">
             Регистрация

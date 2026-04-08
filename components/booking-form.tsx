@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { TimeSlot } from "@/lib/types";
 import { STYLE_OPTIONS } from "@/lib/validators";
@@ -211,6 +212,13 @@ export function BookingForm() {
 
       <p className="helper">
         После записи вы получите персональную ссылку, где можно посмотреть детали и отменить визит.
+      </p>
+      <p className="helper helper-link">
+        Отправляя форму, вы подтверждаете согласие с{" "}
+        <Link href="/privacy">
+          Политикой конфиденциальности
+        </Link>
+        .
       </p>
 
       {error ? <div className="message-error">{error}</div> : null}
