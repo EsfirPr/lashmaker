@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { readJsonResponse } from "@/lib/http";
 import type { TimeSlot } from "@/lib/types";
 import { STYLE_OPTIONS } from "@/lib/validators";
 import { formatSlotRange, getTodayDate } from "@/lib/utils";
@@ -48,11 +49,7 @@ export function BookingForm() {
         setIsLoadingSlots(true);
         setError("");
         const response = await fetch(`/api/slots?date=${form.date}`);
-        const payload = await response.json();
-
-        if (!response.ok) {
-          throw new Error(payload.error || "Не удалось загрузить слоты");
-        }
+        const payload = await readJsonResponse<{ slots: TimeSlot[] }>(response);
 
         if (!isCancelled) {
           setSlots(payload.slots);
@@ -106,11 +103,7 @@ export function BookingForm() {
         body: JSON.stringify(form)
       });
 
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Не удалось создать запись");
-      }
+      const payload = await readJsonResponse<{ token: string }>(response);
 
       router.push(`/booking/${payload.token}`);
       router.refresh();

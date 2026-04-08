@@ -40,11 +40,14 @@ function getHeaderCta(userRole: "master" | "client" | null): Route {
 
 export default async function HomePage() {
   noStore();
-  const [user, profile, portfolioItems] = await Promise.all([
+  const [userResult, profileResult, portfolioResult] = await Promise.allSettled([
     getCurrentUser(),
     getLandingMasterProfile(),
     getLandingPortfolioItems()
   ]);
+  const user = userResult.status === "fulfilled" ? userResult.value : null;
+  const profile = profileResult.status === "fulfilled" ? profileResult.value : null;
+  const portfolioItems = portfolioResult.status === "fulfilled" ? portfolioResult.value : [];
   const primaryCta = getPrimaryCta(user?.role || null);
   const headerCta = getHeaderCta(user?.role || null);
   const masterName = profile?.display_name || "LashMaker";
