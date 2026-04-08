@@ -8,11 +8,6 @@ export type MasterFormState = {
   message: string;
 };
 
-export const initialMasterFormState: MasterFormState = {
-  status: "idle",
-  message: ""
-};
-
 export async function saveMasterProfileAction(
   _previousState: MasterFormState,
   formData: FormData

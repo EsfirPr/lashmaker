@@ -4,7 +4,6 @@ import { useActionState, useEffect, useRef } from "react";
 import { SubmitButton } from "@/components/submit-button";
 import {
   deletePortfolioItemAction,
-  initialMasterFormState,
   saveMasterProfileAction,
   uploadPortfolioItemAction
 } from "@/app/master/dashboard/actions";
@@ -13,6 +12,11 @@ import type { MasterProfile, PortfolioItem } from "@/lib/types";
 type MasterPortfolioManagerProps = {
   items: PortfolioItem[];
   profile: MasterProfile;
+};
+
+const initialMasterFormState = {
+  status: "idle" as const,
+  message: ""
 };
 
 export function MasterPortfolioManager({ items, profile }: MasterPortfolioManagerProps) {
