@@ -201,7 +201,7 @@ export async function authenticateMaster(input: { nickname: string; password: st
   const data = await getMasterUserByNickname(payload.nickname);
 
   if (!data) {
-    throw new Error("Мастер с таким nickname не найден");
+    throw new Error("Пользователь не найден");
   }
 
   const user = data as User;

@@ -10,6 +10,12 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const sessionValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = await verifySessionCookieValue(sessionValue);
+  const isPublicPage =
+    pathname === "/login" || pathname === "/register" || pathname === "/privacy";
+
+  if (!session && !isPublicPage) {
+    return redirectTo(request, "/login");
+  }
 
   if (pathname === "/admin") {
     return session?.role === "master"
@@ -37,5 +43,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/master/:path*", "/account/:path*", "/login", "/register"]
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"]
 };

@@ -69,12 +69,12 @@ export const clientLoginSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  identifier: z.string().trim().min(2, "Введите телефон или nickname"),
+  identifier: z.string().trim().min(2, "Введите данные для входа"),
   password: z.string().min(6, "Введите пароль")
 });
 
 export const masterLoginSchema = z.object({
-  nickname: z.string().trim().min(3, "Введите nickname мастера"),
+  nickname: z.string().trim().min(3, "Введите данные для входа"),
   password: z.string().min(6, "Введите пароль")
 });
 

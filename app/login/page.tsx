@@ -13,20 +13,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="page-shell auth-shell">
       <section className="panel auth-card">
-        <span className="eyebrow">Единый вход</span>
         <h1 className="page-title">Вход</h1>
         <p className="muted">
-          Войдите по телефону клиента или nickname мастера. После авторизации мы сами откроем
-          нужный кабинет.
+          Войдите по номеру телефона. После авторизации вы попадете в свой кабинет.
         </p>
 
         <form className="form-grid section-space" action={loginUserAction}>
           <div className="field">
-            <label htmlFor="identifier">Телефон или nickname</label>
+            <label htmlFor="identifier">Номер телефона</label>
             <input
               id="identifier"
               name="identifier"
-              placeholder="+7 999 123-45-67 или SulamitaMaster"
+              placeholder="+7 999 123-45-67"
               required
             />
           </div>
