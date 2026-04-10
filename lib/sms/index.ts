@@ -6,6 +6,10 @@ import { ProntoSmsProvider } from "@/lib/sms/prontosms";
 import { SmsRuProvider } from "@/lib/sms/smsru";
 
 function createSmsProvider(): SmsProvider {
+  console.info("[sms] Selecting provider", {
+    provider: env.smsProvider
+  });
+
   switch (env.smsProvider) {
     case "prontosms":
       return new ProntoSmsProvider();
@@ -20,6 +24,12 @@ function createSmsProvider(): SmsProvider {
 export const smsProvider = createSmsProvider();
 
 export async function sendSms(to: string, text: string) {
+  console.info("[sms] Sending message", {
+    provider: env.smsProvider,
+    to,
+    messagePreview: text.slice(0, 80)
+  });
+
   await smsProvider.send({
     to,
     message: text

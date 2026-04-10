@@ -282,10 +282,18 @@ export async function createBooking(input: CreateBookingInput) {
 
     try {
       if (booking) {
+        console.info("Sending booking confirmation SMS", {
+          bookingId: booking.id,
+          phone: booking.phone
+        });
         await sendSms(booking.phone, buildConfirmationMessage(booking));
       }
     } catch (smsError) {
-      console.error("Failed to send booking confirmation SMS", smsError);
+      console.error("Failed to send booking confirmation SMS", {
+        bookingId: booking?.id,
+        phone: booking?.phone,
+        error: smsError instanceof Error ? smsError.message : "Unknown error"
+      });
     }
   }
 
@@ -589,6 +597,13 @@ export async function sendUpcomingReminders() {
 
   let sent = 0;
   let failed = 0;
+
+  console.info("Prepared reminder batch", {
+    targetLeadMinutes: reminderLeadTimeMinutes,
+    windowStart: windowStart.toISOString(),
+    windowEnd: windowEnd.toISOString(),
+    checked: bookings.length
+  });
 
   for (const booking of bookings) {
     try {

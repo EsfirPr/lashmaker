@@ -1,47 +1,44 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
 import { normalizePhone } from "@/lib/utils/phone";
 import type { SendSmsInput, SmsProvider } from "@/lib/sms/provider";
 
-type ProntoSmsResponse = {
-  success?: boolean;
-  status?: string | number;
-  error?: string;
-  message?: string;
-  detail?: string;
-};
+const prontoSmsApiUrl = "https://clk.prontosms.ru/sendsms.php";
 
-type ProntoSmsAuthMode = "login_password" | "api_key";
+function maskValue(value: string | undefined) {
+  if (!value) {
+    return "missing";
+  }
+
+  if (value.length <= 4) {
+    return "***";
+  }
+
+  return `${value.slice(0, 2)}***${value.slice(-2)}`;
+}
 
 function getProntoSmsConfig() {
-  const apiUrl = process.env.PRONTOSMS_API_URL;
-  const authMode = (process.env.PRONTOSMS_AUTH_MODE || "login_password") as ProntoSmsAuthMode;
-  const apiKey = process.env.PRONTOSMS_API_KEY;
-  const login = process.env.PRONTOSMS_LOGIN;
-  const password = process.env.PRONTOSMS_PASSWORD;
-  const sender = process.env.PRONTOSMS_SENDER || process.env.SMS_SENDER_NAME || "LashMaker";
+  const user = process.env.SMS_USER || process.env.PRONTOSMS_LOGIN;
+  const password = process.env.SMS_PASSWORD || process.env.PRONTOSMS_PASSWORD;
+  const sender =
+    process.env.SMS_SENDER ||
+    process.env.PRONTOSMS_SENDER ||
+    process.env.SMS_SENDER_NAME ||
+    "LashMaker";
 
-  if (!apiUrl) {
-    throw new Error("Environment variable PRONTOSMS_API_URL is required for ProntoSMS provider");
+  if (!user) {
+    throw new Error("Environment variable SMS_USER is required for ProntoSMS provider");
   }
 
-  if (authMode === "api_key" && !apiKey) {
-    throw new Error(
-      "Configure PRONTOSMS_API_KEY when PRONTOSMS_AUTH_MODE=api_key"
-    );
+  if (!password) {
+    throw new Error("Environment variable SMS_PASSWORD is required for ProntoSMS provider");
   }
 
-  if (authMode === "login_password" && !(login && password)) {
-    throw new Error(
-      "Configure PRONTOSMS_LOGIN and PRONTOSMS_PASSWORD when PRONTOSMS_AUTH_MODE=login_password"
-    );
+  if (!sender) {
+    throw new Error("Environment variable SMS_SENDER is required for ProntoSMS provider");
   }
 
   return {
-    apiUrl,
-    authMode,
-    apiKey,
-    login,
+    user,
     password,
     sender
   };
@@ -51,66 +48,79 @@ function toProntoPhone(phone: string) {
   return normalizePhone(phone).slice(1);
 }
 
-export async function sendProntoSms(to: string, text: string) {
+function buildRequestUrl(to: string, message: string) {
   const config = getProntoSmsConfig();
-  const message = {
-    phone: toProntoPhone(String(to)),
-    sender: config.sender,
-    clientId: randomUUID(),
-    text
-  };
-  const body: Record<string, unknown> = {
-    messages: [message]
-  };
-
-  if (config.authMode === "api_key" && config.apiKey) {
-    body.apiKey = config.apiKey;
-  } else if (config.login && config.password) {
-    body.login = config.login;
-    body.password = config.password;
-  }
-
-  const response = await fetch(config.apiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json, text/plain;q=0.9, */*;q=0.8"
-    },
-    body: JSON.stringify(body)
+  const params = new URLSearchParams({
+    user: config.user,
+    pwd: config.password,
+    sadr: config.sender,
+    dadr: toProntoPhone(to),
+    text: message,
+    translite: "1"
   });
 
-  const contentType = response.headers.get("content-type") || "";
-  let payload: ProntoSmsResponse | string | null = null;
+  return {
+    url: `${prontoSmsApiUrl}?${params.toString()}`,
+    redactedUrl: `${prontoSmsApiUrl}?${new URLSearchParams({
+      user: config.user,
+      pwd: "***",
+      sadr: config.sender,
+      dadr: toProntoPhone(to),
+      text: message,
+      translite: "1"
+    }).toString()}`,
+    config
+  };
+}
 
-  try {
-    if (contentType.includes("application/json")) {
-      payload = (await response.json()) as ProntoSmsResponse;
-    } else {
-      payload = await response.text();
-    }
-  } catch (error) {
-    console.error("[sms:prontosms] Failed to parse response", error);
-    throw new Error("ProntoSMS returned an invalid response");
-  }
+function isErrorResponse(result: string) {
+  const normalized = result.trim().toLowerCase();
+
+  return (
+    normalized.startsWith("error") ||
+    normalized.includes("invalid") ||
+    normalized.includes("denied") ||
+    normalized.includes("failed")
+  );
+}
+
+export async function sendProntoSms(to: string, text: string) {
+  const { url, redactedUrl, config } = buildRequestUrl(String(to), text);
+
+  console.log("SMS URL:", redactedUrl);
+  console.info("[sms:prontosms] Sending request", {
+    endpoint: prontoSmsApiUrl,
+    user: maskValue(config.user),
+    sender: config.sender,
+    phone: toProntoPhone(String(to)),
+    messagePreview: text.slice(0, 80)
+  });
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "text/plain, text/html;q=0.9, */*;q=0.8"
+    },
+    cache: "no-store"
+  });
+
+  const result = await response.text();
+
+  console.log("SMS RESPONSE:", result);
 
   if (!response.ok) {
     console.error("[sms:prontosms] HTTP error", {
       status: response.status,
-      payload
+      response: result
     });
     throw new Error(`ProntoSMS request failed with status ${response.status}`);
   }
 
-  if (
-    payload &&
-    typeof payload === "object" &&
-    ("error" in payload ||
-      payload.success === false ||
-      payload.status === "error" ||
-      payload.status === "ERROR")
-  ) {
-    console.error("[sms:prontosms] API error", payload);
-    throw new Error(payload.error || payload.detail || payload.message || "ProntoSMS did not accept the message");
+  if (isErrorResponse(result)) {
+    console.error("[sms:prontosms] API error", {
+      response: result
+    });
+    throw new Error(result || "ProntoSMS did not accept the message");
   }
 }
 

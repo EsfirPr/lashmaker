@@ -19,9 +19,13 @@ export async function GET(request: Request) {
   }
 
   try {
+    console.info("[reminders] Trigger accepted");
     const result = await sendUpcomingReminders();
     return NextResponse.json(result);
   } catch (error) {
+    console.error("[reminders] Failed", {
+      error: error instanceof Error ? error.message : "Не удалось отправить напоминания"
+    });
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Не удалось отправить напоминания"

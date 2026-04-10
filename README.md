@@ -99,31 +99,28 @@ npm run dev
 
 Для `ProntoSMS` заполните:
 
-- `PRONTOSMS_API_URL`
-- `PRONTOSMS_AUTH_MODE`
-- `PRONTOSMS_API_KEY` или пару `PRONTOSMS_LOGIN` / `PRONTOSMS_PASSWORD`
-- `PRONTOSMS_SENDER`
+- `SMS_USER`
+- `SMS_PASSWORD`
+- `SMS_SENDER`
 
 И переключите `SMS_PROVIDER=prontosms`.
 
-Сейчас провайдер адаптирован под JSON-формат вида:
+Провайдер отправляет SMS через GET API:
 
-```json
-{
-  "messages": [
-    {
-      "phone": "71234567890",
-      "sender": "MySender",
-      "clientId": "generated-id",
-      "text": "Message text here"
-    }
-  ],
-  "login": "login",
-  "password": "password"
-}
+```text
+https://clk.prontosms.ru/sendsms.php
 ```
 
-Если `PRONTOSMS_AUTH_MODE=api_key`, провайдер отправляет `apiKey` в корне payload. Это сделано как рабочее предположение, если у вашего шлюза режим авторизации по ключу отличается, поле можно быстро скорректировать в [lib/sms/prontosms.ts](/Users/esfirpr/Documents/Project/lashmaker/lib/sms/prontosms.ts).
+С параметрами:
+
+- `user`
+- `pwd`
+- `sadr`
+- `dadr`
+- `text`
+- `translite=1`
+
+В проекте это реализовано в [lib/sms/prontosms.ts](/Users/esfirpr/Documents/Project/lashmaker/lib/sms/prontosms.ts).
 
 ## Напоминания
 
