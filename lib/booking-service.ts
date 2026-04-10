@@ -61,6 +61,11 @@ const reminderWindowStartInMs = reminderLeadTimeInMs - reminderBufferInMs;
 const reminderWindowEndInMs = reminderLeadTimeInMs + reminderBufferInMs;
 const reminderLeadTimeMinutes = 5;
 const appTimeZone = process.env.APP_TIMEZONE || "Europe/Moscow";
+const shortDateFormatter = new Intl.DateTimeFormat("ru-RU", {
+  timeZone: appTimeZone,
+  day: "2-digit",
+  month: "2-digit"
+});
 
 function generateToken() {
   return randomBytes(18).toString("base64url");
@@ -156,15 +161,13 @@ function normalizeBookingsWithSlot(
 
 function buildConfirmationMessage(booking: BookingWithSlot) {
   if (!booking.time_slots) {
-    return "Ваша запись подтверждена.";
+    return "Вы записаны на наращивание ресниц.";
   }
 
-  return [
-    `${env.smsSenderName}: запись подтверждена.`,
-    `${formatDateLabel(booking.time_slots.slot_date)}, ${formatSlotRange(booking.time_slots)}.`,
-    `Стиль: ${booking.style}.`,
-    `Детали: ${createPublicBookingUrl(booking.public_token)}`
-  ].join(" ");
+  const formattedDate = shortDateFormatter.format(new Date(`${booking.time_slots.slot_date}T00:00:00`));
+  const formattedTime = booking.time_slots.start_time.slice(0, 5);
+
+  return `Вы записаны на наращивание ресниц ${formattedDate} в ${formattedTime}`;
 }
 
 async function getSlotById(slotId: string) {
@@ -279,10 +282,7 @@ export async function createBooking(input: CreateBookingInput) {
 
     try {
       if (booking) {
-        await smsProvider.send({
-          to: booking.phone,
-          message: buildConfirmationMessage(booking)
-        });
+        await sendSms(booking.phone, buildConfirmationMessage(booking));
       }
     } catch (smsError) {
       console.error("Failed to send booking confirmation SMS", smsError);
