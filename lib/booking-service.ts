@@ -55,8 +55,11 @@ type BookingWithMaybeSlotArray = Booking & {
   time_slots: TimeSlot | TimeSlot[] | null;
 };
 
-const reminderWindowStartInMs = 23 * 60 * 60 * 1000;
-const reminderWindowEndInMs = 25 * 60 * 60 * 1000;
+const reminderLeadTimeInMs = 5 * 60 * 1000;
+const reminderBufferInMs = 2 * 60 * 1000;
+const reminderWindowStartInMs = reminderLeadTimeInMs - reminderBufferInMs;
+const reminderWindowEndInMs = reminderLeadTimeInMs + reminderBufferInMs;
+const reminderLeadTimeMinutes = 5;
 const appTimeZone = process.env.APP_TIMEZONE || "Europe/Moscow";
 
 function generateToken() {
@@ -98,12 +101,12 @@ function toDateKey(parts: { year: number; month: number; day: number }) {
   ).padStart(2, "0")}`;
 }
 
-function buildDayBeforeReminderMessage(booking: BookingWithSlot) {
+function buildUpcomingReminderMessage(booking: BookingWithSlot) {
   if (!booking.time_slots) {
-    return "Напоминаем: у вас запись на наращивание ресниц завтра.";
+    return "Напоминаем: у вас запись на наращивание ресниц через 5 минут.";
   }
 
-  return `Напоминаем: у вас запись на наращивание ресниц завтра в ${booking.time_slots.start_time.slice(
+  return `Напоминаем: у вас запись на наращивание ресниц через 5 минут в ${booking.time_slots.start_time.slice(
     0,
     5
   )}`;
@@ -589,7 +592,7 @@ export async function sendUpcomingReminders() {
 
   for (const booking of bookings) {
     try {
-      await sendSms(booking.phone, buildDayBeforeReminderMessage(booking));
+      await sendSms(booking.phone, buildUpcomingReminderMessage(booking));
 
       const { data: updatedRows, error: updateError } = await supabase
         .from("bookings")
@@ -623,6 +626,7 @@ export async function sendUpcomingReminders() {
   }
 
   return {
+    targetLeadMinutes: reminderLeadTimeMinutes,
     windowStart: windowStart.toISOString(),
     windowEnd: windowEnd.toISOString(),
     checked: bookings.length,
