@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { loginUserAction } from "./actions";
+import { LoginFlow } from "@/components/login-flow";
+import { loginMasterAction } from "./actions";
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -20,28 +21,33 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
         <h1 className="page-title">Вход</h1>
         <p className="muted">
-          Войдите по номеру телефона. После авторизации вы попадете в свой кабинет.
+          Введите номер телефона, получите одноразовый код в SMS и войдите без пароля.
         </p>
 
-        <form className="form-grid section-space" action={loginUserAction}>
-          <div className="field">
-            <label htmlFor="identifier">Номер телефона</label>
-            <input
-              id="identifier"
-              name="identifier"
-              placeholder="+7 999 123-45-67"
-              required
-            />
+        <LoginFlow />
+
+        <section className="auth-secondary section-space">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Мастер</span>
+              <h2>Вход по паролю</h2>
+            </div>
           </div>
-          <div className="field">
-            <label htmlFor="password">Пароль</label>
-            <input id="password" name="password" type="password" required />
-          </div>
-          {params.error ? <div className="message-error">{params.error}</div> : null}
-          <button className="button" type="submit">
-            Войти
-          </button>
-        </form>
+          <form className="form-grid section-space" action={loginMasterAction}>
+            <div className="field">
+              <label htmlFor="nickname">Nickname</label>
+              <input id="nickname" name="nickname" required />
+            </div>
+            <div className="field">
+              <label htmlFor="password">Пароль</label>
+              <input id="password" name="password" type="password" required />
+            </div>
+            {params.error ? <div className="message-error">{params.error}</div> : null}
+            <button className="ghost-button" type="submit">
+              Войти как мастер
+            </button>
+          </form>
+        </section>
 
         <p className="helper section-space">
           Продолжая использование сайта, вы соглашаетесь с{" "}

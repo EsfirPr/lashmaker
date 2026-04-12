@@ -35,6 +35,23 @@ export type User = {
 
 export type SafeUser = Omit<User, "password_hash">;
 
+export type VerificationPurpose = "registration" | "login";
+
+export type PhoneVerification = {
+  id: string;
+  name: string;
+  phone: string;
+  password_hash: string;
+  code_hash: string;
+  purpose: VerificationPurpose;
+  expires_at: string;
+  used_at: string | null;
+  attempts: number;
+  last_sent_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type BookingWithSlot = Booking & {
   time_slots: TimeSlot | null;
 };

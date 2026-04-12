@@ -67,10 +67,26 @@ export const clientRegisterSchema = z.object({
   })
 });
 
+export const beginClientRegistrationSchema = clientRegisterSchema;
+
+export const verifyClientRegistrationSchema = z.object({
+  phone: phoneSchema,
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{4,6}$/, "Введите корректный код из SMS")
+});
+
 export const clientLoginSchema = z.object({
   phone: phoneSchema,
   password: z.string().min(6, "Введите пароль")
 });
+
+export const beginClientSmsLoginSchema = z.object({
+  phone: phoneSchema
+});
+
+export const verifyClientSmsLoginSchema = verifyClientRegistrationSchema;
 
 export const loginSchema = z.object({
   identifier: z.string().trim().min(2, "Введите данные для входа"),

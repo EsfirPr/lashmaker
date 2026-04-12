@@ -304,6 +304,12 @@ main {
   margin-top: -4px;
 }
 
+.auth-secondary {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
 .site-footer {
   display: flex;
   justify-content: center;

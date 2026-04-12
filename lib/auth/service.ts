@@ -1,21 +1,175 @@
 import "server-only";
+import { randomInt } from "node:crypto";
 import { env } from "@/lib/env";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { sendSms } from "@/lib/sms";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import type { ClientOverview, SafeUser, TimeSlot, User } from "@/lib/types";
+import type {
+  ClientOverview,
+  PhoneVerification,
+  SafeUser,
+  TimeSlot,
+  User,
+  VerificationPurpose
+} from "@/lib/types";
 import {
+  beginClientRegistrationSchema,
+  beginClientSmsLoginSchema,
   clientLoginSchema,
-  clientRegisterSchema,
   loginSchema,
   masterLoginSchema,
-  phonePattern
+  phonePattern,
+  verifyClientRegistrationSchema,
+  verifyClientSmsLoginSchema
 } from "@/lib/validators";
 import { normalizePhone } from "@/lib/utils/phone";
 import { formatDateLabel, formatSlotRange, getSlotStartDate } from "@/lib/utils";
 
+const verificationCodeLength = 4;
+const verificationTtlMinutes = 10;
+const resendCooldownSeconds = 60;
+const maxVerificationAttempts = 5;
+
 function toSafeUser(user: User): SafeUser {
   const { password_hash: _passwordHash, ...safeUser } = user;
   return safeUser;
+}
+
+function generateVerificationCode() {
+  const min = 10 ** (verificationCodeLength - 1);
+  const max = 10 ** verificationCodeLength;
+  return String(randomInt(min, max));
+}
+
+function buildVerificationMessage(code: string) {
+  return `Ваш код подтверждения: ${code}`;
+}
+
+function buildLoginCodeMessage(code: string) {
+  return `Ваш код входа: ${code}`;
+}
+
+function getVerificationExpiryDate() {
+  return new Date(Date.now() + verificationTtlMinutes * 60 * 1000);
+}
+
+function getResendAvailableAtDate() {
+  return new Date(Date.now() + resendCooldownSeconds * 1000);
+}
+
+function isVerificationExpired(verification: PhoneVerification) {
+  return new Date(verification.expires_at) <= new Date();
+}
+
+function toVerificationState(verification: PhoneVerification) {
+  return {
+    phone: verification.phone,
+    expiresAt: verification.expires_at,
+    resendAvailableAt: new Date(
+      new Date(verification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+    ).toISOString()
+  };
+}
+
+async function getPhoneVerification(phone: string, purpose: VerificationPurpose) {
+  const normalizedPhone = normalizePhone(phone);
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("phone_verifications")
+    .select("*")
+    .eq("phone", normalizedPhone)
+    .eq("purpose", purpose)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as PhoneVerification | null) || null;
+}
+
+async function assertClientPhoneAvailable(phone: string) {
+  const existingUser = await getClientUserByPhone(phone);
+
+  if (existingUser) {
+    throw new Error("Пользователь с таким номером уже существует");
+  }
+}
+
+async function savePhoneVerification(input: {
+  name: string;
+  phone: string;
+  passwordHash: string;
+  codeHash: string;
+  purpose: VerificationPurpose;
+}) {
+  const supabase = getSupabaseAdminClient();
+  const now = new Date().toISOString();
+  const expiresAt = getVerificationExpiryDate().toISOString();
+
+  const { data, error } = await supabase
+    .from("phone_verifications")
+    .upsert(
+      {
+        phone: input.phone,
+        name: input.name,
+        password_hash: input.passwordHash,
+        code_hash: input.codeHash,
+        purpose: input.purpose,
+        expires_at: expiresAt,
+        used_at: null,
+        attempts: 0,
+        last_sent_at: now,
+        updated_at: now
+      },
+      {
+        onConflict: "phone,purpose"
+      }
+    )
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as PhoneVerification;
+}
+
+async function markVerificationUsed(phone: string, purpose: VerificationPurpose) {
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("phone_verifications")
+    .update({
+      used_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq("phone", normalizePhone(phone))
+    .eq("purpose", purpose);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function incrementVerificationAttempts(
+  phone: string,
+  purpose: VerificationPurpose,
+  attempts: number
+) {
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("phone_verifications")
+    .update({
+      attempts: attempts + 1,
+      updated_at: new Date().toISOString()
+    })
+    .eq("phone", normalizePhone(phone))
+    .eq("purpose", purpose);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 async function getMasterUserByNickname(nickname: string) {
@@ -49,6 +203,16 @@ async function getClientUserByPhone(phone: string) {
   }
 
   return (data as User | null) || null;
+}
+
+async function requireExistingClientByPhone(phone: string) {
+  const client = await getClientUserByPhone(phone);
+
+  if (!client) {
+    throw new Error("Аккаунт с таким номером не найден");
+  }
+
+  return client;
 }
 
 function getMasterCredentials() {
@@ -114,28 +278,24 @@ export async function createMasterIfNotExists() {
   return toSafeUser(data as User);
 }
 
-export async function registerClient(input: {
+async function createClientUser(input: {
   name: string;
   phone: string;
-  password: string;
-  privacyAccepted: boolean;
+  passwordHash: string;
 }) {
-  const payload = clientRegisterSchema.parse(input);
   const supabase = getSupabaseAdminClient();
-  const existingUser = await getClientUserByPhone(payload.phone);
+  const existingUser = await getClientUserByPhone(input.phone);
 
   if (existingUser) {
     throw new Error("Пользователь с таким номером уже существует");
   }
 
-  const passwordHash = await hashPassword(payload.password);
-
   const { data, error } = await supabase
     .from("users")
     .insert({
-      name: payload.name,
-      phone: payload.phone,
-      password_hash: passwordHash,
+      name: input.name,
+      phone: input.phone,
+      password_hash: input.passwordHash,
       role: "client"
     })
     .select("*")
@@ -152,6 +312,135 @@ export async function registerClient(input: {
   return toSafeUser(data as User);
 }
 
+export async function beginClientRegistration(input: {
+  name: string;
+  phone: string;
+  password: string;
+  privacyAccepted: boolean;
+}) {
+  const payload = beginClientRegistrationSchema.parse(input);
+  await assertClientPhoneAvailable(payload.phone);
+
+  const existingVerification = await getPhoneVerification(payload.phone, "registration");
+
+  if (
+    existingVerification &&
+    !existingVerification.used_at &&
+    !isVerificationExpired(existingVerification)
+  ) {
+    const resendAvailableAt = new Date(
+      new Date(existingVerification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+    );
+
+    if (resendAvailableAt > new Date()) {
+      throw new Error("Код уже отправлен. Попробуйте запросить его повторно чуть позже");
+    }
+  }
+
+  const passwordHash = await hashPassword(payload.password);
+  const code = generateVerificationCode();
+  const codeHash = await hashPassword(code);
+  const verification = await savePhoneVerification({
+    name: payload.name,
+    phone: payload.phone,
+    passwordHash,
+    codeHash,
+    purpose: "registration"
+  });
+
+  try {
+    await sendSms(payload.phone, buildVerificationMessage(code));
+  } catch (error) {
+    console.error("Failed to send registration verification SMS", {
+      phone: payload.phone,
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
+
+  return toVerificationState(verification);
+}
+
+export async function resendClientVerificationCode(phone: string) {
+  const normalizedPhone = normalizePhone(phone);
+  await assertClientPhoneAvailable(normalizedPhone);
+
+  const existingVerification = await getPhoneVerification(normalizedPhone, "registration");
+
+  if (!existingVerification || existingVerification.used_at) {
+    throw new Error("Сначала заполните форму регистрации");
+  }
+
+  const resendAvailableAt = new Date(
+    new Date(existingVerification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+  );
+
+  if (resendAvailableAt > new Date()) {
+    throw new Error("Повторная отправка пока недоступна. Подождите немного");
+  }
+
+  const code = generateVerificationCode();
+  const codeHash = await hashPassword(code);
+  const verification = await savePhoneVerification({
+    name: existingVerification.name,
+    phone: normalizedPhone,
+    passwordHash: existingVerification.password_hash,
+    codeHash,
+    purpose: "registration"
+  });
+
+  try {
+    await sendSms(normalizedPhone, buildVerificationMessage(code));
+  } catch (error) {
+    console.error("Failed to resend registration verification SMS", {
+      phone: normalizedPhone,
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
+
+  return toVerificationState(verification);
+}
+
+export async function verifyClientRegistration(input: {
+  phone: string;
+  code: string;
+}) {
+  const payload = verifyClientRegistrationSchema.parse(input);
+  await assertClientPhoneAvailable(payload.phone);
+
+  const verification = await getPhoneVerification(payload.phone, "registration");
+
+  if (!verification || verification.used_at) {
+    throw new Error("Код подтверждения не найден. Запросите новый код");
+  }
+
+  if (isVerificationExpired(verification)) {
+    throw new Error("Срок действия кода истёк. Запросите новый код");
+  }
+
+  if (verification.attempts >= maxVerificationAttempts) {
+    throw new Error("Превышено количество попыток. Запросите новый код");
+  }
+
+  const isValidCode = await verifyPassword(payload.code, verification.code_hash);
+
+  if (!isValidCode) {
+    await incrementVerificationAttempts(payload.phone, "registration", verification.attempts);
+    throw new Error("Неверный код подтверждения");
+  }
+
+  const user = await createClientUser({
+    name: verification.name,
+    phone: verification.phone,
+    passwordHash: verification.password_hash
+  });
+
+  await markVerificationUsed(verification.phone, "registration");
+
+  return user;
+}
+
 export async function authenticateClient(input: { phone: string; password: string }) {
   const payload = clientLoginSchema.parse(input);
   const data = await getClientUserByPhone(payload.phone);
@@ -166,6 +455,117 @@ export async function authenticateClient(input: { phone: string; password: strin
   if (!isValidPassword) {
     throw new Error("Неверный пароль");
   }
+
+  return toSafeUser(user);
+}
+
+export async function beginClientSmsLogin(input: { phone: string }) {
+  const payload = beginClientSmsLoginSchema.parse(input);
+  const user = await requireExistingClientByPhone(payload.phone);
+  const existingVerification = await getPhoneVerification(payload.phone, "login");
+
+  if (
+    existingVerification &&
+    !existingVerification.used_at &&
+    !isVerificationExpired(existingVerification)
+  ) {
+    const resendAvailableAt = new Date(
+      new Date(existingVerification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+    );
+
+    if (resendAvailableAt > new Date()) {
+      throw new Error("Код уже отправлен. Попробуйте запросить его повторно чуть позже");
+    }
+  }
+
+  const code = generateVerificationCode();
+  const codeHash = await hashPassword(code);
+  const verification = await savePhoneVerification({
+    name: user.name || user.phone || "Клиент",
+    phone: payload.phone,
+    passwordHash: user.password_hash,
+    codeHash,
+    purpose: "login"
+  });
+
+  try {
+    await sendSms(payload.phone, buildLoginCodeMessage(code));
+  } catch (error) {
+    console.error("Failed to send login verification SMS", {
+      phone: payload.phone,
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
+
+  return toVerificationState(verification);
+}
+
+export async function resendClientSmsLoginCode(phone: string) {
+  const normalizedPhone = normalizePhone(phone);
+  const user = await requireExistingClientByPhone(normalizedPhone);
+  const existingVerification = await getPhoneVerification(normalizedPhone, "login");
+
+  if (!existingVerification || existingVerification.used_at) {
+    throw new Error("Сначала запросите код для входа");
+  }
+
+  const resendAvailableAt = new Date(
+    new Date(existingVerification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+  );
+
+  if (resendAvailableAt > new Date()) {
+    throw new Error("Повторная отправка пока недоступна. Подождите немного");
+  }
+
+  const code = generateVerificationCode();
+  const codeHash = await hashPassword(code);
+  const verification = await savePhoneVerification({
+    name: user.name || user.phone || "Клиент",
+    phone: normalizedPhone,
+    passwordHash: user.password_hash,
+    codeHash,
+    purpose: "login"
+  });
+
+  try {
+    await sendSms(normalizedPhone, buildLoginCodeMessage(code));
+  } catch (error) {
+    console.error("Failed to resend login verification SMS", {
+      phone: normalizedPhone,
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
+
+  return toVerificationState(verification);
+}
+
+export async function verifyClientSmsLogin(input: { phone: string; code: string }) {
+  const payload = verifyClientSmsLoginSchema.parse(input);
+  const user = await requireExistingClientByPhone(payload.phone);
+  const verification = await getPhoneVerification(payload.phone, "login");
+
+  if (!verification || verification.used_at) {
+    throw new Error("Код входа не найден. Запросите новый код");
+  }
+
+  if (isVerificationExpired(verification)) {
+    throw new Error("Срок действия кода истёк. Запросите новый код");
+  }
+
+  if (verification.attempts >= maxVerificationAttempts) {
+    throw new Error("Превышено количество попыток. Запросите новый код");
+  }
+
+  const isValidCode = await verifyPassword(payload.code, verification.code_hash);
+
+  if (!isValidCode) {
+    await incrementVerificationAttempts(payload.phone, "login", verification.attempts);
+    throw new Error("Неверный код входа");
+  }
+
+  await markVerificationUsed(verification.phone, "login");
 
   return toSafeUser(user);
 }

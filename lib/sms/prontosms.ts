@@ -1,6 +1,6 @@
 import "server-only";
 import { normalizePhone } from "@/lib/utils/phone";
-import type { SendSmsInput, SmsProvider } from "@/lib/sms/provider";
+import { getSmsLogPreview, type SendSmsInput, type SmsProvider } from "@/lib/sms/provider";
 
 const prontoSmsApiUrl = "https://clk.prontosms.ru/sendsms.php";
 
@@ -66,7 +66,7 @@ function buildRequestUrl(to: string, message: string) {
       pwd: "***",
       sadr: config.sender,
       dadr: toProntoPhone(to),
-      text: message,
+      text: getSmsLogPreview(message),
       translite: "1"
     }).toString()}`,
     config
@@ -93,7 +93,7 @@ export async function sendProntoSms(to: string, text: string) {
     user: maskValue(config.user),
     sender: config.sender,
     phone: toProntoPhone(String(to)),
-    messagePreview: text.slice(0, 80)
+    messagePreview: getSmsLogPreview(text)
   });
 
   const response = await fetch(url, {
