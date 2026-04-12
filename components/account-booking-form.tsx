@@ -106,7 +106,7 @@ function getPeriodRange(anchorDate: string, mode: PeriodMode) {
   }
 
   if (mode === "week") {
-    const start = getWeekStart(anchorDate);
+    const start = anchorDate;
     const end = addDays(start, 6);
 
     return {
@@ -180,6 +180,7 @@ function getWeekDays(anchorDate: string) {
 
 export function AccountBookingForm() {
   const router = useRouter();
+  const today = getTodayDate();
   const [form, setForm] = useState<FormState>(initialState);
   const [periodMode, setPeriodMode] = useState<PeriodMode>("week");
   const [anchorDate, setAnchorDate] = useState(getTodayDate());
@@ -208,6 +209,23 @@ export function AccountBookingForm() {
     () => slotsByDate.get(monthFocusedDate) || [],
     [monthFocusedDate, slotsByDate]
   );
+  const isPrevDisabled = useMemo(() => {
+    if (periodMode === "day") {
+      return anchorDate <= today;
+    }
+
+    if (periodMode === "week") {
+      return anchorDate <= today;
+    }
+
+    const currentMonth = parseDateKey(today);
+    const viewedMonth = parseDateKey(anchorDate);
+
+    return (
+      viewedMonth.getFullYear() === currentMonth.getFullYear() &&
+      viewedMonth.getMonth() === currentMonth.getMonth()
+    );
+  }, [anchorDate, periodMode, today]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -274,16 +292,34 @@ export function AccountBookingForm() {
   function handleNavigate(direction: "prev" | "next") {
     const step = direction === "next" ? 1 : -1;
 
+    if (direction === "prev" && isPrevDisabled) {
+      return;
+    }
+
     setAnchorDate((current) => {
       if (periodMode === "day") {
-        return addDays(current, step);
+        const next = addDays(current, step);
+        return next < today ? today : next;
       }
 
       if (periodMode === "week") {
-        return addDays(current, step * 7);
+        const next = addDays(current, step * 7);
+        return next < today ? today : next;
       }
 
-      return addMonths(current, step);
+      const next = addMonths(current, step);
+      const currentMonth = parseDateKey(today);
+      const nextMonth = parseDateKey(next);
+
+      if (
+        nextMonth.getFullYear() < currentMonth.getFullYear() ||
+        (nextMonth.getFullYear() === currentMonth.getFullYear() &&
+          nextMonth.getMonth() < currentMonth.getMonth())
+      ) {
+        return today;
+      }
+
+      return next;
     });
   }
 
@@ -383,6 +419,7 @@ export function AccountBookingForm() {
           <button
             aria-label="Предыдущий период"
             className="calendar-nav-button"
+            disabled={isPrevDisabled}
             onClick={() => handleNavigate("prev")}
             type="button"
           >
@@ -456,18 +493,21 @@ export function AccountBookingForm() {
                 const daySlots = slotsByDate.get(day.date) || [];
                 const isCurrentMonth = day.inMonth;
                 const isSelectedDay = monthFocusedDate === day.date;
+                const isPast = day.date < today;
 
                 return (
                   <button
                     className={[
                       "month-day",
                       isCurrentMonth ? "" : "is-outside",
+                      isPast ? "is-past" : "",
                       daySlots.length > 0 ? "has-slots" : "",
                       isSelectedDay ? "is-selected" : ""
                     ]
                       .filter(Boolean)
                       .join(" ")}
                     key={day.date}
+                    disabled={isPast}
                     onClick={() => setMonthFocusedDate(day.date)}
                     type="button"
                   >

@@ -892,6 +892,12 @@ main {
   transform: translateY(-1px);
 }
 
+.calendar-nav-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .beauty-calendar__loading {
   margin: 0;
 }
@@ -1043,6 +1049,11 @@ main {
 
 .month-day.is-outside {
   opacity: 0.42;
+}
+
+.month-day.is-past {
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 .month-day.has-slots {

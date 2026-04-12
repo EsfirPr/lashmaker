@@ -18,7 +18,8 @@ import {
   formatSlotRange,
   getRelativeDate,
   getSlotEndDate,
-  getSlotStartDate
+  getSlotStartDate,
+  getTodayDate
 } from "@/lib/utils";
 
 type CreateBookingInput = {
@@ -185,22 +186,79 @@ async function getSlotById(slotId: string) {
   return (data as TimeSlot | null) || null;
 }
 
+async function cleanupPastEmptyTimeSlots() {
+  const supabase = getSupabaseAdminClient();
+  const today = getTodayDate();
+
+  const { data: candidateSlots, error: slotsError } = await supabase
+    .from("time_slots")
+    .select("*")
+    .lte("slot_date", today)
+    .order("slot_date", { ascending: true })
+    .order("start_time", { ascending: true });
+
+  if (slotsError) {
+    throw new Error(slotsError.message);
+  }
+
+  const safeSlots = (candidateSlots || []) as TimeSlot[];
+  const expiredSlotIds = safeSlots
+    .filter((slot) => getSlotEndDate(slot) < new Date())
+    .map((slot) => slot.id);
+
+  if (expiredSlotIds.length === 0) {
+    return;
+  }
+
+  const { data: linkedBookings, error: bookingsError } = await supabase
+    .from("bookings")
+    .select("slot_id")
+    .in("slot_id", expiredSlotIds);
+
+  if (bookingsError) {
+    throw new Error(bookingsError.message);
+  }
+
+  const protectedSlotIds = new Set((linkedBookings || []).map((booking) => booking.slot_id));
+  const removableSlotIds = expiredSlotIds.filter((slotId) => !protectedSlotIds.has(slotId));
+
+  if (removableSlotIds.length === 0) {
+    return;
+  }
+
+  const { error: deleteError } = await supabase
+    .from("time_slots")
+    .delete()
+    .in("id", removableSlotIds);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+}
+
 export async function listAvailableSlots(date: string) {
   const parsed = bookingInputSchema.pick({ date: true }).parse({ date });
   return listAvailableSlotsInRange(parsed.date, parsed.date);
 }
 
 export async function listAvailableSlotsInRange(startDate: string, endDate: string) {
+  await cleanupPastEmptyTimeSlots();
   const parsed = bookingInputSchema
     .pick({ date: true })
     .array()
     .parse([{ date: startDate }, { date: endDate }]);
   const supabase = getSupabaseAdminClient();
+  const today = getTodayDate();
+  const effectiveStartDate = parsed[0].date < today ? today : parsed[0].date;
+
+  if (parsed[1].date < effectiveStartDate) {
+    return [];
+  }
 
   const { data: slots, error: slotsError } = await supabase
     .from("time_slots")
     .select("*")
-    .gte("slot_date", parsed[0].date)
+    .gte("slot_date", effectiveStartDate)
     .lte("slot_date", parsed[1].date)
     .order("slot_date", { ascending: true })
     .order("start_time", { ascending: true });
@@ -227,7 +285,7 @@ export async function listAvailableSlotsInRange(startDate: string, endDate: stri
   }
 
   const busySlotIds = new Set((activeBookings || []).map((booking) => booking.slot_id));
-  return safeSlots.filter((slot) => !busySlotIds.has(slot.id));
+  return safeSlots.filter((slot) => !busySlotIds.has(slot.id) && getSlotEndDate(slot) > new Date());
 }
 
 export async function createBooking(input: CreateBookingInput) {
@@ -416,6 +474,7 @@ export async function cancelBookingByToken(token: string) {
 }
 
 export async function listScheduleDays(daysAhead = 14) {
+  await cleanupPastEmptyTimeSlots();
   const supabase = getSupabaseAdminClient();
   const startDate = getRelativeDate(0);
   const endDate = getRelativeDate(daysAhead);
