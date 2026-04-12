@@ -187,12 +187,22 @@ async function getSlotById(slotId: string) {
 
 export async function listAvailableSlots(date: string) {
   const parsed = bookingInputSchema.pick({ date: true }).parse({ date });
+  return listAvailableSlotsInRange(parsed.date, parsed.date);
+}
+
+export async function listAvailableSlotsInRange(startDate: string, endDate: string) {
+  const parsed = bookingInputSchema
+    .pick({ date: true })
+    .array()
+    .parse([{ date: startDate }, { date: endDate }]);
   const supabase = getSupabaseAdminClient();
 
   const { data: slots, error: slotsError } = await supabase
     .from("time_slots")
     .select("*")
-    .eq("slot_date", parsed.date)
+    .gte("slot_date", parsed[0].date)
+    .lte("slot_date", parsed[1].date)
+    .order("slot_date", { ascending: true })
     .order("start_time", { ascending: true });
 
   if (slotsError) {

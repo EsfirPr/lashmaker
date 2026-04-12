@@ -63,8 +63,7 @@ export default async function AccountPage() {
             </div>
           </div>
           <p className="muted">
-            Выберите стиль, дату и свободное время. Имя и номер телефона подставятся автоматически
-            из вашего аккаунта.
+            Выберите стиль, период и свободное время, затем подтвердите запись.
           </p>
           <AccountBookingForm />
         </section>

@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { listAvailableSlots } from "@/lib/booking-service";
+import { listAvailableSlots, listAvailableSlotsInRange } from "@/lib/booking-service";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date") || "";
-    const slots = await listAvailableSlots(date);
+    const start = searchParams.get("start") || "";
+    const end = searchParams.get("end") || "";
+    const slots =
+      start && end ? await listAvailableSlotsInRange(start, end) : await listAvailableSlots(date);
 
     return NextResponse.json({ slots });
   } catch (error) {
@@ -17,4 +20,3 @@ export async function GET(request: Request) {
     );
   }
 }
-
