@@ -89,6 +89,7 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 16px;
   padding: 8px 12px;
   border-radius: 999px;
   color: var(--accent-dark);
@@ -302,6 +303,46 @@ main {
 
 .helper-link {
   margin-top: -4px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.icon-button:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(43, 33, 28, 0.38);
+  backdrop-filter: blur(6px);
+}
+
+.modal-card {
+  width: min(100%, 560px);
+  padding: 28px;
 }
 
 .auth-secondary {

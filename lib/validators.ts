@@ -88,6 +88,19 @@ export const beginClientSmsLoginSchema = z.object({
 
 export const verifyClientSmsLoginSchema = verifyClientRegistrationSchema;
 
+export const updateClientProfileSchema = z.object({
+  name: z.string().trim().min(2, "Укажите имя").max(100, "Слишком длинное имя"),
+  phone: phoneSchema
+});
+
+export const verifyPhoneChangeSchema = z.object({
+  phone: phoneSchema,
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{4,6}$/, "Введите корректный код из SMS")
+});
+
 export const loginSchema = z.object({
   identifier: z.string().trim().min(2, "Введите данные для входа"),
   password: z.string().min(6, "Введите пароль")

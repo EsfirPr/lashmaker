@@ -35,10 +35,11 @@ export type User = {
 
 export type SafeUser = Omit<User, "password_hash">;
 
-export type VerificationPurpose = "registration" | "login";
+export type VerificationPurpose = "registration" | "login" | "change_phone";
 
 export type PhoneVerification = {
   id: string;
+  user_id: string | null;
   name: string;
   phone: string;
   password_hash: string;

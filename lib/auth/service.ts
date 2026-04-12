@@ -19,8 +19,10 @@ import {
   loginSchema,
   masterLoginSchema,
   phonePattern,
+  updateClientProfileSchema,
   verifyClientRegistrationSchema,
-  verifyClientSmsLoginSchema
+  verifyClientSmsLoginSchema,
+  verifyPhoneChangeSchema
 } from "@/lib/validators";
 import { normalizePhone } from "@/lib/utils/phone";
 import { formatDateLabel, formatSlotRange, getSlotStartDate } from "@/lib/utils";
@@ -49,6 +51,10 @@ function buildLoginCodeMessage(code: string) {
   return `Ваш код входа: ${code}`;
 }
 
+function buildPhoneChangeCodeMessage(code: string) {
+  return `Ваш код подтверждения: ${code}`;
+}
+
 function getVerificationExpiryDate() {
   return new Date(Date.now() + verificationTtlMinutes * 60 * 1000);
 }
@@ -71,15 +77,24 @@ function toVerificationState(verification: PhoneVerification) {
   };
 }
 
-async function getPhoneVerification(phone: string, purpose: VerificationPurpose) {
+async function getPhoneVerification(
+  phone: string,
+  purpose: VerificationPurpose,
+  userId?: string
+) {
   const normalizedPhone = normalizePhone(phone);
   const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("phone_verifications")
     .select("*")
     .eq("phone", normalizedPhone)
-    .eq("purpose", purpose)
-    .maybeSingle();
+    .eq("purpose", purpose);
+
+  if (userId) {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     throw new Error(error.message);
@@ -97,6 +112,7 @@ async function assertClientPhoneAvailable(phone: string) {
 }
 
 async function savePhoneVerification(input: {
+  userId?: string | null;
   name: string;
   phone: string;
   passwordHash: string;
@@ -111,6 +127,7 @@ async function savePhoneVerification(input: {
     .from("phone_verifications")
     .upsert(
       {
+        user_id: input.userId ?? null,
         phone: input.phone,
         name: input.name,
         password_hash: input.passwordHash,
@@ -150,6 +167,59 @@ async function markVerificationUsed(phone: string, purpose: VerificationPurpose)
   if (error) {
     throw new Error(error.message);
   }
+}
+
+async function getUserRecordById(userId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as User | null) || null;
+}
+
+async function updateClientName(userId: string, name: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("users")
+    .update({
+      name
+    })
+    .eq("id", userId)
+    .eq("role", "client")
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return toSafeUser(data as User);
+}
+
+async function updateClientPhone(userId: string, phone: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("users")
+    .update({
+      phone
+    })
+    .eq("id", userId)
+    .eq("role", "client")
+    .select("*")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("Этот номер уже используется");
+    }
+
+    throw new Error(error.message);
+  }
+
+  return toSafeUser(data as User);
 }
 
 async function incrementVerificationAttempts(
@@ -568,6 +638,202 @@ export async function verifyClientSmsLogin(input: { phone: string; code: string 
   await markVerificationUsed(verification.phone, "login");
 
   return toSafeUser(user);
+}
+
+export async function startClientProfileUpdate(
+  userId: string,
+  input: {
+    name: string;
+    phone: string;
+  }
+) {
+  const payload = updateClientProfileSchema.parse(input);
+  const user = await getUserRecordById(userId);
+
+  if (!user || user.role !== "client") {
+    throw new Error("Пользователь не найден");
+  }
+
+  const currentPhone = user.phone ? normalizePhone(user.phone) : null;
+  const nextPhone = payload.phone;
+  const nameChanged = (user.name || "").trim() !== payload.name;
+  const phoneChanged = currentPhone !== nextPhone;
+
+  let updatedUser = toSafeUser(user);
+
+  if (nameChanged) {
+    updatedUser = await updateClientName(userId, payload.name);
+  }
+
+  if (!phoneChanged) {
+    return {
+      requiresPhoneConfirmation: false,
+      user: updatedUser,
+      phone: updatedUser.phone || nextPhone,
+      expiresAt: null,
+      resendAvailableAt: null
+    };
+  }
+
+  const existingUser = await getClientUserByPhone(nextPhone);
+
+  if (existingUser && existingUser.id !== userId) {
+    throw new Error("Этот номер уже используется");
+  }
+
+  const existingVerification = await getPhoneVerification(nextPhone, "change_phone", userId);
+
+  if (
+    existingVerification &&
+    !existingVerification.used_at &&
+    !isVerificationExpired(existingVerification)
+  ) {
+    const resendAvailableAt = new Date(
+      new Date(existingVerification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+    );
+
+    if (resendAvailableAt > new Date()) {
+      throw new Error("Код уже отправлен. Попробуйте запросить его повторно чуть позже");
+    }
+  }
+
+  const code = generateVerificationCode();
+  const codeHash = await hashPassword(code);
+  const verification = await savePhoneVerification({
+    userId,
+    name: payload.name,
+    phone: nextPhone,
+    passwordHash: user.password_hash,
+    codeHash,
+    purpose: "change_phone"
+  });
+
+  try {
+    await sendSms(nextPhone, buildPhoneChangeCodeMessage(code));
+  } catch (error) {
+    console.error("Failed to send phone change verification SMS", {
+      userId,
+      phone: nextPhone,
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
+
+  return {
+    requiresPhoneConfirmation: true,
+    user: updatedUser,
+    phone: verification.phone,
+    expiresAt: verification.expires_at,
+    resendAvailableAt: new Date(
+      new Date(verification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+    ).toISOString()
+  };
+}
+
+export async function resendClientPhoneChangeCode(userId: string, phone: string) {
+  const normalizedPhone = normalizePhone(phone);
+  const user = await getUserRecordById(userId);
+
+  if (!user || user.role !== "client") {
+    throw new Error("Пользователь не найден");
+  }
+
+  const existingUser = await getClientUserByPhone(normalizedPhone);
+
+  if (existingUser && existingUser.id !== userId) {
+    throw new Error("Этот номер уже используется");
+  }
+
+  const verification = await getPhoneVerification(normalizedPhone, "change_phone", userId);
+
+  if (!verification || verification.used_at) {
+    throw new Error("Сначала запросите подтверждение нового номера");
+  }
+
+  const resendAvailableAt = new Date(
+    new Date(verification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+  );
+
+  if (resendAvailableAt > new Date()) {
+    throw new Error("Повторная отправка пока недоступна. Подождите немного");
+  }
+
+  const code = generateVerificationCode();
+  const codeHash = await hashPassword(code);
+  const nextVerification = await savePhoneVerification({
+    userId,
+    name: user.name || verification.name,
+    phone: normalizedPhone,
+    passwordHash: user.password_hash,
+    codeHash,
+    purpose: "change_phone"
+  });
+
+  try {
+    await sendSms(normalizedPhone, buildPhoneChangeCodeMessage(code));
+  } catch (error) {
+    console.error("Failed to resend phone change verification SMS", {
+      userId,
+      phone: normalizedPhone,
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
+
+  return {
+    phone: nextVerification.phone,
+    expiresAt: nextVerification.expires_at,
+    resendAvailableAt: new Date(
+      new Date(nextVerification.last_sent_at).getTime() + resendCooldownSeconds * 1000
+    ).toISOString()
+  };
+}
+
+export async function confirmClientPhoneChange(
+  userId: string,
+  input: {
+    phone: string;
+    code: string;
+  }
+) {
+  const payload = verifyPhoneChangeSchema.parse(input);
+  const user = await getUserRecordById(userId);
+
+  if (!user || user.role !== "client") {
+    throw new Error("Пользователь не найден");
+  }
+
+  const verification = await getPhoneVerification(payload.phone, "change_phone", userId);
+
+  if (!verification || verification.used_at) {
+    throw new Error("Код подтверждения не найден. Запросите новый код");
+  }
+
+  if (isVerificationExpired(verification)) {
+    throw new Error("Срок действия кода истёк. Запросите новый код");
+  }
+
+  if (verification.attempts >= maxVerificationAttempts) {
+    throw new Error("Превышено количество попыток. Запросите новый код");
+  }
+
+  const existingUser = await getClientUserByPhone(payload.phone);
+
+  if (existingUser && existingUser.id !== userId) {
+    throw new Error("Этот номер уже используется");
+  }
+
+  const isValidCode = await verifyPassword(payload.code, verification.code_hash);
+
+  if (!isValidCode) {
+    await incrementVerificationAttempts(payload.phone, "change_phone", verification.attempts);
+    throw new Error("Неверный код подтверждения");
+  }
+
+  const updatedUser = await updateClientPhone(userId, payload.phone);
+  await markVerificationUsed(payload.phone, "change_phone");
+
+  return updatedUser;
 }
 
 export async function authenticateUser(input: { identifier: string; password: string }) {

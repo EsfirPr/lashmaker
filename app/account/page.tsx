@@ -3,6 +3,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { logoutAction } from "@/app/auth-actions";
 import { AccountBookingForm } from "@/components/account-booking-form";
 import { AccountBookingCard } from "@/components/account-booking-card";
+import { AccountProfileSettings } from "@/components/account-profile-settings";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForClient } from "@/lib/booking-service";
 
@@ -53,9 +54,10 @@ export default async function AccountPage() {
                 <span className="eyebrow">Профиль</span>
                 <h2>Ваши данные</h2>
               </div>
-              <button className="ghost-button" type="button" disabled>
-                Редактирование скоро
-              </button>
+              <AccountProfileSettings
+                name={profileName || ""}
+                phone={user.phone || ""}
+              />
             </div>
             <div className="account-profile-grid section-space">
               <div className="booking-meta">
