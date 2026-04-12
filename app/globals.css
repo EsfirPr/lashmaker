@@ -327,6 +327,33 @@ main {
 .icon-button svg {
   width: 18px;
   height: 18px;
+  display: block;
+}
+
+.cog-icon {
+  display: inline-block;
+  color: #d2765d;
+  transition: transform 0.3s ease, color 0.2s ease;
+  transform-origin: center;
+}
+
+.icon-button:hover .cog-icon:not(.cog-icon--open) {
+  animation: cog-spin 1s linear;
+}
+
+.cog-icon--open {
+  animation: none;
+  transform: rotate(0deg);
+}
+
+@keyframes cog-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .modal-overlay {
