@@ -173,8 +173,8 @@ function buildMonthGrid(anchorDate: string) {
   return days;
 }
 
-function getWeekDays(anchorDate: string) {
-  const start = getWeekStart(anchorDate);
+function getVisibleWeekDays(startDate: string) {
+  const start = startDate;
   return Array.from({ length: 7 }, (_, index) => addDays(start, index));
 }
 
@@ -198,8 +198,8 @@ export function AccountBookingForm() {
     [groupedSlots]
   );
   const weekDays = useMemo(
-    () => (periodMode === "week" ? getWeekDays(anchorDate) : []),
-    [anchorDate, periodMode]
+    () => (periodMode === "week" ? getVisibleWeekDays(period.start) : []),
+    [period.start, periodMode]
   );
   const monthDays = useMemo(
     () => (periodMode === "month" ? buildMonthGrid(anchorDate) : []),
