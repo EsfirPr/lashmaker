@@ -66,10 +66,7 @@ export default async function AccountPage() {
             Выберите стиль, дату и свободное время. Имя и номер телефона подставятся автоматически
             из вашего аккаунта.
           </p>
-          <AccountBookingForm
-            phone={user.phone || "Телефон не указан"}
-            profileName={profileName || "Имя не указано"}
-          />
+          <AccountBookingForm />
         </section>
 
         <section className="panel stack-card section-space account-section">

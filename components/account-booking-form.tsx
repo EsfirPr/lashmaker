@@ -9,11 +9,6 @@ import type { TimeSlot } from "@/lib/types";
 import { STYLE_OPTIONS } from "@/lib/validators";
 import { formatSlotRange, getTodayDate } from "@/lib/utils";
 
-type AccountBookingFormProps = {
-  profileName: string;
-  phone: string;
-};
-
 type FormState = {
   style: string;
   notes: string;
@@ -28,7 +23,7 @@ const initialState: FormState = {
   slotId: ""
 };
 
-export function AccountBookingForm({ profileName, phone }: AccountBookingFormProps) {
+export function AccountBookingForm() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialState);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
@@ -114,17 +109,6 @@ export function AccountBookingForm({ profileName, phone }: AccountBookingFormPro
 
   return (
     <form className="form-grid section-space" onSubmit={handleSubmit}>
-      <div className="account-booking-form__identity">
-        <div className="booking-meta">
-          <strong>Имя из профиля</strong>
-          <span>{profileName}</span>
-        </div>
-        <div className="booking-meta">
-          <strong>Телефон из профиля</strong>
-          <span>{phone}</span>
-        </div>
-      </div>
-
       <div className="two-columns">
         <div className="field">
           <label htmlFor="style">Стиль наращивания</label>
@@ -190,8 +174,7 @@ export function AccountBookingForm({ profileName, phone }: AccountBookingFormPro
       </div>
 
       <p className="helper">
-        Имя и телефон подставятся автоматически из вашего профиля. После записи слот сразу станет
-        недоступен для других клиентов.
+        После записи слот сразу станет недоступен для других клиентов.
       </p>
 
       {successToken ? (

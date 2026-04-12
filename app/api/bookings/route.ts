@@ -4,16 +4,29 @@ import { createBooking } from "@/lib/booking-service";
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json();
+    const payload = (await request.json()) as {
+      name?: string;
+      phone?: string;
+      style?: string;
+      notes?: string;
+      date?: string;
+      slotId?: string;
+    };
     const user = await getCurrentUser();
+    const bookingFields = {
+      style: payload.style || "",
+      notes: payload.notes || "",
+      date: payload.date || "",
+      slotId: payload.slotId || ""
+    };
 
-     if (user?.role === "client") {
+    if (user?.role === "client") {
       if (!user.name?.trim() || !user.phone?.trim()) {
         throw new Error("Профиль клиента заполнен не полностью");
       }
 
       const result = await createBooking({
-        ...payload,
+        ...bookingFields,
         name: user.name,
         phone: user.phone,
         userId: user.id
@@ -23,7 +36,9 @@ export async function POST(request: Request) {
     }
 
     const result = await createBooking({
-      ...payload,
+      name: payload.name || "",
+      phone: payload.phone || "",
+      ...bookingFields,
       userId: null
     });
 
