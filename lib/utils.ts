@@ -60,6 +60,24 @@ function getDateTimeParts(value: Date) {
   };
 }
 
+export function getGreetingByTime(value = new Date()) {
+  const hour = getDateTimeParts(value).hour;
+
+  if (hour >= 5 && hour <= 11) {
+    return "Доброе утро";
+  }
+
+  if (hour >= 12 && hour <= 16) {
+    return "Добрый день";
+  }
+
+  if (hour >= 17 && hour <= 22) {
+    return "Добрый вечер";
+  }
+
+  return "Доброй ночи";
+}
+
 export function zonedDateTimeToUtc(date: string, time: string) {
   const [year, month, day] = date.split("-").map(Number);
   const [hour, minute] = time.slice(0, 5).split(":").map(Number);

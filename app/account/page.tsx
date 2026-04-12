@@ -6,87 +6,39 @@ import { AccountBookingCard } from "@/components/account-booking-card";
 import { AccountProfileSettings } from "@/components/account-profile-settings";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForClient } from "@/lib/booking-service";
+import { getGreetingByTime } from "@/lib/utils";
 
 export default async function AccountPage() {
   noStore();
   const user = await requireUserRole("client", "/login");
   const bookings = await listBookingsForClient(user.id);
-  const nextBooking = bookings.find((booking) => booking.status === "confirmed" && booking.time_slots);
   const profileName = user.name || bookings.find((booking) => booking.name.trim())?.name || null;
   const displayIdentity = profileName || user.phone || "гостья";
+  const greeting = getGreetingByTime();
 
   return (
     <main className="page-shell">
       <div className="container">
         <section className="panel account-hero">
-          <div className="account-hero__copy">
+          <div className="account-hero__top">
             <span className="eyebrow">Личный кабинет клиента</span>
-            <h1 className="page-title">Здравствуйте, {displayIdentity}</h1>
-            <p className="lead">
-              Здесь собраны ваши записи, статус визитов и быстрые действия. Кабинет показывает
-              только бронирования, привязанные к текущему аккаунту.
-            </p>
-          </div>
-          <div className="account-hero__stats">
-            <div className="stat">
-              <strong>{bookings.length}</strong>
-              <span className="muted">всего записей</span>
-            </div>
-            <div className="stat">
-              <strong>
-                {
-                  bookings.filter((booking) => booking.status === "confirmed").length
-                }
-              </strong>
-              <span className="muted">активных визитов</span>
-            </div>
-            <div className="stat">
-              <strong>{nextBooking ? "Есть" : "Нет"}</strong>
-              <span className="muted">ближайшей записи</span>
-            </div>
-          </div>
-        </section>
-
-        <section className="page-columns">
-          <section className="panel stack-card account-section">
-            <div className="account-section__heading">
-              <div>
-                <span className="eyebrow">Профиль</span>
-                <h2>Ваши данные</h2>
-              </div>
+            <div className="account-hero__header-actions">
               <AccountProfileSettings
                 name={profileName || ""}
                 phone={user.phone || ""}
               />
+              <form action={logoutAction}>
+                <button className="ghost-button" type="submit">
+                  Выйти
+                </button>
+              </form>
             </div>
-            <div className="account-profile-grid section-space">
-              <div className="booking-meta">
-                <strong>Телефон</strong>
-                <span>{user.phone || "Не указан"}</span>
-              </div>
-              <div className="booking-meta">
-                <strong>Имя</strong>
-                <span>{profileName || "Добавится после записи"}</span>
-              </div>
-              <div className="booking-meta">
-                <strong>Роль</strong>
-                <span>Клиент</span>
-              </div>
-              <div className="booking-meta">
-                <strong>Ближайшая запись</strong>
-                <span>{nextBooking?.time_slots ? "Запланирована" : "Пока нет"}</span>
-              </div>
-            </div>
-          </section>
-
-          <aside className="panel stack-card account-section">
-            <div className="account-section__heading">
-              <div>
-                <span className="eyebrow">Быстрые действия</span>
-                <h2>Что можно сделать</h2>
-              </div>
-            </div>
-            <div className="account-actions section-space">
+          </div>
+          <div className="account-hero__copy">
+            <h1 className="page-title">
+              {greeting}, {displayIdentity}
+            </h1>
+            <div className="account-hero__links">
               <Link className="button" href="#new-booking">
                 Новая запись
               </Link>
@@ -99,23 +51,8 @@ export default async function AccountPage() {
               >
                 Последняя запись
               </Link>
-              <form action={logoutAction}>
-                <button className="ghost-button" type="submit">
-                  Выйти
-                </button>
-              </form>
             </div>
-            <p className="helper">
-              Если нужно отменить визит, сделайте это прямо в карточке записи ниже.
-            </p>
-            <p className="helper">
-              Подробнее об обработке персональных данных можно прочитать в{" "}
-              <Link href="/privacy">
-                Политике конфиденциальности
-              </Link>
-              .
-            </p>
-          </aside>
+          </div>
         </section>
 
         <section className="panel stack-card section-space account-section" id="new-booking">

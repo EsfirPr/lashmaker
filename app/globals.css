@@ -718,16 +718,9 @@ main {
   display: block;
 }
 
-.page-columns {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 20px;
-}
-
 .account-hero {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 22px;
+  gap: 18px;
   padding: 28px;
   margin-bottom: 24px;
   background:
@@ -735,15 +728,23 @@ main {
     linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(250, 238, 230, 0.82));
 }
 
-.account-hero__copy {
-  display: grid;
-  gap: 10px;
+.account-hero__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
 }
 
-.account-hero__stats {
+.account-hero__copy {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.account-hero__header-actions,
+.account-hero__links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .account-section {
@@ -756,12 +757,6 @@ main {
   justify-content: space-between;
   gap: 16px;
   align-items: flex-start;
-}
-
-.account-profile-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
 }
 
 .account-actions {
@@ -1063,7 +1058,6 @@ main {
   .landing-hero,
   .admin-grid,
   .booking-layout,
-  .page-columns,
   .account-hero,
   .master-hero,
   .landing-about,
@@ -1076,10 +1070,8 @@ main {
   .portfolio-grid,
   .meta-grid,
   .two-columns,
-  .account-profile-grid,
   .account-booking-form__identity,
   .account-booking-card__grid,
-  .account-hero__stats,
   .master-stats-grid,
   .master-upcoming-list,
   .master-booking-item__grid,
@@ -1124,6 +1116,7 @@ main {
   .slot-item header,
   .cancelled-item header,
   .booking-card header,
+  .account-hero__top,
   .account-booking-card__header,
   .account-section__heading,
   .master-booking-item__header,
