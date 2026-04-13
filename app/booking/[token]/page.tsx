@@ -25,20 +25,22 @@ export default async function BookingPage({ params }: BookingPageProps) {
 
   return (
     <main className="page-shell">
-      <div className="container booking-layout">
+      <div className="container">
         <section className="panel booking-card">
           <header>
             <div>
-              <span className="eyebrow">Детали записи</span>
+              <div className="inline-actions">
+                <span className="eyebrow">Детали записи</span>
+                <span
+                  className={`status-pill ${
+                    booking.status === "confirmed" ? "status-confirmed" : "status-cancelled"
+                  }`}
+                >
+                  {formatStatusLabel(booking.status)}
+                </span>
+              </div>
               <h1 className="page-title">Бронирование клиента</h1>
             </div>
-            <span
-              className={`status-pill ${
-                booking.status === "confirmed" ? "status-confirmed" : "status-cancelled"
-              }`}
-            >
-              {formatStatusLabel(booking.status)}
-            </span>
           </header>
 
           <div className="meta-grid">
@@ -87,31 +89,16 @@ export default async function BookingPage({ params }: BookingPageProps) {
               Запись уже отменена. Освободившийся слот снова доступен для бронирования.
             </div>
           )}
-        </section>
 
-        <aside className="panel stack-card">
-          <h2>Что дальше</h2>
-          <div className="stack-list">
-            <div className="feature">
-              <h3>Сохраните ссылку</h3>
-              <p>Эта страница доступна по публичному токену, поэтому ее удобно открыть снова позже.</p>
-            </div>
-            <div className="feature">
-              <h3>SMS-подтверждение</h3>
-              <p>При подключении провайдера система может отправлять подтверждение сразу после записи.</p>
-            </div>
-            <div className="feature">
-              <h3>Напоминание на завтра</h3>
-              <p>Отдельный серверный маршрут ищет записи на следующий день и отправляет SMS один раз.</p>
-            </div>
-          </div>
-
-          <div className="section-space">
+          <div className="inline-actions section-space">
+            <Link className="ghost-button" href="/account">
+              Вернуться в кабинет
+            </Link>
             <Link className="ghost-button" href="/">
               Вернуться на главную
             </Link>
           </div>
-        </aside>
+        </section>
       </div>
     </main>
   );
