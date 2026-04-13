@@ -984,11 +984,14 @@ main {
 
 .beauty-calendar__topbar {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
   gap: 14px;
 }
 
 .beauty-calendar__title-wrap {
   display: grid;
+  min-width: 0;
   justify-items: center;
   text-align: center;
   gap: 2px;
@@ -998,24 +1001,26 @@ main {
   margin: 0;
   font-size: clamp(1.2rem, 2vw, 1.6rem);
   letter-spacing: -0.03em;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .beauty-calendar__eyebrow {
   margin-bottom: 4px;
-}
-
-.beauty-calendar__navigation {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 12px;
-  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .calendar-nav-button {
   width: 46px;
   height: 46px;
+  flex-shrink: 0;
   border: 1px solid rgba(65, 43, 32, 0.1);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.86);
@@ -1644,14 +1649,9 @@ main {
     min-width: max-content;
   }
 
-  .beauty-calendar__title-wrap {
-    justify-items: flex-start;
-    text-align: left;
-  }
-
-  .beauty-calendar__navigation {
-    width: 100%;
-    gap: 16px;
+  .beauty-calendar__topbar {
+    grid-template-columns: 46px minmax(0, 1fr) 46px;
+    gap: 10px;
   }
 
   .calendar-nav-button {
