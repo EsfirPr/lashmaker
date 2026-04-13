@@ -60,7 +60,11 @@ function buildPhoneChangeCodeMessage(code: string) {
   return `Ваш код подтверждения: ${code}`;
 }
 
-async function sendPhoneChangeVerificationSms(phone: string, code: string, context: { userId: string; stage: "initial" | "resend" }) {
+async function sendPhoneChangeVerificationSms(
+  phone: string,
+  code: string,
+  context: { userId: string; stage: "initial" | "resend" }
+) {
   console.info("[auth] Sending phone change verification SMS", {
     userId: context.userId,
     stage: context.stage,
@@ -732,6 +736,11 @@ export async function startClientProfileUpdate(
 
   const code = generateVerificationCode();
   const codeHash = await hashPassword(code);
+  await sendPhoneChangeVerificationSms(nextPhone, code, {
+    userId,
+    stage: "initial"
+  });
+
   const verification = await savePhoneVerification({
     userId,
     name: payload.name,
@@ -741,9 +750,10 @@ export async function startClientProfileUpdate(
     purpose: "change_phone"
   });
 
-  await sendPhoneChangeVerificationSms(verification.phone, code, {
+  console.info("[auth] Saved phone change verification", {
     userId,
-    stage: "initial"
+    phone: maskPhoneForLogs(verification.phone),
+    expiresAt: verification.expires_at
   });
 
   return {
@@ -787,6 +797,11 @@ export async function resendClientPhoneChangeCode(userId: string, phone: string)
 
   const code = generateVerificationCode();
   const codeHash = await hashPassword(code);
+  await sendPhoneChangeVerificationSms(normalizedPhone, code, {
+    userId,
+    stage: "resend"
+  });
+
   const nextVerification = await savePhoneVerification({
     userId,
     name: user.name || verification.name,
@@ -796,9 +811,10 @@ export async function resendClientPhoneChangeCode(userId: string, phone: string)
     purpose: "change_phone"
   });
 
-  await sendPhoneChangeVerificationSms(nextVerification.phone, code, {
+  console.info("[auth] Refreshed phone change verification", {
     userId,
-    stage: "resend"
+    phone: maskPhoneForLogs(nextVerification.phone),
+    expiresAt: nextVerification.expires_at
   });
 
   return {
@@ -847,12 +863,22 @@ export async function confirmClientPhoneChange(
   const isValidCode = await verifyPassword(payload.code, verification.code_hash);
 
   if (!isValidCode) {
+    console.warn("[auth] Invalid phone change verification code", {
+      userId,
+      phone: maskPhoneForLogs(payload.phone),
+      attempts: verification.attempts + 1
+    });
     await incrementVerificationAttempts(payload.phone, "change_phone", verification.attempts);
     throw new Error("Неверный код подтверждения");
   }
 
-  const updatedUser = await updateClientPhone(userId, payload.phone);
-  await markVerificationUsed(payload.phone, "change_phone");
+  const updatedUser = await updateClientPhone(userId, verification.phone);
+  await markVerificationUsed(verification.phone, "change_phone");
+
+  console.info("[auth] Phone change confirmed", {
+    userId,
+    phone: maskPhoneForLogs(verification.phone)
+  });
 
   return updatedUser;
 }
