@@ -1217,6 +1217,12 @@ main {
   letter-spacing: -0.02em;
 }
 
+.account-booking-card__schedule {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
 .account-booking-card__eyebrow {
   margin: 0;
   color: var(--accent-dark);
@@ -1226,34 +1232,17 @@ main {
   font-weight: 800;
 }
 
-.account-booking-card__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.account-booking-card__meta,
-.account-booking-card__notes {
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(65, 43, 32, 0.1);
-  background: rgba(255, 255, 255, 0.74);
-}
-
-.account-booking-card__meta strong,
-.account-booking-card__notes strong {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-}
-
-.account-booking-card__notes p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.6;
+.account-booking-card__time-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(210, 118, 93, 0.12);
+  color: var(--accent-dark);
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 .status-completed {

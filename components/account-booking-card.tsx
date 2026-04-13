@@ -8,6 +8,10 @@ type AccountBookingCardProps = {
   booking: BookingWithSlot;
 };
 
+function formatClientBookingDate(value: string) {
+  return formatDateLabel(value).replace(" г.", "");
+}
+
 function getBookingViewState(booking: BookingWithSlot) {
   if (booking.status === "cancelled") {
     return {
@@ -38,33 +42,20 @@ export function AccountBookingCard({ booking }: AccountBookingCardProps) {
     <article className={`account-booking-card ${viewState.className}`}>
       <header className="account-booking-card__header">
         <div>
-          <p className="account-booking-card__eyebrow">Запись клиента</p>
-          <h3>
-            {booking.time_slots
-              ? `${formatDateLabel(booking.time_slots.slot_date)}, ${formatSlotRange(
-                  booking.time_slots
-                )}`
-              : "Слот больше недоступен"}
-          </h3>
+          <p className="account-booking-card__eyebrow">Моя запись</p>
+          {booking.time_slots ? (
+            <div className="account-booking-card__schedule">
+              <h3>{formatClientBookingDate(booking.time_slots.slot_date)}</h3>
+              <span className="account-booking-card__time-badge">
+                {formatSlotRange(booking.time_slots)}
+              </span>
+            </div>
+          ) : (
+            <h3>Слот больше недоступен</h3>
+          )}
         </div>
         <span className={`status-pill ${viewState.className}`}>{viewState.label}</span>
       </header>
-
-      <div className="account-booking-card__grid">
-        <div className="account-booking-card__meta">
-          <strong>Стиль</strong>
-          <span>{booking.style}</span>
-        </div>
-        <div className="account-booking-card__meta">
-          <strong>Контакт</strong>
-          <span>{booking.phone}</span>
-        </div>
-      </div>
-
-      <div className="account-booking-card__notes">
-        <strong>Пожелания</strong>
-        <p>{booking.notes || "Пожелания не указаны."}</p>
-      </div>
 
       <div className="inline-actions">
         <Link className="ghost-button" href={`/booking/${booking.public_token}`}>
