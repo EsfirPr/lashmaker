@@ -451,7 +451,6 @@ export function AccountBookingForm() {
 
         {!isLoadingSlots && slots.length === 0 ? (
           <div className="account-empty beauty-calendar__empty">
-            <div className="account-empty__icon">○</div>
             <h3>Нет свободных окон на выбранный период</h3>
             <p className="empty-state">Попробуйте переключить режим или пролистать календарь вперед.</p>
           </div>

@@ -101,7 +101,6 @@ export function AccountBookingsHistory({ bookings }: AccountBookingsHistoryProps
       <div className="account-bookings-list account-bookings-history__list">
         {filteredBookings.length === 0 ? (
           <div className="account-empty">
-            <div className="account-empty__icon">L</div>
             <h3>{emptyMessage}</h3>
             <p className="empty-state">
               {filter === "year"
