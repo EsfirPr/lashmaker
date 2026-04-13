@@ -106,21 +106,11 @@ export default async function HomePage() {
           </div>
 
           <aside className="panel landing-hero__aside">
-            <div className="landing-badge-grid">
-              <article className="feature">
-                <h3>{masterName}</h3>
-                <p>Мастер по наращиванию ресниц с аккуратной техникой, чистой посадкой и любовью к естественной эстетике.</p>
-              </article>
-              <article className="feature">
-                <h3>Комфортный сервис</h3>
-                <p>Помогу подобрать эффект, длину и изгиб так, чтобы результат оставался выразительным и удобным в носке.</p>
-              </article>
-            </div>
-            <div className="landing-quote section-space">
-              <p>
-                “Портфолио, запись и кабинет собраны в одном месте: можно посмотреть работы, выбрать удобное окно и сохранить историю визитов.”
-              </p>
-            </div>
+            <img
+              alt="Мастер по наращиванию ресниц"
+              className="landing-hero__image"
+              src="/images/master-placeholder.svg"
+            />
           </aside>
         </section>
 
