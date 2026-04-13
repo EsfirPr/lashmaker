@@ -110,10 +110,10 @@ function toDateKey(parts: { year: number; month: number; day: number }) {
 
 function buildUpcomingReminderMessage(booking: BookingWithSlot) {
   if (!booking.time_slots) {
-    return "Напоминаем: у вас запись на наращивание ресниц через 5 минут.";
+    return "Напоминаем: запись через 5 минут.";
   }
 
-  return `Напоминаем: у вас запись на наращивание ресниц через 5 минут в ${booking.time_slots.start_time.slice(
+  return `Напоминаем: запись через 5 минут в ${booking.time_slots.start_time.slice(
     0,
     5
   )}`;
@@ -163,13 +163,13 @@ function normalizeBookingsWithSlot(
 
 function buildConfirmationMessage(booking: BookingWithSlot) {
   if (!booking.time_slots) {
-    return "Вы записаны на наращивание ресниц.";
+    return "Вы записаны.";
   }
 
   const formattedDate = shortDateFormatter.format(new Date(`${booking.time_slots.slot_date}T00:00:00`));
   const formattedTime = booking.time_slots.start_time.slice(0, 5);
 
-  return `Вы записаны на наращивание ресниц ${formattedDate} в ${formattedTime}`;
+  return `Вы записаны на ${formattedDate} в ${formattedTime}`;
 }
 
 function ensureBookingCancelable(booking: BookingWithSlot) {

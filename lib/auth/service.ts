@@ -53,15 +53,15 @@ async function createSmsOnlyPasswordHash() {
 }
 
 function buildVerificationMessage(code: string) {
-  return `Ваш код подтверждения: ${code}`;
+  return `Код подтверждения: ${code}`;
 }
 
 function buildLoginCodeMessage(code: string) {
-  return `Ваш код входа: ${code}`;
+  return `Код входа: ${code}`;
 }
 
 function buildPhoneChangeCodeMessage(code: string) {
-  return `Ваш код подтверждения: ${code}`;
+  return `Код подтверждения: ${code}`;
 }
 
 async function sendPhoneChangeVerificationSms(

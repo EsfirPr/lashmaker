@@ -106,6 +106,7 @@ export async function sendProntoSms(to: string, text: string) {
   const { url, redactedUrl, config } = buildRequestUrl(String(to), text);
   const normalizedPhone = toProntoPhone(String(to));
 
+  console.log("SMS GET REQUEST:", redactedUrl);
   console.log("SMS URL:", redactedUrl);
   console.info("[sms:prontosms] Sending request", {
     endpoint: prontoSmsApiUrl,
