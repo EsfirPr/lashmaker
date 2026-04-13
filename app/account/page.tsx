@@ -2,7 +2,7 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { logoutAction } from "@/app/auth-actions";
 import { AccountBookingForm } from "@/components/account-booking-form";
-import { AccountBookingCard } from "@/components/account-booking-card";
+import { AccountBookingsHistory } from "@/components/account-bookings-history";
 import { AccountProfileSettings } from "@/components/account-profile-settings";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForClient } from "@/lib/booking-service";
@@ -75,24 +75,7 @@ export default async function AccountPage() {
               <h2>История и текущие визиты</h2>
             </div>
           </div>
-          <div className="account-bookings-list section-space">
-            {bookings.length === 0 ? (
-              <div className="account-empty">
-                <div className="account-empty__icon">L</div>
-                <h3>У вас пока нет записей</h3>
-                <p className="empty-state">
-                  Когда вы оформите первую запись, здесь появятся дата, время, статус и пожелания.
-                </p>
-                <Link className="button" href="#new-booking">
-                  Создать запись
-                </Link>
-              </div>
-            ) : null}
-
-            {bookings.map((booking) => (
-              <AccountBookingCard booking={booking} key={booking.id} />
-            ))}
-          </div>
+          <AccountBookingsHistory bookings={bookings} />
         </section>
       </div>
     </main>
