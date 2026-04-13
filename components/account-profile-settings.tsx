@@ -192,10 +192,10 @@ export function AccountProfileSettings({
                 <form action={verifyAction} className="form-grid section-space">
                   <input name="phone" type="hidden" value={activeState.pendingPhone} />
                   <div className="field">
-                    <label htmlFor="code">Код из SMS</label>
+                    <label htmlFor="phoneChangeCode">Код из SMS</label>
                     <input
                       autoComplete="one-time-code"
-                      id="code"
+                      id="phoneChangeCode"
                       inputMode="numeric"
                       maxLength={6}
                       name="code"
@@ -221,6 +221,7 @@ export function AccountProfileSettings({
                 <div className="field">
                   <label htmlFor="profileName">Имя</label>
                   <input
+                    autoComplete="name"
                     id="profileName"
                     name="name"
                     onChange={(event) => setNameValue(event.target.value)}
@@ -231,10 +232,12 @@ export function AccountProfileSettings({
                 <div className="field">
                   <label htmlFor="profilePhone">Номер телефона</label>
                   <input
+                    autoComplete="tel"
                     id="profilePhone"
                     name="phone"
                     onChange={(event) => setPhoneValue(event.target.value)}
                     required
+                    type="tel"
                     value={phoneValue}
                   />
                 </div>

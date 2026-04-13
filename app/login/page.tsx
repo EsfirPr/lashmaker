@@ -36,11 +36,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <form className="form-grid section-space" action={loginMasterAction}>
             <div className="field">
               <label htmlFor="nickname">Nickname</label>
-              <input id="nickname" name="nickname" required />
+              <input autoComplete="username" id="nickname" name="nickname" required />
             </div>
             <div className="field">
               <label htmlFor="password">Пароль</label>
-              <input id="password" name="password" type="password" required />
+              <input
+                autoComplete="current-password"
+                id="password"
+                name="password"
+                type="password"
+                required
+              />
             </div>
             {params.error ? <div className="message-error">{params.error}</div> : null}
             <button className="ghost-button" type="submit">

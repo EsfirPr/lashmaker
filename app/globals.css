@@ -198,9 +198,11 @@ main {
   gap: 8px;
 }
 
-.field label {
+.field label,
+.field__label {
   font-size: 0.95rem;
   font-weight: 700;
+  margin: 0;
 }
 
 .field input,

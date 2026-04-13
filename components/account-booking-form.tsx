@@ -396,8 +396,14 @@ export function AccountBookingForm() {
           </select>
         </div>
         <div className="field">
-          <label>Период показа</label>
-          <div className="slot-segmented" role="tablist" aria-label="Выбор периода">
+          <p className="field__label" id="accountBookingPeriodLabel">
+            Период показа
+          </p>
+          <div
+            aria-labelledby="accountBookingPeriodLabel"
+            className="slot-segmented"
+            role="tablist"
+          >
             {periodOptions.map((option) => (
               <button
                 aria-selected={periodMode === option.value}
@@ -548,6 +554,7 @@ export function AccountBookingForm() {
       <div className="field">
         <label htmlFor="notes">Дополнительные пожелания</label>
         <textarea
+          autoComplete="off"
           id="notes"
           name="notes"
           placeholder="Например, нужен натуральный эффект или комфортное время после работы"

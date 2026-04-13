@@ -120,9 +120,11 @@ export function BookingForm() {
         <div className="field">
           <label htmlFor="name">Имя</label>
           <input
+            autoComplete="name"
             id="name"
             name="name"
             placeholder="Например, Алина"
+            type="text"
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
           />
@@ -130,9 +132,11 @@ export function BookingForm() {
         <div className="field">
           <label htmlFor="phone">Номер телефона</label>
           <input
+            autoComplete="tel"
             id="phone"
             name="phone"
             placeholder="+7 999 123-45-67"
+            type="tel"
             value={form.phone}
             onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
           />

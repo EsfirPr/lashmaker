@@ -77,10 +77,10 @@ export function RegisterFlow() {
           <form action={verifyAction} className="form-grid section-space">
             <input name="phone" type="hidden" value={activeState.phone} />
             <div className="field">
-              <label htmlFor="code">Код из SMS</label>
+              <label htmlFor="registerCode">Код из SMS</label>
               <input
                 autoComplete="one-time-code"
-                id="code"
+                id="registerCode"
                 inputMode="numeric"
                 maxLength={6}
                 name="code"
@@ -103,16 +103,35 @@ export function RegisterFlow() {
       ) : (
         <form className="form-grid section-space" action={startAction}>
           <div className="field">
-            <label htmlFor="name">Имя</label>
-            <input id="name" name="name" placeholder="Например, Алина" required />
+            <label htmlFor="registerName">Имя</label>
+            <input
+              autoComplete="name"
+              id="registerName"
+              name="name"
+              placeholder="Например, Алина"
+              required
+            />
           </div>
           <div className="field">
-            <label htmlFor="phone">Телефон</label>
-            <input id="phone" name="phone" placeholder="+7 999 123-45-67" required />
+            <label htmlFor="registerPhone">Телефон</label>
+            <input
+              autoComplete="tel"
+              id="registerPhone"
+              name="phone"
+              placeholder="+7 999 123-45-67"
+              required
+              type="tel"
+            />
           </div>
           <div className="field">
-            <label htmlFor="password">Пароль</label>
-            <input id="password" name="password" type="password" required />
+            <label htmlFor="registerPassword">Пароль</label>
+            <input
+              autoComplete="new-password"
+              id="registerPassword"
+              name="password"
+              type="password"
+              required
+            />
           </div>
           <label className="consent-row">
             <input name="privacyAccepted" type="checkbox" required />

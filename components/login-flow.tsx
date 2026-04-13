@@ -74,10 +74,10 @@ export function LoginFlow() {
       <form action={verifyAction} className="form-grid section-space">
         <input name="phone" type="hidden" value={activeState.phone} />
         <div className="field">
-          <label htmlFor="code">Код из SMS</label>
+          <label htmlFor="loginCode">Код из SMS</label>
           <input
             autoComplete="one-time-code"
-            id="code"
+            id="loginCode"
             inputMode="numeric"
             maxLength={6}
             name="code"
@@ -100,8 +100,15 @@ export function LoginFlow() {
   ) : (
     <form className="form-grid section-space" action={startAction}>
       <div className="field">
-        <label htmlFor="phone">Номер телефона</label>
-        <input id="phone" name="phone" placeholder="+7 999 123-45-67" required />
+        <label htmlFor="loginPhone">Номер телефона</label>
+        <input
+          autoComplete="tel"
+          id="loginPhone"
+          name="phone"
+          placeholder="+7 999 123-45-67"
+          required
+          type="tel"
+        />
       </div>
       {startState.error ? <div className="message-error">{startState.error}</div> : null}
       <SubmitButton>Получить код</SubmitButton>
