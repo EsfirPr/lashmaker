@@ -42,7 +42,6 @@ export async function startClientRegistrationAction(
     const result = await beginClientRegistration({
       name: String(formData.get("name") || ""),
       phone: String(formData.get("phone") || ""),
-      password: String(formData.get("password") || ""),
       privacyAccepted: formData.get("privacyAccepted") === "on"
     });
 

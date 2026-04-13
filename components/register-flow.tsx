@@ -123,16 +123,6 @@ export function RegisterFlow() {
               type="tel"
             />
           </div>
-          <div className="field">
-            <label htmlFor="registerPassword">Пароль</label>
-            <input
-              autoComplete="new-password"
-              id="registerPassword"
-              name="password"
-              type="password"
-              required
-            />
-          </div>
           <label className="consent-row">
             <input name="privacyAccepted" type="checkbox" required />
             <span>

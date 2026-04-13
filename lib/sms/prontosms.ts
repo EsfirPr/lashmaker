@@ -86,6 +86,22 @@ function isErrorResponse(result: string) {
   );
 }
 
+function extractMessageId(result: string) {
+  const trimmed = result.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed) as { messageId?: string; id?: string; sms_id?: string };
+    return parsed.messageId || parsed.id || parsed.sms_id || null;
+  } catch {
+    const match = trimmed.match(/(?:message[_\s-]?id|sms[_\s-]?id|id)\s*[:=]\s*([A-Za-z0-9_-]+)/i);
+    return match?.[1] || null;
+  }
+}
+
 export async function sendProntoSms(to: string, text: string) {
   const { url, redactedUrl, config } = buildRequestUrl(String(to), text);
   const normalizedPhone = toProntoPhone(String(to));
@@ -109,6 +125,7 @@ export async function sendProntoSms(to: string, text: string) {
 
   const result = await response.text();
   const contentType = response.headers.get("content-type") || "unknown";
+  const messageId = extractMessageId(result);
 
   console.log("SMS RESPONSE:", result);
 
@@ -133,7 +150,9 @@ export async function sendProntoSms(to: string, text: string) {
 
   console.info("[sms:prontosms] SMS accepted by provider", {
     phone: normalizedPhone,
-    contentType
+    contentType,
+    messageId,
+    responsePreview: result.slice(0, 160)
   });
 }
 

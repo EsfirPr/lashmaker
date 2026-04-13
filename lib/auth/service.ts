@@ -1,5 +1,5 @@
 import "server-only";
-import { randomInt } from "node:crypto";
+import { randomBytes, randomInt } from "node:crypto";
 import { env } from "@/lib/env";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { sendSms } from "@/lib/sms";
@@ -46,6 +46,10 @@ function generateVerificationCode() {
   const min = 10 ** (verificationCodeLength - 1);
   const max = 10 ** verificationCodeLength;
   return String(randomInt(min, max));
+}
+
+async function createSmsOnlyPasswordHash() {
+  return hashPassword(randomBytes(24).toString("hex"));
 }
 
 function buildVerificationMessage(code: string) {
@@ -411,10 +415,29 @@ async function createClientUser(input: {
   return toSafeUser(data as User);
 }
 
+async function sendRegistrationVerificationSms(phone: string, code: string, stage: "initial" | "resend") {
+  const normalizedPhone = normalizePhone(phone);
+
+  console.info("[auth] Sending registration verification SMS", {
+    stage,
+    phone: maskPhoneForLogs(normalizedPhone)
+  });
+
+  try {
+    await sendSms(normalizedPhone, buildVerificationMessage(code));
+  } catch (error) {
+    console.error("Failed to send registration verification SMS", {
+      stage,
+      phone: maskPhoneForLogs(normalizedPhone),
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
+}
+
 export async function beginClientRegistration(input: {
   name: string;
   phone: string;
-  password: string;
   privacyAccepted: boolean;
 }) {
   const payload = beginClientRegistrationSchema.parse(input);
@@ -436,9 +459,11 @@ export async function beginClientRegistration(input: {
     }
   }
 
-  const passwordHash = await hashPassword(payload.password);
+  const passwordHash = await createSmsOnlyPasswordHash();
   const code = generateVerificationCode();
   const codeHash = await hashPassword(code);
+  await sendRegistrationVerificationSms(payload.phone, code, "initial");
+
   const verification = await savePhoneVerification({
     name: payload.name,
     phone: payload.phone,
@@ -447,15 +472,10 @@ export async function beginClientRegistration(input: {
     purpose: "registration"
   });
 
-  try {
-    await sendSms(payload.phone, buildVerificationMessage(code));
-  } catch (error) {
-    console.error("Failed to send registration verification SMS", {
-      phone: payload.phone,
-      error: error instanceof Error ? error.message : error
-    });
-    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
-  }
+  console.info("[auth] Saved registration verification", {
+    phone: maskPhoneForLogs(verification.phone),
+    expiresAt: verification.expires_at
+  });
 
   return toVerificationState(verification);
 }
@@ -480,6 +500,8 @@ export async function resendClientVerificationCode(phone: string) {
 
   const code = generateVerificationCode();
   const codeHash = await hashPassword(code);
+  await sendRegistrationVerificationSms(normalizedPhone, code, "resend");
+
   const verification = await savePhoneVerification({
     name: existingVerification.name,
     phone: normalizedPhone,
@@ -488,15 +510,10 @@ export async function resendClientVerificationCode(phone: string) {
     purpose: "registration"
   });
 
-  try {
-    await sendSms(normalizedPhone, buildVerificationMessage(code));
-  } catch (error) {
-    console.error("Failed to resend registration verification SMS", {
-      phone: normalizedPhone,
-      error: error instanceof Error ? error.message : error
-    });
-    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
-  }
+  console.info("[auth] Refreshed registration verification", {
+    phone: maskPhoneForLogs(verification.phone),
+    expiresAt: verification.expires_at
+  });
 
   return toVerificationState(verification);
 }
@@ -525,6 +542,10 @@ export async function verifyClientRegistration(input: {
   const isValidCode = await verifyPassword(payload.code, verification.code_hash);
 
   if (!isValidCode) {
+    console.warn("[auth] Invalid registration verification code", {
+      phone: maskPhoneForLogs(payload.phone),
+      attempts: verification.attempts + 1
+    });
     await incrementVerificationAttempts(payload.phone, "registration", verification.attempts);
     throw new Error("Неверный код подтверждения");
   }
@@ -536,6 +557,10 @@ export async function verifyClientRegistration(input: {
   });
 
   await markVerificationUsed(verification.phone, "registration");
+
+  console.info("[auth] Registration verification confirmed", {
+    phone: maskPhoneForLogs(verification.phone)
+  });
 
   return user;
 }

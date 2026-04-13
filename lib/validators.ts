@@ -59,7 +59,6 @@ export const tokenSchema = z.object({
 export const clientRegisterSchema = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(100, "Слишком длинное имя"),
   phone: phoneSchema,
-  password: z.string().min(6, "Пароль должен быть не короче 6 символов"),
   privacyAccepted: z.literal(true, {
     errorMap: () => ({
       message: "Необходимо согласиться с Политикой конфиденциальности"
