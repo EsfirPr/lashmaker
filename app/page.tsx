@@ -50,10 +50,10 @@ export default async function HomePage() {
   const portfolioItems = portfolioResult.status === "fulfilled" ? portfolioResult.value : [];
   const primaryCta = getPrimaryCta(user?.role || null);
   const headerCta = getHeaderCta(user?.role || null);
-  const masterName = profile?.display_name || "LashMaker";
+  const masterName = profile?.display_name || "Sulamita";
   const heroHeadline =
     profile?.headline ||
-    "Премиальное наращивание ресниц с мягким beauty-сервисом и аккуратным результатом";
+    "Наращивание ресниц, которое подчёркивает взгляд и не спорит с вашим стилем";
   const yearsExperience = profile?.years_experience ?? 3;
 
   return (
@@ -76,32 +76,28 @@ export default async function HomePage() {
 
         <section className="landing-hero">
           <div className="panel landing-hero__copy">
-            <span className="eyebrow">Lash artist portfolio</span>
-            <h1>Наращивание ресниц, которое подчёркивает взгляд и не спорит с вашим стилем.</h1>
+            <span className="eyebrow">О мастере</span>
+            <h1>{masterName}</h1>
             <p className="lead">
               {heroHeadline}
             </p>
-            <div className="inline-actions section-space">
-              <Link className="button" href={primaryCta.href}>
-                {primaryCta.label}
-              </Link>
-              <a className="ghost-button" href="#portfolio">
-                Смотреть работы
-              </a>
-            </div>
             <div className="stats-grid landing-stats">
               <div className="stat">
                 <strong>{yearsExperience}+</strong>
                 <span className="muted">лет деликатной практики</span>
               </div>
               <div className="stat">
-                <strong>{portfolioItems.length || "0"}</strong>
-                <span className="muted">работ в живом портфолио</span>
+                <strong>2+</strong>
+                <span className="muted">часа по времени</span>
               </div>
-              <div className="stat">
-                <strong>1:1</strong>
-                <span className="muted">спокойный персональный подход</span>
-              </div>
+            </div>
+            <div className="landing-actions">
+              <Link className="button" href={primaryCta.href}>
+                {primaryCta.label}
+              </Link>
+              <a className="ghost-button" href="#portfolio">
+                Смотреть работы
+              </a>
             </div>
           </div>
 
@@ -116,9 +112,9 @@ export default async function HomePage() {
 
         <section className="panel landing-section section-space" id="portfolio">
           <div className="landing-section__heading">
-            <div>
+            <div className="landing-section__title-wrap">
               <span className="eyebrow">Портфолио</span>
-              <h2>Работы мастера</h2>
+              <h2 className="landing-section__title-nowrap">Работы мастера</h2>
             </div>
             <p className="muted">
               Сет лёгких натуральных эффектов, выразительных объемов и аккуратных посадок для повседневных и вечерних образов.

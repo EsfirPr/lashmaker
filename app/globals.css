@@ -507,11 +507,33 @@ main {
   margin-top: 26px;
 }
 
+.landing-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.landing-actions .button,
+.landing-actions .ghost-button {
+  min-height: 44px;
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .landing-section__heading {
   display: flex;
   justify-content: space-between;
   gap: 20px;
   align-items: flex-end;
+}
+
+.landing-section__title-wrap {
+  min-width: 0;
 }
 
 .landing-section__heading h2,
@@ -520,6 +542,12 @@ main {
   font-size: clamp(1.8rem, 3vw, 2.8rem);
   line-height: 1.05;
   letter-spacing: -0.04em;
+}
+
+.landing-section__title-nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .landing-about {
