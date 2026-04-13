@@ -29,7 +29,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
         <section className="panel booking-card">
           <header>
             <div>
-              <div className="inline-actions">
+              <div className="booking-card__badges">
                 <span className="eyebrow">Детали записи</span>
                 <span
                   className={`status-pill ${
@@ -93,9 +93,6 @@ export default async function BookingPage({ params }: BookingPageProps) {
           <div className="inline-actions section-space">
             <Link className="ghost-button" href="/account">
               Вернуться в кабинет
-            </Link>
-            <Link className="ghost-button" href="/">
-              Вернуться на главную
             </Link>
           </div>
         </section>

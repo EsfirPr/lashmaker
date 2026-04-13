@@ -712,6 +712,25 @@ main {
   margin-bottom: 20px;
 }
 
+.booking-card__badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.booking-card__badges .eyebrow,
+.booking-card__badges .status-pill {
+  margin-bottom: 0;
+}
+
+.booking-card__badges .eyebrow,
+.booking-card__badges .status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+}
+
 .note-box {
   margin-top: 16px;
   padding: 16px;
