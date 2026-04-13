@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   confirmClientPhoneChangeAction,
@@ -33,6 +34,7 @@ export function AccountProfileSettings({
   const router = useRouter();
   const initialState = useMemo(() => createInitialAccountProfileState(name, phone), [name, phone]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const handledSuccessRef = useRef<string>("");
   const [nameValue, setNameValue] = useState(name);
   const [phoneValue, setPhoneValue] = useState(phone);
@@ -60,6 +62,10 @@ export function AccountProfileSettings({
   );
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     setNameValue(activeState.currentName);
     setPhoneValue(activeState.step === "verify" ? activeState.pendingPhone : activeState.currentPhone);
   }, [activeState.currentName, activeState.currentPhone, activeState.pendingPhone, activeState.step]);
@@ -79,6 +85,28 @@ export function AccountProfileSettings({
 
     return () => window.clearInterval(timer);
   }, [activeState.resendAvailableAt]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const successKey = `${activeState.status}:${activeState.step}:${activeState.currentName}:${activeState.currentPhone}:${activeState.message}`;
@@ -124,7 +152,8 @@ export function AccountProfileSettings({
         </svg>
       </button>
 
-      {isOpen ? (
+      {isOpen && isMounted
+        ? createPortal(
         <div className="modal-overlay" onClick={() => setIsOpen(false)} role="presentation">
           <div
             aria-modal="true"
@@ -132,13 +161,18 @@ export function AccountProfileSettings({
             onClick={(event) => event.stopPropagation()}
             role="dialog"
           >
-            <div className="account-section__heading">
+            <div className="modal-card__header">
               <div>
                 <span className="eyebrow">Настройки профиля</span>
                 <h2>{activeState.step === "verify" ? "Подтвердите новый номер" : "Редактирование профиля"}</h2>
               </div>
-              <button className="ghost-button" onClick={() => setIsOpen(false)} type="button">
-                Отмена
+              <button
+                aria-label="Закрыть настройки"
+                className="modal-close-button"
+                onClick={() => setIsOpen(false)}
+                type="button"
+              >
+                ×
               </button>
             </div>
 
@@ -213,8 +247,10 @@ export function AccountProfileSettings({
               </form>
             )}
           </div>
-        </div>
-      ) : null}
+        </div>,
+        document.body
+      )
+        : null}
     </>
   );
 }

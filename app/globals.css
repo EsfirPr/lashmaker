@@ -370,7 +370,7 @@ main {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 999;
   display: grid;
   place-items: center;
   padding: 24px;
@@ -379,8 +379,49 @@ main {
 }
 
 .modal-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1000;
+  transform: translate(-50%, -50%);
   width: min(100%, 560px);
+  max-width: calc(100vw - 32px);
+  max-height: min(90vh, 760px);
+  overflow-y: auto;
   padding: 28px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.modal-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.modal-card__header h2 {
+  margin: 0;
+}
+
+.modal-close-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(65, 43, 32, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--accent-dark);
+  cursor: pointer;
+  font-size: 1.4rem;
+  line-height: 1;
+  box-shadow: 0 10px 20px rgba(71, 44, 31, 0.06);
+}
+
+.modal-close-button:hover {
+  transform: translateY(-1px);
 }
 
 .auth-secondary {
