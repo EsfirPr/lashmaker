@@ -57,11 +57,11 @@ type BookingWithMaybeSlotArray = Booking & {
   time_slots: TimeSlot | TimeSlot[] | null;
 };
 
-const reminderLeadTimeInMs = 5 * 60 * 1000;
-const reminderBufferInMs = 2 * 60 * 1000;
+const reminderLeadTimeInMs = 24 * 60 * 60 * 1000;
+const reminderBufferInMs = 5 * 60 * 1000;
 const reminderWindowStartInMs = reminderLeadTimeInMs - reminderBufferInMs;
 const reminderWindowEndInMs = reminderLeadTimeInMs + reminderBufferInMs;
-const reminderLeadTimeMinutes = 5;
+const reminderLeadTimeMinutes = 24 * 60;
 const appTimeZone = process.env.APP_TIMEZONE || "Europe/Moscow";
 const shortDateFormatter = new Intl.DateTimeFormat("ru-RU", {
   timeZone: appTimeZone,
@@ -110,10 +110,10 @@ function toDateKey(parts: { year: number; month: number; day: number }) {
 
 function buildUpcomingReminderMessage(booking: BookingWithSlot) {
   if (!booking.time_slots) {
-    return "Напоминаем: запись через 5 минут.";
+    return "Напоминаем: запись завтра.";
   }
 
-  return `Напоминаем: запись через 5 минут в ${booking.time_slots.start_time.slice(
+  return `Напоминаем: запись завтра в ${booking.time_slots.start_time.slice(
     0,
     5
   )}`;
