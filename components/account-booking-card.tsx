@@ -54,20 +54,22 @@ export function AccountBookingCard({ booking }: AccountBookingCardProps) {
             <h3>Слот больше недоступен</h3>
           )}
         </div>
-        <span className={`status-pill ${viewState.className}`}>{viewState.label}</span>
+        <div className="account-booking-card__status-block">
+          <span className={`status-pill ${viewState.className}`}>{viewState.label}</span>
+          <Link className="ghost-button" href={`/booking/${booking.public_token}`}>
+            Детали записи
+          </Link>
+        </div>
       </header>
 
-      <div className="inline-actions">
-        <Link className="ghost-button" href={`/booking/${booking.public_token}`}>
-          Детали записи
-        </Link>
-        {canCancel ? (
+      {canCancel ? (
+        <div className="inline-actions">
           <form action={cancelOwnBookingAction}>
             <input type="hidden" name="bookingId" value={booking.id} />
             <SubmitButton className="ghost-button">Отменить</SubmitButton>
           </form>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </article>
   );
 }

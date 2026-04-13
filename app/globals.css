@@ -1245,6 +1245,16 @@ main {
   letter-spacing: 0.02em;
 }
 
+.account-booking-card__status-block {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.account-booking-card__status-block .ghost-button {
+  margin-top: 2px;
+}
+
 .status-completed {
   color: #46678c;
   background: rgba(70, 103, 140, 0.12);
