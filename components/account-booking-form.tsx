@@ -416,27 +416,29 @@ export function AccountBookingForm() {
 
       <section className="beauty-calendar">
         <div className="beauty-calendar__topbar">
-          <button
-            aria-label="Предыдущий период"
-            className="calendar-nav-button"
-            disabled={isPrevDisabled}
-            onClick={() => handleNavigate("prev")}
-            type="button"
-          >
-            ←
-          </button>
           <div className="beauty-calendar__title-wrap">
             <span className="eyebrow beauty-calendar__eyebrow">Календарь записи</span>
             <h3>{period.label}</h3>
           </div>
-          <button
-            aria-label="Следующий период"
-            className="calendar-nav-button"
-            onClick={() => handleNavigate("next")}
-            type="button"
-          >
-            →
-          </button>
+          <div className="beauty-calendar__navigation">
+            <button
+              aria-label="Предыдущий период"
+              className="calendar-nav-button"
+              disabled={isPrevDisabled}
+              onClick={() => handleNavigate("prev")}
+              type="button"
+            >
+              ←
+            </button>
+            <button
+              aria-label="Следующий период"
+              className="calendar-nav-button"
+              onClick={() => handleNavigate("next")}
+              type="button"
+            >
+              →
+            </button>
+          </div>
         </div>
 
         {isLoadingSlots ? <p className="empty-state beauty-calendar__loading">Загружаем доступные окна...</p> : null}

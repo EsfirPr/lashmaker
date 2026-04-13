@@ -851,9 +851,7 @@ main {
 
 .beauty-calendar__topbar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 16px;
-  align-items: center;
+  gap: 14px;
 }
 
 .beauty-calendar__title-wrap {
@@ -871,6 +869,15 @@ main {
 
 .beauty-calendar__eyebrow {
   margin-bottom: 4px;
+}
+
+.beauty-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+  width: 100%;
 }
 
 .calendar-nav-button {
@@ -1456,7 +1463,6 @@ main {
   .cancelled-item header,
   .booking-card header,
   .account-hero__top,
-  .beauty-calendar__topbar,
   .month-day-detail__head,
   .account-booking-card__header,
   .account-section__heading,
@@ -1479,9 +1485,19 @@ main {
     padding: 18px;
   }
 
-  .beauty-calendar__topbar {
-    grid-template-columns: 1fr;
-    justify-items: stretch;
+  .beauty-calendar__title-wrap {
+    justify-items: flex-start;
+    text-align: left;
+  }
+
+  .beauty-calendar__navigation {
+    width: 100%;
+    gap: 16px;
+  }
+
+  .calendar-nav-button {
+    min-width: 46px;
+    min-height: 46px;
   }
 
   .week-calendar {
