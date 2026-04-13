@@ -75,6 +75,13 @@ function formatReadableDate(dateKey: string) {
   }).format(parseDateKey(dateKey));
 }
 
+function formatShortDate(dateKey: string) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "2-digit"
+  }).format(parseDateKey(dateKey));
+}
+
 function formatReadableMonth(dateKey: string) {
   return new Intl.DateTimeFormat("ru-RU", {
     month: "long",
@@ -96,23 +103,24 @@ function formatMonthDayNumber(dateKey: string) {
   }).format(parseDateKey(dateKey));
 }
 
-function getPeriodRange(anchorDate: string, mode: PeriodMode) {
+function getPeriodRange(anchorDate: string, mode: PeriodMode, useShortLabel = false) {
   if (mode === "day") {
     return {
       start: anchorDate,
       end: anchorDate,
-      label: formatReadableDate(anchorDate)
+      label: useShortLabel ? formatShortDate(anchorDate) : formatReadableDate(anchorDate)
     };
   }
 
   if (mode === "week") {
     const start = anchorDate;
     const end = addDays(start, 6);
+    const formatter = useShortLabel ? formatShortDate : formatReadableDate;
 
     return {
       start,
       end,
-      label: `${formatReadableDate(start)} - ${formatReadableDate(end)}`
+      label: `${formatter(start)} - ${formatter(end)}`
     };
   }
 
@@ -181,6 +189,7 @@ function getVisibleWeekDays(startDate: string) {
 export function AccountBookingForm() {
   const router = useRouter();
   const today = getTodayDate();
+  const [isMobile, setIsMobile] = useState(false);
   const [form, setForm] = useState<FormState>(initialState);
   const [periodMode, setPeriodMode] = useState<PeriodMode>("week");
   const [anchorDate, setAnchorDate] = useState(getTodayDate());
@@ -191,7 +200,10 @@ export function AccountBookingForm() {
   const [error, setError] = useState("");
   const [successToken, setSuccessToken] = useState("");
 
-  const period = useMemo(() => getPeriodRange(anchorDate, periodMode), [anchorDate, periodMode]);
+  const period = useMemo(
+    () => getPeriodRange(anchorDate, periodMode, isMobile),
+    [anchorDate, isMobile, periodMode]
+  );
   const groupedSlots = useMemo(() => groupSlotsByDay(slots), [slots]);
   const slotsByDate = useMemo(
     () => new Map(groupedSlots.map((group) => [group.date, group.slots])),
@@ -226,6 +238,16 @@ export function AccountBookingForm() {
       viewedMonth.getMonth() === currentMonth.getMonth()
     );
   }, [anchorDate, periodMode, today]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
