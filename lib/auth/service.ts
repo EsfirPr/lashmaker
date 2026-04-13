@@ -32,6 +32,11 @@ const verificationTtlMinutes = 10;
 const resendCooldownSeconds = 60;
 const maxVerificationAttempts = 5;
 
+function maskPhoneForLogs(phone: string) {
+  const normalized = normalizePhone(phone);
+  return `${normalized.slice(0, 2)}***${normalized.slice(-4)}`;
+}
+
 function toSafeUser(user: User): SafeUser {
   const { password_hash: _passwordHash, ...safeUser } = user;
   return safeUser;
@@ -53,6 +58,26 @@ function buildLoginCodeMessage(code: string) {
 
 function buildPhoneChangeCodeMessage(code: string) {
   return `Ваш код подтверждения: ${code}`;
+}
+
+async function sendPhoneChangeVerificationSms(phone: string, code: string, context: { userId: string; stage: "initial" | "resend" }) {
+  console.info("[auth] Sending phone change verification SMS", {
+    userId: context.userId,
+    stage: context.stage,
+    phone: maskPhoneForLogs(phone)
+  });
+
+  try {
+    await sendSms(phone, buildPhoneChangeCodeMessage(code));
+  } catch (error) {
+    console.error("Failed to send phone change verification SMS", {
+      userId: context.userId,
+      stage: context.stage,
+      phone: maskPhoneForLogs(phone),
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
 }
 
 function getVerificationExpiryDate() {
@@ -659,6 +684,14 @@ export async function startClientProfileUpdate(
   const nameChanged = (user.name || "").trim() !== payload.name;
   const phoneChanged = currentPhone !== nextPhone;
 
+  console.info("[auth] Client requested profile update", {
+    userId,
+    nameChanged,
+    phoneChanged,
+    currentPhone: currentPhone ? maskPhoneForLogs(currentPhone) : "missing",
+    nextPhone: maskPhoneForLogs(nextPhone)
+  });
+
   let updatedUser = toSafeUser(user);
 
   if (nameChanged) {
@@ -708,16 +741,10 @@ export async function startClientProfileUpdate(
     purpose: "change_phone"
   });
 
-  try {
-    await sendSms(nextPhone, buildPhoneChangeCodeMessage(code));
-  } catch (error) {
-    console.error("Failed to send phone change verification SMS", {
-      userId,
-      phone: nextPhone,
-      error: error instanceof Error ? error.message : error
-    });
-    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
-  }
+  await sendPhoneChangeVerificationSms(verification.phone, code, {
+    userId,
+    stage: "initial"
+  });
 
   return {
     requiresPhoneConfirmation: true,
@@ -769,16 +796,10 @@ export async function resendClientPhoneChangeCode(userId: string, phone: string)
     purpose: "change_phone"
   });
 
-  try {
-    await sendSms(normalizedPhone, buildPhoneChangeCodeMessage(code));
-  } catch (error) {
-    console.error("Failed to resend phone change verification SMS", {
-      userId,
-      phone: normalizedPhone,
-      error: error instanceof Error ? error.message : error
-    });
-    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
-  }
+  await sendPhoneChangeVerificationSms(nextVerification.phone, code, {
+    userId,
+    stage: "resend"
+  });
 
   return {
     phone: nextVerification.phone,

@@ -77,6 +77,8 @@ function isErrorResponse(result: string) {
   const normalized = result.trim().toLowerCase();
 
   return (
+    normalized.startsWith("<!doctype") ||
+    normalized.startsWith("<html") ||
     normalized.startsWith("error") ||
     normalized.includes("invalid") ||
     normalized.includes("denied") ||
@@ -86,13 +88,14 @@ function isErrorResponse(result: string) {
 
 export async function sendProntoSms(to: string, text: string) {
   const { url, redactedUrl, config } = buildRequestUrl(String(to), text);
+  const normalizedPhone = toProntoPhone(String(to));
 
   console.log("SMS URL:", redactedUrl);
   console.info("[sms:prontosms] Sending request", {
     endpoint: prontoSmsApiUrl,
     user: maskValue(config.user),
     sender: config.sender,
-    phone: toProntoPhone(String(to)),
+    phone: normalizedPhone,
     messagePreview: getSmsLogPreview(text)
   });
 
@@ -105,12 +108,15 @@ export async function sendProntoSms(to: string, text: string) {
   });
 
   const result = await response.text();
+  const contentType = response.headers.get("content-type") || "unknown";
 
   console.log("SMS RESPONSE:", result);
 
   if (!response.ok) {
     console.error("[sms:prontosms] HTTP error", {
       status: response.status,
+      contentType,
+      phone: normalizedPhone,
       response: result
     });
     throw new Error(`ProntoSMS request failed with status ${response.status}`);
@@ -118,10 +124,17 @@ export async function sendProntoSms(to: string, text: string) {
 
   if (isErrorResponse(result)) {
     console.error("[sms:prontosms] API error", {
+      contentType,
+      phone: normalizedPhone,
       response: result
     });
     throw new Error(result || "ProntoSMS did not accept the message");
   }
+
+  console.info("[sms:prontosms] SMS accepted by provider", {
+    phone: normalizedPhone,
+    contentType
+  });
 }
 
 export class ProntoSmsProvider implements SmsProvider {

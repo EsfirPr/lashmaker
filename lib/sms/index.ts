@@ -4,6 +4,16 @@ import { ConsoleSmsProvider } from "@/lib/sms/console-provider";
 import { getSmsLogPreview, type SmsProvider } from "@/lib/sms/provider";
 import { ProntoSmsProvider } from "@/lib/sms/prontosms";
 import { SmsRuProvider } from "@/lib/sms/smsru";
+import { normalizePhone } from "@/lib/utils/phone";
+
+function maskPhoneForLogs(phone: string) {
+  try {
+    const normalized = normalizePhone(phone);
+    return `${normalized.slice(0, 2)}***${normalized.slice(-4)}`;
+  } catch {
+    return "***";
+  }
+}
 
 function createSmsProvider(): SmsProvider {
   console.info("[sms] Selecting provider", {
@@ -26,7 +36,7 @@ export const smsProvider = createSmsProvider();
 export async function sendSms(to: string, text: string) {
   console.info("[sms] Sending message", {
     provider: env.smsProvider,
-    to,
+    to: maskPhoneForLogs(to),
     messagePreview: getSmsLogPreview(text)
   });
 
