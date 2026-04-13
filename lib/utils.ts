@@ -116,6 +116,14 @@ export function getSlotEndDate(slot: Pick<TimeSlot, "slot_date" | "end_time">) {
   return zonedDateTimeToUtc(slot.slot_date, slot.end_time);
 }
 
+export function getBookingCancelDeadline(slot: Pick<TimeSlot, "slot_date" | "start_time">) {
+  return new Date(getSlotStartDate(slot).getTime() - 5 * 60 * 1000);
+}
+
+export function isBookingCancelable(slot: Pick<TimeSlot, "slot_date" | "start_time">, now = new Date()) {
+  return now < getBookingCancelDeadline(slot);
+}
+
 export function formatSlotRange(slot: Pick<TimeSlot, "start_time" | "end_time">) {
   return `${slot.start_time.slice(0, 5)} - ${slot.end_time.slice(0, 5)}`;
 }

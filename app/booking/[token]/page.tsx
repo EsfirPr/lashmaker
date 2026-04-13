@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { SubmitButton } from "@/components/submit-button";
 import { getBookingByToken } from "@/lib/booking-service";
-import { formatDateLabel, formatSlotRange, formatStatusLabel } from "@/lib/utils";
+import { formatDateLabel, formatSlotRange, formatStatusLabel, isBookingCancelable } from "@/lib/utils";
 import { cancelBookingAction } from "./cancel-action";
 
 type BookingPageProps = {
@@ -20,6 +20,8 @@ export default async function BookingPage({ params }: BookingPageProps) {
   if (!booking || !booking.time_slots) {
     notFound();
   }
+
+  const canCancel = booking.status === "confirmed" && isBookingCancelable(booking.time_slots);
 
   return (
     <main className="page-shell">
@@ -71,11 +73,15 @@ export default async function BookingPage({ params }: BookingPageProps) {
             <p className="muted">{booking.notes || "Пожелания не указаны."}</p>
           </div>
 
-          {booking.status === "confirmed" ? (
+          {canCancel ? (
             <form className="section-space" action={cancelBookingAction}>
               <input type="hidden" name="token" value={booking.public_token} />
               <SubmitButton className="danger-button">Отменить запись</SubmitButton>
             </form>
+          ) : booking.status === "confirmed" ? (
+            <div className="message-error section-space">
+              Отмена возможна не позднее чем за 5 минут до начала записи.
+            </div>
           ) : (
             <div className="message-success section-space">
               Запись уже отменена. Освободившийся слот снова доступен для бронирования.

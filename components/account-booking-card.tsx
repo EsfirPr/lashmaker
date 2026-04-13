@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cancelOwnBookingAction } from "@/app/account/actions";
 import { SubmitButton } from "@/components/submit-button";
 import type { BookingWithSlot } from "@/lib/types";
-import { formatDateLabel, formatSlotRange, getSlotEndDate } from "@/lib/utils";
+import { formatDateLabel, formatSlotRange, getSlotEndDate, isBookingCancelable } from "@/lib/utils";
 
 type AccountBookingCardProps = {
   booking: BookingWithSlot;
@@ -32,6 +32,7 @@ function getBookingViewState(booking: BookingWithSlot) {
 export function AccountBookingCard({ booking }: AccountBookingCardProps) {
   const viewState = getBookingViewState(booking);
   const isActive = booking.status === "confirmed" && viewState.className === "status-confirmed";
+  const canCancel = isActive && booking.time_slots ? isBookingCancelable(booking.time_slots) : false;
 
   return (
     <article className={`account-booking-card ${viewState.className}`}>
@@ -69,7 +70,7 @@ export function AccountBookingCard({ booking }: AccountBookingCardProps) {
         <Link className="ghost-button" href={`/booking/${booking.public_token}`}>
           Детали записи
         </Link>
-        {isActive ? (
+        {canCancel ? (
           <form action={cancelOwnBookingAction}>
             <input type="hidden" name="bookingId" value={booking.id} />
             <SubmitButton className="ghost-button">Отменить</SubmitButton>
@@ -79,4 +80,3 @@ export function AccountBookingCard({ booking }: AccountBookingCardProps) {
     </article>
   );
 }
-

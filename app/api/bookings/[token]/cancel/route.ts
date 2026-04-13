@@ -14,12 +14,14 @@ export async function POST(_: Request, context: RouteContext) {
 
     return NextResponse.json({ status: booking.status });
   } catch (error) {
+    const isCancellationDeadlineError =
+      error instanceof Error && error.name === "BookingCancellationDeadlineError";
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Не удалось отменить запись"
       },
-      { status: 400 }
+      { status: isCancellationDeadlineError ? 403 : 400 }
     );
   }
 }
-

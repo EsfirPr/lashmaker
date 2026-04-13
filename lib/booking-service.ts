@@ -16,6 +16,7 @@ import {
   createPublicBookingUrl,
   formatDateLabel,
   formatSlotRange,
+  isBookingCancelable,
   getRelativeDate,
   getSlotEndDate,
   getSlotStartDate,
@@ -169,6 +170,14 @@ function buildConfirmationMessage(booking: BookingWithSlot) {
   const formattedTime = booking.time_slots.start_time.slice(0, 5);
 
   return `Вы записаны на наращивание ресниц ${formattedDate} в ${formattedTime}`;
+}
+
+function ensureBookingCancelable(booking: BookingWithSlot) {
+  if (!booking.time_slots || !isBookingCancelable(booking.time_slots)) {
+    const error = new Error("Отмена возможна не позднее чем за 5 минут до начала записи");
+    error.name = "BookingCancellationDeadlineError";
+    throw error;
+  }
 }
 
 async function getSlotById(slotId: string) {
@@ -426,6 +435,8 @@ export async function cancelBookingByToken(token: string) {
   if (booking.status === "cancelled") {
     return booking;
   }
+
+  ensureBookingCancelable(booking);
 
   const { data, error } = await supabase
     .from("bookings")
@@ -836,6 +847,49 @@ export async function listBookingsForMaster(filters: MasterBookingsFilters = {})
 export async function cancelBookingForClient(bookingId: string, userId: string) {
   const payload = bookingIdSchema.parse({ bookingId });
   const supabase = getSupabaseAdminClient();
+  const { data: existingBooking, error: bookingError } = await supabase
+    .from("bookings")
+    .select(
+      `
+      id,
+      name,
+      phone,
+      style,
+      notes,
+      user_id,
+      slot_id,
+      status,
+      public_token,
+      reminder_sent,
+      created_at,
+      time_slots!bookings_slot_id_fkey (
+        id,
+        slot_date,
+        start_time,
+        end_time,
+        created_at
+      )
+    `
+    )
+    .eq("id", payload.bookingId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (bookingError) {
+    throw new Error(bookingError.message);
+  }
+
+  const booking = normalizeBookingWithSlot(existingBooking as BookingWithMaybeSlotArray | null);
+
+  if (!booking) {
+    throw new Error("Запись не найдена или уже отменена");
+  }
+
+  if (booking.status === "cancelled") {
+    throw new Error("Запись не найдена или уже отменена");
+  }
+
+  ensureBookingCancelable(booking);
 
   const { data, error } = await supabase
     .from("bookings")
