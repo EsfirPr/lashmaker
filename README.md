@@ -118,7 +118,6 @@ https://clk.prontosms.ru/sendsms.php
 - `sadr`
 - `dadr`
 - `text`
-- `translite=1`
 
 В проекте это реализовано в [lib/sms/prontosms.ts](/Users/esfirpr/Documents/Project/lashmaker/lib/sms/prontosms.ts).
 

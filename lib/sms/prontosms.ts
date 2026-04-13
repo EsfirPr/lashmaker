@@ -55,8 +55,7 @@ function buildRequestUrl(to: string, message: string) {
     pwd: config.password,
     sadr: config.sender,
     dadr: toProntoPhone(to),
-    text: message,
-    translite: "1"
+    text: message
   });
 
   return {
@@ -66,8 +65,7 @@ function buildRequestUrl(to: string, message: string) {
       pwd: "***",
       sadr: config.sender,
       dadr: toProntoPhone(to),
-      text: getSmsLogPreview(message),
-      translite: "1"
+      text: getSmsLogPreview(message)
     }).toString()}`,
     config
   };
