@@ -136,19 +136,18 @@ export default async function HomePage() {
               {profile?.bio ||
                 "Работаю в спокойном темпе, уделяю внимание форме глаза, носибельности и чистоте каждой работы, чтобы результат выглядел дорого и гармонично."}
             </p>
-            <div className="feature-grid landing-feature-grid section-space">
-              <article className="feature">
-                <h3>Подбор под вас</h3>
-                <p>Эффект, изгиб и длина подбираются под посадку глаз, привычный макияж и желаемую выразительность.</p>
-              </article>
-              <article className="feature">
-                <h3>Комфортная носка</h3>
-                <p>Работаю на результат, который красиво раскрывает взгляд и остаётся удобным в повседневной жизни.</p>
-              </article>
-              <article className="feature">
-                <h3>Чистая техника</h3>
-                <p>Аккуратная изоляция и спокойный beauty-процесс помогают получить чистый и премиальный итог.</p>
-              </article>
+            <div className="certificates-gallery section-space">
+              <div className="certificates-list">
+                <article className="certificate-card">
+                  <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
+                </article>
+                <article className="certificate-card">
+                  <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
+                </article>
+                <article className="certificate-card">
+                  <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
+                </article>
+              </div>
             </div>
           </section>
 

@@ -1,0 +1,16 @@
+<svg width="800" height="1067" viewBox="0 0 800 1067" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="1067" rx="44" fill="#F8F1ED"/>
+  <rect x="34" y="34" width="732" height="999" rx="34" fill="#FFFDFC" stroke="#E6D5CC" stroke-width="2"/>
+  <circle cx="400" cy="184" r="72" fill="#E9C1B2"/>
+  <path d="M400 140C424.301 140 444 159.699 444 184C444 208.301 424.301 228 400 228C375.699 228 356 208.301 356 184C356 159.699 375.699 140 400 140Z" fill="#D2765D"/>
+  <rect x="196" y="304" width="408" height="18" rx="9" fill="#D9B6A8"/>
+  <rect x="246" y="342" width="308" height="18" rx="9" fill="#E8D7CF"/>
+  <rect x="164" y="430" width="472" height="12" rx="6" fill="#E8D7CF"/>
+  <rect x="164" y="462" width="472" height="12" rx="6" fill="#E8D7CF"/>
+  <rect x="164" y="494" width="472" height="12" rx="6" fill="#E8D7CF"/>
+  <rect x="164" y="526" width="472" height="12" rx="6" fill="#E8D7CF"/>
+  <rect x="164" y="558" width="472" height="12" rx="6" fill="#E8D7CF"/>
+  <path d="M232 760C232 737.909 249.909 720 272 720H528C550.091 720 568 737.909 568 760V816H232V760Z" fill="#F3E1D8"/>
+  <path d="M286 816H514L494 904H306L286 816Z" fill="#D2765D"/>
+  <circle cx="400" cy="816" r="28" fill="#FFFDFC"/>
+</svg>

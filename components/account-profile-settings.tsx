@@ -243,7 +243,7 @@ export function AccountProfileSettings({
                       value={phoneValue}
                     />
                   </div>
-                  <div className="inline-actions">
+                  <div className="inline-actions settings-actions">
                     <SubmitButton>Сохранить</SubmitButton>
                     <button className="ghost-button" onClick={() => setIsOpen(false)} type="button">
                       Отмена

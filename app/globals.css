@@ -562,6 +562,10 @@ main {
   gap: 24px;
 }
 
+.landing-about .landing-section__heading {
+  margin-bottom: 16px;
+}
+
 .landing-cta {
   background:
     radial-gradient(circle at top left, rgba(210, 118, 93, 0.16), transparent 28%),
@@ -576,6 +580,46 @@ main {
 
 .landing-feature-grid {
   margin-top: 22px;
+}
+
+.certificates-gallery {
+  width: 100%;
+  min-width: 0;
+}
+
+.certificates-list {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 12px;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.certificates-list::-webkit-scrollbar {
+  display: none;
+}
+
+.certificate-card {
+  flex: 0 0 auto;
+  width: min(64vw, 220px);
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(65, 43, 32, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 28px rgba(71, 44, 31, 0.06);
+}
+
+.certificate-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 18px;
 }
 
 .portfolio-grid {
@@ -860,6 +904,19 @@ main {
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.settings-actions {
+  align-items: stretch;
+}
+
+.settings-actions .button,
+.settings-actions .ghost-button {
+  min-height: 50px;
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .list-table {
