@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { logoutAction } from "@/app/auth-actions";
 import {
   confirmClientPhoneChangeAction,
   resendClientPhoneChangeCodeAction,
@@ -217,37 +218,45 @@ export function AccountProfileSettings({
                 </form>
               </>
             ) : (
-              <form action={saveAction} className="form-grid section-space">
-                <div className="field">
-                  <label htmlFor="profileName">Имя</label>
-                  <input
-                    autoComplete="name"
-                    id="profileName"
-                    name="name"
-                    onChange={(event) => setNameValue(event.target.value)}
-                    required
-                    value={nameValue}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="profilePhone">Номер телефона</label>
-                  <input
-                    autoComplete="tel"
-                    id="profilePhone"
-                    name="phone"
-                    onChange={(event) => setPhoneValue(event.target.value)}
-                    required
-                    type="tel"
-                    value={phoneValue}
-                  />
-                </div>
-                <div className="inline-actions">
-                  <SubmitButton>Сохранить</SubmitButton>
-                  <button className="ghost-button" onClick={() => setIsOpen(false)} type="button">
-                    Отмена
+              <>
+                <form action={saveAction} className="form-grid section-space">
+                  <div className="field">
+                    <label htmlFor="profileName">Имя</label>
+                    <input
+                      autoComplete="name"
+                      id="profileName"
+                      name="name"
+                      onChange={(event) => setNameValue(event.target.value)}
+                      required
+                      value={nameValue}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="profilePhone">Номер телефона</label>
+                    <input
+                      autoComplete="tel"
+                      id="profilePhone"
+                      name="phone"
+                      onChange={(event) => setPhoneValue(event.target.value)}
+                      required
+                      type="tel"
+                      value={phoneValue}
+                    />
+                  </div>
+                  <div className="inline-actions">
+                    <SubmitButton>Сохранить</SubmitButton>
+                    <button className="ghost-button" onClick={() => setIsOpen(false)} type="button">
+                      Отмена
+                    </button>
+                  </div>
+                </form>
+
+                <form action={logoutAction} className="section-space">
+                  <button className="ghost-button" type="submit">
+                    Выйти
                   </button>
-                </div>
-              </form>
+                </form>
+              </>
             )}
           </div>
         </div>,

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { logoutAction } from "@/app/auth-actions";
 import { AccountBookingForm } from "@/components/account-booking-form";
 import { AccountBookingsHistory } from "@/components/account-bookings-history";
 import { AccountProfileSettings } from "@/components/account-profile-settings";
@@ -27,11 +26,6 @@ export default async function AccountPage() {
                 name={profileName || ""}
                 phone={user.phone || ""}
               />
-              <form action={logoutAction}>
-                <button className="ghost-button" type="submit">
-                  Выйти
-                </button>
-              </form>
             </div>
           </div>
           <div className="account-hero__copy">
