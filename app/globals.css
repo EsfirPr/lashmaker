@@ -455,6 +455,8 @@ main {
 }
 
 .landing-hero__copy {
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at top left, rgba(255, 214, 198, 0.92), transparent 34%),
     linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(252, 241, 236, 0.82));
@@ -503,6 +505,10 @@ main {
   line-height: 1.7;
 }
 
+.landing-bottom {
+  margin-top: auto;
+}
+
 .landing-stats {
   margin-top: 26px;
 }
@@ -510,7 +516,7 @@ main {
 .landing-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
   margin-top: 16px;
   flex-wrap: wrap;
@@ -573,7 +579,19 @@ main {
 }
 
 .portfolio-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 16px;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.portfolio-grid::-webkit-scrollbar {
+  display: none;
 }
 
 .portfolio-card,
@@ -583,6 +601,11 @@ main {
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.8);
   box-shadow: 0 16px 30px rgba(71, 44, 31, 0.06);
+}
+
+.portfolio-card {
+  flex: 0 0 auto;
+  width: min(78vw, 280px);
 }
 
 .portfolio-card__image-wrap,

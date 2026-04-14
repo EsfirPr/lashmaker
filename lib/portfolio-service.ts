@@ -26,7 +26,7 @@ export function resolveMasterProfile(master: SafeUser, profile: MasterProfile | 
   return {
     user_id: master.id,
     display_name: master.name || master.nickname || "LashMaker",
-    headline: "Наращивание ресниц с деликатной техникой и спокойным beauty-сервисом",
+    headline: "Наращивание ресниц, которое подчёркивает взгляд и не спорит с вашим стилем",
     bio:
       "Помогаю подобрать форму и объем так, чтобы взгляд выглядел выразительно, а образ оставался гармоничным в повседневной жизни и на съемках.",
     years_experience: 3,

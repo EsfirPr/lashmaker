@@ -81,23 +81,25 @@ export default async function HomePage() {
             <p className="lead">
               {heroHeadline}
             </p>
-            <div className="stats-grid landing-stats">
-              <div className="stat">
-                <strong>{yearsExperience}+</strong>
-                <span className="muted">лет деликатной практики</span>
+            <div className="landing-bottom">
+              <div className="stats-grid landing-stats">
+                <div className="stat">
+                  <strong>{yearsExperience}+</strong>
+                  <span className="muted">лет деликатной практики</span>
+                </div>
+                <div className="stat">
+                  <strong>2+</strong>
+                  <span className="muted">часа по времени</span>
+                </div>
               </div>
-              <div className="stat">
-                <strong>2+</strong>
-                <span className="muted">часа по времени</span>
+              <div className="landing-actions">
+                <Link className="button" href={primaryCta.href}>
+                  {primaryCta.label}
+                </Link>
+                <a className="ghost-button" href="#portfolio">
+                  Смотреть работы
+                </a>
               </div>
-            </div>
-            <div className="landing-actions">
-              <Link className="button" href={primaryCta.href}>
-                {primaryCta.label}
-              </Link>
-              <a className="ghost-button" href="#portfolio">
-                Смотреть работы
-              </a>
             </div>
           </div>
 
@@ -116,9 +118,6 @@ export default async function HomePage() {
               <span className="eyebrow">Портфолио</span>
               <h2 className="landing-section__title-nowrap">Работы мастера</h2>
             </div>
-            <p className="muted">
-              Сет лёгких натуральных эффектов, выразительных объемов и аккуратных посадок для повседневных и вечерних образов.
-            </p>
           </div>
           <div className="section-space">
             <PortfolioGallery items={portfolioItems} />
