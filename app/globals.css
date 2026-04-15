@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Doppelganger_RUS";
+  src: url("/fonts/Doppelganger_RUS.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #f6f1eb;
   --surface: rgba(255, 255, 255, 0.82);
@@ -16,6 +24,7 @@
   --radius-sm: 12px;
   --container: 1120px;
   --font-sans: "Manrope", "Segoe UI", sans-serif;
+  --font-heading: "Doppelganger_RUS", "Manrope", "Segoe UI", sans-serif;
 }
 
 * {
@@ -104,6 +113,13 @@ main {
   font-size: clamp(2.1rem, 4vw, 4rem);
   line-height: 0.98;
   letter-spacing: -0.04em;
+  font-family: var(--font-heading);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
 }
 
 .lead {
