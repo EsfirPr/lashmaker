@@ -771,7 +771,7 @@ h2 {
   text-align: center;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 801px) {
   .certificates-list,
   .portfolio-grid {
     padding-inline: 20px;
@@ -782,6 +782,23 @@ h2 {
   .certificate-card,
   .portfolio-card {
     scroll-snap-stop: always;
+  }
+}
+
+@media (min-width: 801px) {
+  .gallery-scroll {
+    cursor: grab;
+  }
+
+  .gallery-scroll.is-dragging {
+    cursor: grabbing;
+    scroll-behavior: auto;
+    user-select: none;
+  }
+
+  .gallery-scroll > * {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
   }
 }
 

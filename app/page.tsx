@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getLandingMasterProfile, getLandingPortfolioItems } from "@/lib/portfolio-service";
@@ -142,13 +143,13 @@ export default async function HomePage() {
                 "Работаю в спокойном темпе, уделяю внимание форме глаза, носибельности и чистоте каждой работы, чтобы результат выглядел дорого и гармонично."}
             </p>
             <div className="certificates-gallery section-space">
-              <div className="certificates-list">
+              <HorizontalScrollGallery className="certificates-list">
                 {certificatePlaceholderIds.map((certificateId) => (
                   <article className="certificate-card" key={certificateId}>
                     <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
                   </article>
                 ))}
-              </div>
+              </HorizontalScrollGallery>
             </div>
           </section>
 

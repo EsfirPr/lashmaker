@@ -1,4 +1,5 @@
 import type { PortfolioItem } from "@/lib/types";
+import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 
 type PortfolioGalleryProps = {
   items: PortfolioItem[];
@@ -22,7 +23,7 @@ export function PortfolioGallery({
   }
 
   return (
-    <div className="portfolio-grid">
+    <HorizontalScrollGallery className="portfolio-grid">
       {items.map((item) => (
         <article className="portfolio-card" key={item.id}>
           <div className="portfolio-card__image-wrap">
@@ -33,6 +34,6 @@ export function PortfolioGallery({
           </div>
         </article>
       ))}
-    </div>
+    </HorizontalScrollGallery>
   );
 }
