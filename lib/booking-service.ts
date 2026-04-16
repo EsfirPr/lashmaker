@@ -195,6 +195,40 @@ async function getSlotById(slotId: string) {
   return (data as TimeSlot | null) || null;
 }
 
+async function hydrateAdminSlots(slots: TimeSlot[]) {
+  const supabase = getSupabaseAdminClient();
+  const slotIds = slots.map((slot) => slot.id);
+  const bookingsBySlot = new Map<string, Booking[]>();
+
+  if (slotIds.length > 0) {
+    const { data: bookings, error: bookingsError } = await supabase
+      .from("bookings")
+      .select("*")
+      .in("slot_id", slotIds)
+      .order("created_at", { ascending: true });
+
+    if (bookingsError) {
+      throw new Error(bookingsError.message);
+    }
+
+    for (const booking of (bookings || []) as Booking[]) {
+      const current = bookingsBySlot.get(booking.slot_id) || [];
+      current.push(booking);
+      bookingsBySlot.set(booking.slot_id, current);
+    }
+  }
+
+  return slots.map<AdminSlotView>((slot) => {
+    const bookings = bookingsBySlot.get(slot.id) || [];
+
+    return {
+      ...slot,
+      activeBooking: bookings.find((item) => item.status === "confirmed") || null,
+      cancelledBookings: bookings.filter((item) => item.status === "cancelled")
+    };
+  });
+}
+
 async function cleanupPastEmptyTimeSlots() {
   const supabase = getSupabaseAdminClient();
   const today = getTodayDate();
@@ -485,16 +519,30 @@ export async function cancelBookingByToken(token: string) {
 }
 
 export async function listScheduleDays(daysAhead = 14) {
-  await cleanupPastEmptyTimeSlots();
-  const supabase = getSupabaseAdminClient();
   const startDate = getRelativeDate(0);
   const endDate = getRelativeDate(daysAhead);
+  return listScheduleDaysInRange(startDate, endDate);
+}
+
+export async function listScheduleDaysInRange(startDate: string, endDate: string) {
+  await cleanupPastEmptyTimeSlots();
+  const parsed = bookingInputSchema
+    .pick({ date: true })
+    .array()
+    .parse([{ date: startDate }, { date: endDate }]);
+  const supabase = getSupabaseAdminClient();
+  const today = getTodayDate();
+  const effectiveStartDate = parsed[0].date < today ? today : parsed[0].date;
+
+  if (parsed[1].date < effectiveStartDate) {
+    return [];
+  }
 
   const { data: slots, error } = await supabase
     .from("time_slots")
     .select("*")
-    .gte("slot_date", startDate)
-    .lte("slot_date", endDate)
+    .gte("slot_date", effectiveStartDate)
+    .lte("slot_date", parsed[1].date)
     .order("slot_date", { ascending: true })
     .order("start_time", { ascending: true });
 
@@ -503,39 +551,12 @@ export async function listScheduleDays(daysAhead = 14) {
   }
 
   const safeSlots = (slots || []) as TimeSlot[];
-  const slotIds = safeSlots.map((slot) => slot.id);
-  const bookingsBySlot = new Map<string, Booking[]>();
-
-  if (slotIds.length > 0) {
-    const { data: bookings, error: bookingsError } = await supabase
-      .from("bookings")
-      .select("*")
-      .in("slot_id", slotIds)
-      .order("created_at", { ascending: true });
-
-    if (bookingsError) {
-      throw new Error(bookingsError.message);
-    }
-
-    for (const booking of (bookings || []) as Booking[]) {
-      const current = bookingsBySlot.get(booking.slot_id) || [];
-      current.push(booking);
-      bookingsBySlot.set(booking.slot_id, current);
-    }
-  }
-
+  const adminSlots = await hydrateAdminSlots(safeSlots);
   const grouped = new Map<string, AdminSlotView[]>();
 
-  for (const slot of safeSlots) {
-    const bookings = bookingsBySlot.get(slot.id) || [];
-    const activeBooking = bookings.find((item) => item.status === "confirmed") || null;
-    const cancelledBookings = bookings.filter((item) => item.status === "cancelled");
+  for (const slot of adminSlots) {
     const current = grouped.get(slot.slot_date) || [];
-    current.push({
-      ...slot,
-      activeBooking,
-      cancelledBookings
-    });
+    current.push(slot);
     grouped.set(slot.slot_date, current);
   }
 
@@ -543,6 +564,19 @@ export async function listScheduleDays(daysAhead = 14) {
     date,
     slots: daySlots
   }));
+}
+
+export async function getScheduleSlotDetail(slotId: string) {
+  await cleanupPastEmptyTimeSlots();
+  const payload = deleteSlotSchema.parse({ slotId });
+  const slot = await getSlotById(payload.slotId);
+
+  if (!slot) {
+    return null;
+  }
+
+  const [adminSlot] = await hydrateAdminSlots([slot]);
+  return adminSlot || null;
 }
 
 export async function createTimeSlot(input: CreateSlotInput) {

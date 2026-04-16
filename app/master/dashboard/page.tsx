@@ -2,9 +2,9 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { logoutAction } from "@/app/auth-actions";
 import { AdminSlotForm } from "@/components/admin-slot-form";
+import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
 import { MasterPortfolioManager } from "@/components/master-portfolio-manager";
 import { MasterBookingListItem } from "@/components/master-booking-list-item";
-import { MasterScheduleDay } from "@/components/master-schedule-day";
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
@@ -60,7 +60,19 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
       <div className="container">
         <section className="panel master-hero">
           <div className="master-hero__copy">
-            <span className="eyebrow">Кабинет мастера</span>
+            <div className="master-hero__header">
+              <span className="eyebrow master-hero__label">Кабинет мастера</span>
+              <div className="master-hero__actions">
+                <Link className="ghost-button" href="/">
+                  На главную
+                </Link>
+                <form action={logoutAction}>
+                  <button className="ghost-button" type="submit">
+                    Выйти
+                  </button>
+                </form>
+              </div>
+            </div>
             <h1 className="page-title">Здравствуйте, {master.nickname}</h1>
             <p className="lead">
               Здесь собраны расписание, записи, клиенты и быстрые действия. Все данные доступны
@@ -86,16 +98,6 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
                 Отмены
               </a>
             </div>
-          </div>
-          <div className="master-hero__actions">
-            <Link className="ghost-button" href="/">
-              На главную
-            </Link>
-            <form action={logoutAction}>
-              <button className="ghost-button" type="submit">
-                Выйти
-              </button>
-            </form>
           </div>
         </section>
 
@@ -239,23 +241,10 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
           <div className="account-section__heading">
             <div>
               <span className="eyebrow">Расписание</span>
-              <h2>Слоты по дням</h2>
+              <h2>Календарь мастера</h2>
             </div>
           </div>
-          <div className="master-schedule-list section-space">
-            {days.length === 0 ? (
-              <div className="account-empty">
-                <div className="account-empty__icon">M</div>
-                <h3>Слотов пока нет</h3>
-                <p className="empty-state">
-                  Добавьте первое окно, чтобы клиенты смогли выбрать время для записи.
-                </p>
-              </div>
-            ) : null}
-            {days.map((day) => (
-              <MasterScheduleDay day={day} key={day.date} />
-            ))}
-          </div>
+          <MasterScheduleCalendar initialDays={days} />
         </section>
 
         <section className="panel stack-card section-space master-section" id="clients">

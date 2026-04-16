@@ -5,11 +5,22 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { readJsonResponse } from "@/lib/http";
+import {
+  addDaysToDateKey,
+  addMonthsToDateKey,
+  buildMonthGrid,
+  CALENDAR_PERIOD_OPTIONS,
+  formatMonthDayNumber,
+  formatReadableDate,
+  formatWeekday,
+  getPeriodRange,
+  getVisibleWeekDays,
+  parseDateKey,
+  type PeriodMode
+} from "@/lib/calendar";
 import type { TimeSlot } from "@/lib/types";
 import { STYLE_OPTIONS } from "@/lib/validators";
 import { formatSlotRange, getTodayDate } from "@/lib/utils";
-
-type PeriodMode = "day" | "week" | "month";
 
 type FormState = {
   style: string;
@@ -30,111 +41,6 @@ const initialState: FormState = {
   slotId: ""
 };
 
-const periodOptions: Array<{ value: PeriodMode; label: string }> = [
-  { value: "day", label: "День" },
-  { value: "week", label: "Неделя" },
-  { value: "month", label: "Месяц" }
-];
-
-function parseDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function toDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function addDays(dateKey: string, days: number) {
-  const next = parseDateKey(dateKey);
-  next.setDate(next.getDate() + days);
-  return toDateKey(next);
-}
-
-function addMonths(dateKey: string, months: number) {
-  const next = parseDateKey(dateKey);
-  next.setMonth(next.getMonth() + months);
-  return toDateKey(next);
-}
-
-function getWeekStart(dateKey: string) {
-  const date = parseDateKey(dateKey);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-  return toDateKey(date);
-}
-
-function formatReadableDate(dateKey: string) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    day: "numeric",
-    month: "long"
-  }).format(parseDateKey(dateKey));
-}
-
-function formatShortDate(dateKey: string) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    day: "2-digit",
-    month: "2-digit"
-  }).format(parseDateKey(dateKey));
-}
-
-function formatReadableMonth(dateKey: string) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    month: "long",
-    year: "numeric"
-  }).format(parseDateKey(dateKey));
-}
-
-function formatWeekday(dateKey: string) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    weekday: "short"
-  })
-    .format(parseDateKey(dateKey))
-    .replace(".", "");
-}
-
-function formatMonthDayNumber(dateKey: string) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    day: "numeric"
-  }).format(parseDateKey(dateKey));
-}
-
-function getPeriodRange(anchorDate: string, mode: PeriodMode, useShortLabel = false) {
-  if (mode === "day") {
-    return {
-      start: anchorDate,
-      end: anchorDate,
-      label: useShortLabel ? formatShortDate(anchorDate) : formatReadableDate(anchorDate)
-    };
-  }
-
-  if (mode === "week") {
-    const start = anchorDate;
-    const end = addDays(start, 6);
-    const formatter = useShortLabel ? formatShortDate : formatReadableDate;
-
-    return {
-      start,
-      end,
-      label: `${formatter(start)} - ${formatter(end)}`
-    };
-  }
-
-  const date = parseDateKey(anchorDate);
-  const start = toDateKey(new Date(date.getFullYear(), date.getMonth(), 1));
-  const end = toDateKey(new Date(date.getFullYear(), date.getMonth() + 1, 0));
-
-  return {
-    start,
-    end,
-    label: formatReadableMonth(anchorDate)
-  };
-}
-
 function groupSlotsByDay(slots: TimeSlot[]) {
   return slots.reduce<SlotGroup[]>((accumulator, slot) => {
     const current = accumulator[accumulator.length - 1];
@@ -151,39 +57,6 @@ function groupSlotsByDay(slots: TimeSlot[]) {
 
     return accumulator;
   }, []);
-}
-
-function buildMonthGrid(anchorDate: string) {
-  const monthStart = parseDateKey(toDateKey(new Date(parseDateKey(anchorDate).getFullYear(), parseDateKey(anchorDate).getMonth(), 1)));
-  const monthEnd = parseDateKey(toDateKey(new Date(parseDateKey(anchorDate).getFullYear(), parseDateKey(anchorDate).getMonth() + 1, 0)));
-  const gridStart = parseDateKey(getWeekStart(toDateKey(monthStart)));
-  const endWeekday = monthEnd.getDay();
-  const monthGridEnd = parseDateKey(
-    toDateKey(
-      new Date(
-        monthEnd.getFullYear(),
-        monthEnd.getMonth(),
-        monthEnd.getDate() + (endWeekday === 0 ? 0 : 7 - endWeekday)
-      )
-    )
-  );
-
-  const days: Array<{ date: string; inMonth: boolean }> = [];
-
-  for (let cursor = new Date(gridStart); cursor <= monthGridEnd; cursor.setDate(cursor.getDate() + 1)) {
-    const dateKey = toDateKey(cursor);
-    days.push({
-      date: dateKey,
-      inMonth: cursor.getMonth() === monthStart.getMonth()
-    });
-  }
-
-  return days;
-}
-
-function getVisibleWeekDays(startDate: string) {
-  const start = startDate;
-  return Array.from({ length: 7 }, (_, index) => addDays(start, index));
 }
 
 export function AccountBookingForm() {
@@ -320,16 +193,16 @@ export function AccountBookingForm() {
 
     setAnchorDate((current) => {
       if (periodMode === "day") {
-        const next = addDays(current, step);
+        const next = addDaysToDateKey(current, step);
         return next < today ? today : next;
       }
 
       if (periodMode === "week") {
-        const next = addDays(current, step * 7);
+        const next = addDaysToDateKey(current, step * 7);
         return next < today ? today : next;
       }
 
-      const next = addMonths(current, step);
+      const next = addMonthsToDateKey(current, step);
       const currentMonth = parseDateKey(today);
       const nextMonth = parseDateKey(next);
 
@@ -426,7 +299,7 @@ export function AccountBookingForm() {
             className="slot-segmented"
             role="tablist"
           >
-            {periodOptions.map((option) => (
+            {CALENDAR_PERIOD_OPTIONS.map((option) => (
               <button
                 aria-selected={periodMode === option.value}
                 className={periodMode === option.value ? "slot-segmented__button is-active" : "slot-segmented__button"}
