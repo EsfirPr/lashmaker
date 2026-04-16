@@ -50,11 +50,12 @@ function toProntoPhone(phone: string) {
 
 function buildRequestUrl(to: string, message: string) {
   const config = getProntoSmsConfig();
+  const normalizedPhone = toProntoPhone(to);
   const params = new URLSearchParams({
     user: config.user,
     pwd: config.password,
     sadr: config.sender,
-    dadr: toProntoPhone(to),
+    dadr: normalizedPhone,
     text: message
   });
 
@@ -64,10 +65,11 @@ function buildRequestUrl(to: string, message: string) {
       user: config.user,
       pwd: "***",
       sadr: config.sender,
-      dadr: toProntoPhone(to),
+      dadr: normalizedPhone,
       text: getSmsLogPreview(message)
     }).toString()}`,
-    config
+    config,
+    normalizedPhone
   };
 }
 
@@ -101,8 +103,7 @@ function extractMessageId(result: string) {
 }
 
 export async function sendProntoSms(to: string, text: string) {
-  const { url, redactedUrl, config } = buildRequestUrl(String(to), text);
-  const normalizedPhone = toProntoPhone(String(to));
+  const { url, redactedUrl, config, normalizedPhone } = buildRequestUrl(String(to), text);
 
   console.log("SMS GET REQUEST:", redactedUrl);
   console.log("SMS URL:", redactedUrl);

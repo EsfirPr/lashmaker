@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { logoutAction } from "@/app/auth-actions";
@@ -61,6 +61,8 @@ export function AccountProfileSettings({
   const [secondsLeft, setSecondsLeft] = useState(
     formatCountdown(activeState.resendAvailableAt)
   );
+  const isVerifyStep = activeState.step === "verify";
+  const closeSettings = useCallback(() => setIsOpen(false), []);
 
   useEffect(() => {
     setIsMounted(true);
@@ -68,8 +70,8 @@ export function AccountProfileSettings({
 
   useEffect(() => {
     setNameValue(activeState.currentName);
-    setPhoneValue(activeState.step === "verify" ? activeState.pendingPhone : activeState.currentPhone);
-  }, [activeState.currentName, activeState.currentPhone, activeState.pendingPhone, activeState.step]);
+    setPhoneValue(isVerifyStep ? activeState.pendingPhone : activeState.currentPhone);
+  }, [activeState.currentName, activeState.currentPhone, activeState.pendingPhone, isVerifyStep]);
 
   useEffect(() => {
     setSecondsLeft(formatCountdown(activeState.resendAvailableAt));
@@ -97,7 +99,7 @@ export function AccountProfileSettings({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        closeSettings();
       }
     };
 
@@ -107,7 +109,7 @@ export function AccountProfileSettings({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [closeSettings, isOpen]);
 
   useEffect(() => {
     const successKey = `${activeState.status}:${activeState.step}:${activeState.currentName}:${activeState.currentPhone}:${activeState.message}`;
@@ -155,7 +157,7 @@ export function AccountProfileSettings({
 
       {isOpen && isMounted
         ? createPortal(
-        <div className="modal-overlay" onClick={() => setIsOpen(false)} role="presentation">
+        <div className="modal-overlay" onClick={closeSettings} role="presentation">
           <div
             aria-modal="true"
             className="panel modal-card"
@@ -170,7 +172,7 @@ export function AccountProfileSettings({
               <button
                 aria-label="Закрыть настройки"
                 className="modal-close-button"
-                onClick={() => setIsOpen(false)}
+                onClick={closeSettings}
                 type="button"
               >
                 ×
@@ -182,13 +184,13 @@ export function AccountProfileSettings({
                 className={activeState.status === "error" ? "message-error section-space" : "message-success section-space"}
               >
                 {activeState.message}
-                {activeState.step === "verify" && activeState.maskedPendingPhone ? (
+                {isVerifyStep && activeState.maskedPendingPhone ? (
                   <> Номер для подтверждения: <strong>{activeState.maskedPendingPhone}</strong>.</>
                 ) : null}
               </div>
             ) : null}
 
-            {activeState.step === "verify" ? (
+            {isVerifyStep ? (
               <>
                 <form action={verifyAction} className="form-grid section-space">
                   <input name="phone" type="hidden" value={activeState.pendingPhone} />
@@ -245,7 +247,7 @@ export function AccountProfileSettings({
                   </div>
                   <div className="inline-actions settings-actions">
                     <SubmitButton>Сохранить</SubmitButton>
-                    <button className="ghost-button" onClick={() => setIsOpen(false)} type="button">
+                    <button className="ghost-button" onClick={closeSettings} type="button">
                       Отмена
                     </button>
                   </div>

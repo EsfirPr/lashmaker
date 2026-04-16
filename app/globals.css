@@ -122,6 +122,11 @@ h3 {
   font-family: var(--font-heading);
 }
 
+h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
 .lead {
   margin: 0;
   max-width: 56ch;
@@ -179,7 +184,7 @@ h3 {
 .stack-card h2,
 .stack-card h3,
 .booking-card h2 {
-  margin: 0 0 10px;
+  margin: 0 0 16px;
 }
 
 .feature p,
@@ -419,7 +424,7 @@ h3 {
 }
 
 .modal-card__header h2 {
-  margin: 0;
+  margin: 0 0 16px;
 }
 
 .modal-close-button {
@@ -572,7 +577,7 @@ h3 {
 
 .landing-section__heading h2,
 .landing-cta h2 {
-  margin: 10px 0 0;
+  margin: 10px 0 16px;
   font-size: clamp(1.8rem, 3vw, 2.8rem);
   line-height: 1.05;
   letter-spacing: -0.04em;
@@ -713,12 +718,17 @@ h3 {
 .portfolio-card {
   flex: 0 0 auto;
   width: min(78vw, 280px);
+  display: flex;
+  flex-direction: column;
 }
 
 .portfolio-card__image-wrap,
 .master-portfolio-item__image-wrap {
   position: relative;
+  width: 100%;
+  flex: 0 0 auto;
   aspect-ratio: 4 / 5;
+  overflow: hidden;
   background: linear-gradient(180deg, rgba(244, 232, 225, 0.9), rgba(254, 247, 242, 0.88));
 }
 
@@ -778,7 +788,7 @@ h3 {
 }
 
 .legal-copy h2 {
-  margin: 28px 0 12px;
+  margin: 28px 0 16px;
   font-size: 1.2rem;
 }
 
@@ -1667,7 +1677,7 @@ h3 {
 
 .master-booking-item__header h3,
 .master-day-card__header h2 {
-  margin: 6px 0 0;
+  margin: 6px 0 16px;
 }
 
 .master-booking-item__grid,

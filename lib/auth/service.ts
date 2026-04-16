@@ -52,16 +52,12 @@ async function createSmsOnlyPasswordHash() {
   return hashPassword(randomBytes(24).toString("hex"));
 }
 
-function buildVerificationMessage(code: string) {
+function buildConfirmationCodeMessage(code: string) {
   return `Код подтверждения: ${code}`;
 }
 
 function buildLoginCodeMessage(code: string) {
   return `Код входа: ${code}`;
-}
-
-function buildPhoneChangeCodeMessage(code: string) {
-  return `Код подтверждения: ${code}`;
 }
 
 async function sendPhoneChangeVerificationSms(
@@ -76,7 +72,7 @@ async function sendPhoneChangeVerificationSms(
   });
 
   try {
-    await sendSms(phone, buildPhoneChangeCodeMessage(code));
+    await sendSms(phone, buildConfirmationCodeMessage(code));
   } catch (error) {
     console.error("Failed to send phone change verification SMS", {
       userId: context.userId,
@@ -424,9 +420,33 @@ async function sendRegistrationVerificationSms(phone: string, code: string, stag
   });
 
   try {
-    await sendSms(normalizedPhone, buildVerificationMessage(code));
+    await sendSms(normalizedPhone, buildConfirmationCodeMessage(code));
   } catch (error) {
     console.error("Failed to send registration verification SMS", {
+      stage,
+      phone: maskPhoneForLogs(normalizedPhone),
+      error: error instanceof Error ? error.message : error
+    });
+    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
+  }
+}
+
+async function sendLoginVerificationSms(
+  phone: string,
+  code: string,
+  stage: "initial" | "resend"
+) {
+  const normalizedPhone = normalizePhone(phone);
+
+  console.info("[auth] Sending login verification SMS", {
+    stage,
+    phone: maskPhoneForLogs(normalizedPhone)
+  });
+
+  try {
+    await sendSms(normalizedPhone, buildLoginCodeMessage(code));
+  } catch (error) {
+    console.error("Failed to send login verification SMS", {
       stage,
       phone: maskPhoneForLogs(normalizedPhone),
       error: error instanceof Error ? error.message : error
@@ -612,15 +632,7 @@ export async function beginClientSmsLogin(input: { phone: string }) {
     purpose: "login"
   });
 
-  try {
-    await sendSms(payload.phone, buildLoginCodeMessage(code));
-  } catch (error) {
-    console.error("Failed to send login verification SMS", {
-      phone: payload.phone,
-      error: error instanceof Error ? error.message : error
-    });
-    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
-  }
+  await sendLoginVerificationSms(payload.phone, code, "initial");
 
   return toVerificationState(verification);
 }
@@ -652,15 +664,7 @@ export async function resendClientSmsLoginCode(phone: string) {
     purpose: "login"
   });
 
-  try {
-    await sendSms(normalizedPhone, buildLoginCodeMessage(code));
-  } catch (error) {
-    console.error("Failed to resend login verification SMS", {
-      phone: normalizedPhone,
-      error: error instanceof Error ? error.message : error
-    });
-    throw new Error("Не удалось отправить SMS с кодом. Попробуйте ещё раз");
-  }
+  await sendLoginVerificationSms(normalizedPhone, code, "resend");
 
   return toVerificationState(verification);
 }

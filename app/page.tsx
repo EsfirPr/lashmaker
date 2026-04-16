@@ -5,6 +5,12 @@ import { PortfolioGallery } from "@/components/portfolio-gallery";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getLandingMasterProfile, getLandingPortfolioItems } from "@/lib/portfolio-service";
 
+const certificatePlaceholderIds = ["certificate-1", "certificate-2", "certificate-3"] as const;
+
+function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
+  return result.status === "fulfilled" ? result.value : fallback;
+}
+
 function getPrimaryCta(userRole: "master" | "client" | null) {
   if (userRole === "master") {
     return {
@@ -45,9 +51,9 @@ export default async function HomePage() {
     getLandingMasterProfile(),
     getLandingPortfolioItems()
   ]);
-  const user = userResult.status === "fulfilled" ? userResult.value : null;
-  const profile = profileResult.status === "fulfilled" ? profileResult.value : null;
-  const portfolioItems = portfolioResult.status === "fulfilled" ? portfolioResult.value : [];
+  const user = getSettledValue(userResult, null);
+  const profile = getSettledValue(profileResult, null);
+  const portfolioItems = getSettledValue(portfolioResult, []);
   const primaryCta = getPrimaryCta(user?.role || null);
   const headerCta = getHeaderCta(user?.role || null);
   const masterName = profile?.display_name || "Sulamita";
@@ -137,15 +143,11 @@ export default async function HomePage() {
             </p>
             <div className="certificates-gallery section-space">
               <div className="certificates-list">
-                <article className="certificate-card">
-                  <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
-                </article>
-                <article className="certificate-card">
-                  <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
-                </article>
-                <article className="certificate-card">
-                  <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
-                </article>
+                {certificatePlaceholderIds.map((certificateId) => (
+                  <article className="certificate-card" key={certificateId}>
+                    <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
+                  </article>
+                ))}
               </div>
             </div>
           </section>
