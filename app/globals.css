@@ -674,6 +674,7 @@ h2 {
 .certificate-card {
   flex: 0 0 auto;
   width: min(64vw, 220px);
+  scroll-snap-align: start;
   overflow: hidden;
   border-radius: 18px;
   border: 1px solid rgba(65, 43, 32, 0.08);
@@ -720,6 +721,7 @@ h2 {
   width: min(78vw, 280px);
   display: flex;
   flex-direction: column;
+  scroll-snap-align: start;
 }
 
 .portfolio-card__image-wrap,
@@ -734,10 +736,20 @@ h2 {
 
 .portfolio-card__image,
 .master-portfolio-item__image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: block;
   object-fit: cover;
+  object-position: center;
+}
+
+.panel.landing-section .portfolio-card__image,
+.panel.landing-section .master-portfolio-item__image {
+  width: 100%;
+  height: 100%;
+  max-width: none;
 }
 
 .portfolio-card__body,
@@ -757,6 +769,34 @@ h2 {
 .portfolio-empty {
   justify-items: center;
   text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .certificates-list,
+  .portfolio-grid {
+    padding-inline: 20px;
+    scroll-padding-inline: 20px;
+    scroll-snap-type: x mandatory;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 36px,
+      #000 calc(100% - 36px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 36px,
+      #000 calc(100% - 36px),
+      transparent 100%
+    );
+  }
+
+  .certificate-card,
+  .portfolio-card {
+    scroll-snap-stop: always;
+  }
 }
 
 .master-portfolio-stack {
