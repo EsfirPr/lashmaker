@@ -1943,6 +1943,7 @@ h2 {
 
 .master-bookings-row {
   border-bottom: 1px solid rgba(65, 43, 32, 0.06);
+  cursor: pointer;
   transition: background 160ms ease;
 }
 
@@ -1950,18 +1951,14 @@ h2 {
   background: rgba(255, 248, 244, 0.72);
 }
 
+.master-bookings-row:focus-visible {
+  outline: 2px solid rgba(210, 118, 93, 0.26);
+  outline-offset: -2px;
+  background: rgba(255, 248, 244, 0.72);
+}
+
 .master-bookings-table tbody tr:last-child {
   border-bottom: 0;
-}
-
-.master-bookings-table__link {
-  color: var(--text);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.master-bookings-table__link:hover {
-  color: var(--accent-dark);
 }
 
 .master-slot-card__grid {
