@@ -79,6 +79,9 @@ export type MasterProfile = {
   headline: string | null;
   bio: string | null;
   years_experience: number | null;
+  lash_experience_years: number | null;
+  avatar_path: string | null;
+  avatar_url: string | null;
   updated_at: string;
 };
 
@@ -88,5 +91,13 @@ export type PortfolioItem = {
   image_path: string;
   image_url: string;
   caption: string | null;
+  created_at: string;
+};
+
+export type MasterCertificate = {
+  id: string;
+  owner_id: string;
+  image_path: string;
+  image_url: string;
   created_at: string;
 };

@@ -4,9 +4,11 @@ import { unstable_noStore as noStore } from "next/cache";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
 import { getCurrentUser } from "@/lib/auth/server";
-import { getLandingMasterProfile, getLandingPortfolioItems } from "@/lib/portfolio-service";
-
-const certificatePlaceholderIds = ["certificate-1", "certificate-2", "certificate-3"] as const;
+import {
+  getLandingCertificates,
+  getLandingMasterProfile,
+  getLandingPortfolioItems
+} from "@/lib/portfolio-service";
 
 function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
   return result.status === "fulfilled" ? result.value : fallback;
@@ -47,14 +49,16 @@ function getHeaderCta(userRole: "master" | "client" | null): Route {
 
 export default async function HomePage() {
   noStore();
-  const [userResult, profileResult, portfolioResult] = await Promise.allSettled([
+  const [userResult, profileResult, portfolioResult, certificateResult] = await Promise.allSettled([
     getCurrentUser(),
     getLandingMasterProfile(),
-    getLandingPortfolioItems()
+    getLandingPortfolioItems(),
+    getLandingCertificates()
   ]);
   const user = getSettledValue(userResult, null);
   const profile = getSettledValue(profileResult, null);
   const portfolioItems = getSettledValue(portfolioResult, []);
+  const certificates = getSettledValue(certificateResult, []);
   const primaryCta = getPrimaryCta(user?.role || null);
   const headerCta = getHeaderCta(user?.role || null);
   const masterName = profile?.display_name || "Sulamita";
@@ -62,6 +66,7 @@ export default async function HomePage() {
     profile?.headline ||
     "Наращивание ресниц, которое подчёркивает взгляд и не спорит с вашим стилем";
   const yearsExperience = profile?.years_experience ?? 3;
+  const lashExperienceYears = profile?.lash_experience_years ?? 2;
 
   return (
     <main className="page-shell">
@@ -92,8 +97,8 @@ export default async function HomePage() {
                   <span className="muted">лет деликатной практики</span>
                 </div>
                 <div className="stat">
-                  <strong>2+</strong>
-                  <span className="muted">часа по времени</span>
+                  <strong>{lashExperienceYears}+</strong>
+                  <span className="muted">лет в наращивании</span>
                 </div>
               </div>
               <div className="landing-actions">
@@ -110,9 +115,9 @@ export default async function HomePage() {
           <aside className="panel landing-hero__aside">
             <div className="landing-hero__image master-image">
               <img
-                alt="Мастер"
+                alt={masterName}
                 className="landing-hero__img"
-                src="/images/master-placeholder.svg"
+                src={profile?.avatar_url || "/images/master-placeholder.svg"}
               />
             </div>
           </aside>
@@ -143,13 +148,17 @@ export default async function HomePage() {
                 "Работаю в спокойном темпе, уделяю внимание форме глаза, носибельности и чистоте каждой работы, чтобы результат выглядел дорого и гармонично."}
             </p>
             <div className="certificates-gallery section-space">
-              <HorizontalScrollGallery className="certificates-list" showAffordance>
-                {certificatePlaceholderIds.map((certificateId) => (
-                  <article className="certificate-card" key={certificateId}>
-                    <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
-                  </article>
-                ))}
-              </HorizontalScrollGallery>
+              {certificates.length > 0 ? (
+                <HorizontalScrollGallery className="certificates-list" showAffordance>
+                  {certificates.map((certificate) => (
+                    <article className="certificate-card" key={certificate.id}>
+                      <img alt="Сертификат мастера" src={certificate.image_url} />
+                    </article>
+                  ))}
+                </HorizontalScrollGallery>
+              ) : (
+                <p className="muted">Сертификаты скоро появятся.</p>
+              )}
             </div>
           </section>
 

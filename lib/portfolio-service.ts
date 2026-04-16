@@ -2,11 +2,18 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import type { MasterProfile, PortfolioItem, SafeUser, User } from "@/lib/types";
+import type {
+  MasterCertificate,
+  MasterProfile,
+  PortfolioItem,
+  SafeUser,
+  User
+} from "@/lib/types";
 
 const portfolioBucket = "portfolio";
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxImageSize = 5 * 1024 * 1024;
+const missingRelationErrorCodes = new Set(["42P01", "42703"]);
 
 function toSafeUser(user: User): SafeUser {
   const { password_hash: _passwordHash, ...safeUser } = user;
@@ -19,18 +26,72 @@ function sanitizeFileName(name: string) {
 }
 
 export function resolveMasterProfile(master: SafeUser, profile: MasterProfile | null): MasterProfile {
-  if (profile) {
-    return profile;
-  }
-
-  return {
+  const fallbackProfile: MasterProfile = {
     user_id: master.id,
     display_name: master.name || master.nickname || "LashMaker",
     headline: "Наращивание ресниц, которое подчёркивает взгляд и не спорит с вашим стилем",
     bio:
       "Помогаю подобрать форму и объем так, чтобы взгляд выглядел выразительно, а образ оставался гармоничным в повседневной жизни и на съемках.",
     years_experience: 3,
+    lash_experience_years: 2,
+    avatar_path: null,
+    avatar_url: null,
     updated_at: new Date(0).toISOString()
+  };
+
+  if (!profile) {
+    return fallbackProfile;
+  }
+
+  return {
+    ...fallbackProfile,
+    ...profile,
+    display_name: profile.display_name ?? fallbackProfile.display_name,
+    headline: profile.headline ?? fallbackProfile.headline,
+    bio: profile.bio ?? fallbackProfile.bio,
+    years_experience: profile.years_experience ?? fallbackProfile.years_experience,
+    lash_experience_years:
+      profile.lash_experience_years ?? fallbackProfile.lash_experience_years,
+    avatar_path: profile.avatar_path ?? fallbackProfile.avatar_path,
+    avatar_url: profile.avatar_url ?? fallbackProfile.avatar_url
+  };
+}
+
+function isMissingRelationError(error: { code?: string | null; message?: string | null }) {
+  return (
+    (error.code ? missingRelationErrorCodes.has(error.code) : false) ||
+    error.message?.includes("does not exist") ||
+    false
+  );
+}
+
+async function uploadImageToBucket(ownerId: string, folder: string, file: File) {
+  if (!allowedImageTypes.has(file.type)) {
+    throw new Error("Загрузите JPG, PNG или WEBP");
+  }
+
+  if (file.size > maxImageSize) {
+    throw new Error("Файл должен быть не больше 5 МБ");
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const path = `${ownerId}/${folder}/${Date.now()}-${randomUUID()}-${sanitizeFileName(file.name)}`;
+  const { error: uploadError } = await supabase.storage
+    .from(portfolioBucket)
+    .upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type
+    });
+
+  if (uploadError) {
+    throw new Error(uploadError.message);
+  }
+
+  const { data: publicUrlData } = supabase.storage.from(portfolioBucket).getPublicUrl(path);
+  return {
+    path,
+    publicUrl: publicUrlData.publicUrl
   };
 }
 
@@ -74,6 +135,31 @@ export async function getLandingPortfolioItems() {
   return (data || []) as PortfolioItem[];
 }
 
+export async function getLandingCertificates() {
+  const master = await getMasterUser();
+
+  if (!master) {
+    return [] as MasterCertificate[];
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("master_certificates")
+    .select("*")
+    .eq("owner_id", master.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (isMissingRelationError(error)) {
+      return [] as MasterCertificate[];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return (data || []) as MasterCertificate[];
+}
+
 export async function getLandingMasterProfile() {
   const master = await getMasterUser();
 
@@ -87,10 +173,15 @@ export async function getLandingMasterProfile() {
 
 export async function getPortfolioDashboardData(ownerId: string) {
   const supabase = getSupabaseAdminClient();
-  const [profile, portfolioItems] = await Promise.all([
+  const [profile, portfolioItems, certificates] = await Promise.all([
     getMasterProfileByUserId(ownerId),
     supabase
       .from("portfolio_items")
+      .select("*")
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("master_certificates")
       .select("*")
       .eq("owner_id", ownerId)
       .order("created_at", { ascending: false })
@@ -100,9 +191,14 @@ export async function getPortfolioDashboardData(ownerId: string) {
     throw new Error(portfolioItems.error.message);
   }
 
+  if (certificates.error && !isMissingRelationError(certificates.error)) {
+    throw new Error(certificates.error.message);
+  }
+
   return {
     profile,
-    items: (portfolioItems.data || []) as PortfolioItem[]
+    items: (portfolioItems.data || []) as PortfolioItem[],
+    certificates: (certificates.data || []) as MasterCertificate[]
   };
 }
 
@@ -112,6 +208,7 @@ export async function updateMasterProfile(input: {
   headline: string;
   bio: string;
   yearsExperience: number | null;
+  lashExperienceYears: number | null;
 }) {
   const supabase = getSupabaseAdminClient();
   const payload = {
@@ -120,6 +217,7 @@ export async function updateMasterProfile(input: {
     headline: input.headline.trim() || null,
     bio: input.bio.trim() || null,
     years_experience: input.yearsExperience,
+    lash_experience_years: input.lashExperienceYears,
     updated_at: new Date().toISOString()
   };
 
@@ -140,43 +238,134 @@ export async function uploadPortfolioItem(input: {
   file: File;
   caption?: string;
 }) {
-  if (!allowedImageTypes.has(input.file.type)) {
-    throw new Error("Загрузите JPG, PNG или WEBP");
-  }
-
-  if (input.file.size > maxImageSize) {
-    throw new Error("Файл должен быть не больше 5 МБ");
-  }
-
   const supabase = getSupabaseAdminClient();
-  const path = `${input.ownerId}/${Date.now()}-${randomUUID()}-${sanitizeFileName(input.file.name)}`;
-  const { error: uploadError } = await supabase.storage
-    .from(portfolioBucket)
-    .upload(path, input.file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: input.file.type
-    });
-
-  if (uploadError) {
-    throw new Error(uploadError.message);
-  }
-
-  const { data: publicUrlData } = supabase.storage.from(portfolioBucket).getPublicUrl(path);
+  const uploadedImage = await uploadImageToBucket(input.ownerId, "portfolio", input.file);
   const { error: insertError } = await supabase.from("portfolio_items").insert({
     owner_id: input.ownerId,
-    image_path: path,
-    image_url: publicUrlData.publicUrl,
+    image_path: uploadedImage.path,
+    image_url: uploadedImage.publicUrl,
     caption: input.caption?.trim() || null
   });
 
   if (insertError) {
-    await supabase.storage.from(portfolioBucket).remove([path]);
+    await supabase.storage.from(portfolioBucket).remove([uploadedImage.path]);
     throw new Error(insertError.message);
   }
 
   revalidatePath("/");
   revalidatePath("/account");
+  revalidatePath("/master/dashboard");
+}
+
+export async function uploadMasterAvatar(input: {
+  ownerId: string;
+  file: File;
+}) {
+  const supabase = getSupabaseAdminClient();
+  const currentProfile = await getMasterProfileByUserId(input.ownerId);
+  const uploadedImage = await uploadImageToBucket(input.ownerId, "avatar", input.file);
+  const payload = {
+    user_id: input.ownerId,
+    avatar_path: uploadedImage.path,
+    avatar_url: uploadedImage.publicUrl,
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await supabase.from("master_profiles").upsert(payload, {
+    onConflict: "user_id"
+  });
+
+  if (error) {
+    await supabase.storage.from(portfolioBucket).remove([uploadedImage.path]);
+    throw new Error(error.message);
+  }
+
+  if (currentProfile?.avatar_path) {
+    await supabase.storage.from(portfolioBucket).remove([currentProfile.avatar_path]);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/master/dashboard");
+}
+
+export async function uploadMasterCertificates(input: {
+  ownerId: string;
+  files: File[];
+}) {
+  if (input.files.length === 0) {
+    throw new Error("Выберите хотя бы одно изображение сертификата");
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const uploadedImages: Array<{ path: string; publicUrl: string }> = [];
+
+  try {
+    for (const file of input.files) {
+      uploadedImages.push(await uploadImageToBucket(input.ownerId, "certificates", file));
+    }
+
+    const { error } = await supabase.from("master_certificates").insert(
+      uploadedImages.map((image) => ({
+        owner_id: input.ownerId,
+        image_path: image.path,
+        image_url: image.publicUrl
+      }))
+    );
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  } catch (error) {
+    if (uploadedImages.length > 0) {
+      await supabase.storage.from(portfolioBucket).remove(uploadedImages.map((image) => image.path));
+    }
+
+    throw error;
+  }
+
+  revalidatePath("/");
+  revalidatePath("/master/dashboard");
+}
+
+export async function deleteMasterCertificate(certificateId: string, ownerId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("master_certificates")
+    .select("*")
+    .eq("id", certificateId)
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const certificate = (data as MasterCertificate | null) || null;
+
+  if (!certificate) {
+    throw new Error("Сертификат не найден");
+  }
+
+  const { error: removeStorageError } = await supabase
+    .storage
+    .from(portfolioBucket)
+    .remove([certificate.image_path]);
+
+  if (removeStorageError) {
+    throw new Error(removeStorageError.message);
+  }
+
+  const { error: deleteError } = await supabase
+    .from("master_certificates")
+    .delete()
+    .eq("id", certificate.id)
+    .eq("owner_id", ownerId);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+
+  revalidatePath("/");
   revalidatePath("/master/dashboard");
 }
 

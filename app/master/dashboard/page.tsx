@@ -318,7 +318,11 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
         </section>
 
         <section className="section-space">
-          <MasterPortfolioManager items={portfolioData.items} profile={portfolioProfile} />
+          <MasterPortfolioManager
+            certificates={portfolioData.certificates}
+            items={portfolioData.items}
+            profile={portfolioProfile}
+          />
         </section>
       </div>
     </main>

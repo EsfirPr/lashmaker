@@ -1,7 +1,14 @@
 "use server";
 
 import { requireUserRole } from "@/lib/auth/server";
-import { deletePortfolioItem, updateMasterProfile, uploadPortfolioItem } from "@/lib/portfolio-service";
+import {
+  deleteMasterCertificate,
+  deletePortfolioItem,
+  updateMasterProfile,
+  uploadMasterAvatar,
+  uploadMasterCertificates,
+  uploadPortfolioItem
+} from "@/lib/portfolio-service";
 
 export type MasterFormState = {
   status: "idle" | "success" | "error";
@@ -15,13 +22,15 @@ export async function saveMasterProfileAction(
   try {
     const master = await requireUserRole("master", "/login");
     const yearsValue = String(formData.get("yearsExperience") || "").trim();
+    const lashYearsValue = String(formData.get("lashExperienceYears") || "").trim();
 
     await updateMasterProfile({
       ownerId: master.id,
       displayName: String(formData.get("displayName") || ""),
       headline: String(formData.get("headline") || ""),
       bio: String(formData.get("bio") || ""),
-      yearsExperience: yearsValue ? Number(yearsValue) : null
+      yearsExperience: yearsValue ? Number(yearsValue) : null,
+      lashExperienceYears: lashYearsValue ? Number(lashYearsValue) : null
     });
 
     return {
@@ -32,6 +41,38 @@ export async function saveMasterProfileAction(
     return {
       status: "error",
       message: error instanceof Error ? error.message : "Не удалось сохранить профиль"
+    };
+  }
+}
+
+export async function uploadMasterAvatarAction(
+  _previousState: MasterFormState,
+  formData: FormData
+): Promise<MasterFormState> {
+  try {
+    const master = await requireUserRole("master", "/login");
+    const avatar = formData.get("avatar");
+
+    if (!(avatar instanceof File) || avatar.size === 0) {
+      return {
+        status: "error",
+        message: "Выберите фото мастера"
+      };
+    }
+
+    await uploadMasterAvatar({
+      ownerId: master.id,
+      file: avatar
+    });
+
+    return {
+      status: "success",
+      message: "Главное фото обновлено"
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Не удалось обновить фото"
     };
   }
 }
@@ -69,7 +110,39 @@ export async function uploadPortfolioItemAction(
   }
 }
 
+export async function uploadMasterCertificatesAction(
+  _previousState: MasterFormState,
+  formData: FormData
+): Promise<MasterFormState> {
+  try {
+    const master = await requireUserRole("master", "/login");
+    const certificateFiles = formData
+      .getAll("certificates")
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+    await uploadMasterCertificates({
+      ownerId: master.id,
+      files: certificateFiles
+    });
+
+    return {
+      status: "success",
+      message: certificateFiles.length === 1 ? "Сертификат загружен" : "Сертификаты загружены"
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Не удалось загрузить сертификаты"
+    };
+  }
+}
+
 export async function deletePortfolioItemAction(formData: FormData) {
   const master = await requireUserRole("master", "/login");
   await deletePortfolioItem(String(formData.get("itemId") || ""), master.id);
+}
+
+export async function deleteMasterCertificateAction(formData: FormData) {
+  const master = await requireUserRole("master", "/login");
+  await deleteMasterCertificate(String(formData.get("certificateId") || ""), master.id);
 }

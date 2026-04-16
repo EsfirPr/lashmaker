@@ -1,16 +1,21 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import type { ChangeEvent } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { SubmitButton } from "@/components/submit-button";
 import {
+  deleteMasterCertificateAction,
   deletePortfolioItemAction,
   saveMasterProfileAction,
+  uploadMasterAvatarAction,
+  uploadMasterCertificatesAction,
   uploadPortfolioItemAction
 } from "@/app/master/dashboard/actions";
-import type { MasterProfile, PortfolioItem } from "@/lib/types";
+import type { MasterCertificate, MasterProfile, PortfolioItem } from "@/lib/types";
 
 type MasterPortfolioManagerProps = {
+  certificates: MasterCertificate[];
   items: PortfolioItem[];
   profile: MasterProfile;
 };
@@ -20,16 +25,105 @@ const initialMasterFormState = {
   message: ""
 };
 
-export function MasterPortfolioManager({ items, profile }: MasterPortfolioManagerProps) {
+export function MasterPortfolioManager({
+  certificates,
+  items,
+  profile
+}: MasterPortfolioManagerProps) {
   const [profileState, profileAction] = useActionState(saveMasterProfileAction, initialMasterFormState);
+  const [avatarState, avatarAction] = useActionState(uploadMasterAvatarAction, initialMasterFormState);
   const [uploadState, uploadAction] = useActionState(uploadPortfolioItemAction, initialMasterFormState);
+  const [certificateState, certificateAction] = useActionState(
+    uploadMasterCertificatesAction,
+    initialMasterFormState
+  );
   const uploadFormRef = useRef<HTMLFormElement>(null);
+  const avatarFormRef = useRef<HTMLFormElement>(null);
+  const certificateFormRef = useRef<HTMLFormElement>(null);
+  const avatarObjectUrlRef = useRef<string | null>(null);
+  const certificateObjectUrlsRef = useRef<string[]>([]);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url || null);
+  const [certificatePreviews, setCertificatePreviews] = useState<string[]>([]);
+
+  function clearAvatarPreviewObjectUrl() {
+    if (!avatarObjectUrlRef.current) {
+      return;
+    }
+
+    URL.revokeObjectURL(avatarObjectUrlRef.current);
+    avatarObjectUrlRef.current = null;
+  }
+
+  function clearCertificatePreviewObjectUrls() {
+    if (certificateObjectUrlsRef.current.length === 0) {
+      return;
+    }
+
+    certificateObjectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    certificateObjectUrlsRef.current = [];
+  }
 
   useEffect(() => {
     if (uploadState.status === "success") {
       uploadFormRef.current?.reset();
     }
   }, [uploadState.status]);
+
+  useEffect(() => {
+    if (avatarState.status === "success") {
+      avatarFormRef.current?.reset();
+      clearAvatarPreviewObjectUrl();
+    }
+  }, [avatarState.status]);
+
+  useEffect(() => {
+    if (certificateState.status === "success") {
+      certificateFormRef.current?.reset();
+      clearCertificatePreviewObjectUrls();
+      setCertificatePreviews([]);
+    }
+  }, [certificateState.status]);
+
+  useEffect(() => {
+    if (!avatarObjectUrlRef.current) {
+      setAvatarPreview(profile.avatar_url || null);
+    }
+  }, [profile.avatar_url]);
+
+  useEffect(() => {
+    return () => {
+      clearAvatarPreviewObjectUrl();
+      clearCertificatePreviewObjectUrls();
+    };
+  }, []);
+
+  function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
+    clearAvatarPreviewObjectUrl();
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setAvatarPreview(profile.avatar_url || null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    avatarObjectUrlRef.current = previewUrl;
+    setAvatarPreview(previewUrl);
+  }
+
+  function handleCertificateChange(event: ChangeEvent<HTMLInputElement>) {
+    clearCertificatePreviewObjectUrls();
+    const files = Array.from(event.target.files || []);
+
+    if (files.length === 0) {
+      setCertificatePreviews([]);
+      return;
+    }
+
+    const previewUrls = files.map((file) => URL.createObjectURL(file));
+    certificateObjectUrlsRef.current = previewUrls;
+    setCertificatePreviews(previewUrls);
+  }
 
   return (
     <section className="master-portfolio-stack" id="portfolio-manager">
@@ -57,17 +151,29 @@ export function MasterPortfolioManager({ items, profile }: MasterPortfolioManage
               />
             </div>
           </div>
-          <div className="field">
-            <label htmlFor="headline">Короткий заголовок</label>
-            <input
-              defaultValue={profile.headline || ""}
-              id="headline"
-              maxLength={180}
-              name="headline"
-            />
+          <div className="two-columns">
+            <div className="field">
+              <label htmlFor="headline">Цитата / короткое описание</label>
+              <input
+                defaultValue={profile.headline || ""}
+                id="headline"
+                maxLength={180}
+                name="headline"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="lashExperienceYears">Опыт в наращивании, лет</label>
+              <input
+                defaultValue={profile.lash_experience_years ?? ""}
+                id="lashExperienceYears"
+                min="0"
+                name="lashExperienceYears"
+                type="number"
+              />
+            </div>
           </div>
           <div className="field">
-            <label htmlFor="bio">Описание</label>
+            <label htmlFor="bio">Описание для блока «О мастере»</label>
             <textarea defaultValue={profile.bio || ""} id="bio" maxLength={1200} name="bio" />
           </div>
           {profileState.status !== "idle" ? (
@@ -77,6 +183,39 @@ export function MasterPortfolioManager({ items, profile }: MasterPortfolioManage
           ) : null}
           <SubmitButton>Сохранить информацию</SubmitButton>
         </form>
+
+        <div className="master-media-grid section-space">
+          <div className="master-avatar-card">
+            <p className="field__label">Главное фото мастера</p>
+            <div className="master-avatar-card__preview">
+              <img
+                alt={profile.display_name || "Главное фото мастера"}
+                className="master-avatar-card__image"
+                src={avatarPreview || "/images/master-placeholder.svg"}
+              />
+            </div>
+          </div>
+
+          <form action={avatarAction} className="form-grid master-inline-form" ref={avatarFormRef}>
+            <div className="field">
+              <label htmlFor="avatar">Обновить аватар</label>
+              <input
+                accept="image/jpeg,image/png,image/webp"
+                id="avatar"
+                name="avatar"
+                onChange={handleAvatarChange}
+                required
+                type="file"
+              />
+            </div>
+            {avatarState.status !== "idle" ? (
+              <div className={avatarState.status === "error" ? "message-error" : "message-success"}>
+                {avatarState.message}
+              </div>
+            ) : null}
+            <SubmitButton>Сохранить фото</SubmitButton>
+          </form>
+        </div>
       </section>
 
       <section className="panel stack-card master-section">
@@ -127,6 +266,72 @@ export function MasterPortfolioManager({ items, profile }: MasterPortfolioManage
             ))}
           </HorizontalScrollGallery>
         )}
+
+        <div className="master-certificates-stack section-space">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Сертификаты</span>
+              <h2>Галерея сертификатов</h2>
+            </div>
+          </div>
+
+          <form action={certificateAction} className="form-grid section-space" ref={certificateFormRef}>
+            <div className="field">
+              <label htmlFor="certificates">Добавить сертификаты</label>
+              <input
+                accept="image/jpeg,image/png,image/webp"
+                id="certificates"
+                multiple
+                name="certificates"
+                onChange={handleCertificateChange}
+                required
+                type="file"
+              />
+            </div>
+
+            {certificatePreviews.length > 0 ? (
+              <div className="master-upload-preview-grid">
+                {certificatePreviews.map((previewUrl, index) => (
+                  <div className="master-upload-preview-grid__item" key={previewUrl}>
+                    <img alt={`Предпросмотр сертификата ${index + 1}`} src={previewUrl} />
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {certificateState.status !== "idle" ? (
+              <div className={certificateState.status === "error" ? "message-error" : "message-success"}>
+                {certificateState.message}
+              </div>
+            ) : null}
+
+            <SubmitButton>Загрузить сертификаты</SubmitButton>
+          </form>
+
+          {certificates.length === 0 ? (
+            <p className="empty-state">Сертификаты пока не загружены.</p>
+          ) : (
+            <HorizontalScrollGallery className="master-certificates-list section-space">
+              {certificates.map((certificate) => (
+                <article className="master-certificate-card" key={certificate.id}>
+                  <div className="master-certificate-card__image-wrap">
+                    <img
+                      alt="Сертификат мастера"
+                      className="master-certificate-card__image"
+                      src={certificate.image_url}
+                    />
+                  </div>
+                  <div className="master-certificate-card__body">
+                    <form action={deleteMasterCertificateAction}>
+                      <input name="certificateId" type="hidden" value={certificate.id} />
+                      <SubmitButton className="danger-button">Удалить</SubmitButton>
+                    </form>
+                  </div>
+                </article>
+              ))}
+            </HorizontalScrollGallery>
+          )}
+        </div>
       </section>
     </section>
   );
