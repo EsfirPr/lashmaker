@@ -197,11 +197,6 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
       >
         <div className="master-schedule-slot__top">
           <strong className="master-schedule-slot__time">{formatSlotRange(slot)}</strong>
-          <span
-            className={`status-pill ${slot.activeBooking ? "status-confirmed" : "status-free"}`}
-          >
-            {slot.activeBooking ? "Занято" : "Свободно"}
-          </span>
         </div>
         <span
           className={
