@@ -5,12 +5,11 @@ import { logoutAction } from "@/app/auth-actions";
 import { AdminSlotForm } from "@/components/admin-slot-form";
 import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
 import { MasterPortfolioManager } from "@/components/master-portfolio-manager";
-import { MasterBookingListItem } from "@/components/master-booking-list-item";
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
 import { getPortfolioDashboardData, resolveMasterProfile } from "@/lib/portfolio-service";
-import { getSlotEndDate } from "@/lib/utils";
+import { formatDateLabel, formatSlotRange, getSlotEndDate } from "@/lib/utils";
 
 type MasterDashboardPageProps = {
   searchParams?: Promise<{
@@ -242,9 +241,41 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
             {bookings.length === 0 ? (
               <p className="empty-state">По выбранным фильтрам записи не найдены.</p>
             ) : null}
-            {visibleBookings.map((booking) => (
-              <MasterBookingListItem booking={booking} key={booking.id} />
-            ))}
+            {visibleBookings.length > 0 ? (
+              <div className="master-bookings-table-wrap">
+                <table className="master-bookings-table">
+                  <thead>
+                    <tr>
+                      <th>Дата и время</th>
+                      <th>Имя</th>
+                      <th>Контакт</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleBookings.map((booking) => (
+                      <tr className="master-bookings-row" key={booking.id}>
+                        <td>
+                          {booking.time_slots
+                            ? `${formatDateLabel(booking.time_slots.slot_date)}, ${formatSlotRange(
+                                booking.time_slots
+                              )}`
+                            : "Нет привязанного слота"}
+                        </td>
+                        <td>
+                          <Link
+                            className="master-bookings-table__link"
+                            href={`/booking/${booking.public_token}`}
+                          >
+                            {booking.name}
+                          </Link>
+                        </td>
+                        <td>{booking.phone}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
           </div>
 
           {bookings.length > bookingsPerPage ? (

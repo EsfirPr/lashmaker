@@ -1803,11 +1803,6 @@ h2 {
   align-items: end;
 }
 
-.master-booking-item {
-  display: grid;
-  gap: 16px;
-}
-
 .master-pagination {
   display: flex;
   align-items: center;
@@ -1901,7 +1896,6 @@ h2 {
   pointer-events: none;
 }
 
-.master-booking-item__header,
 .master-client-card__head,
 .master-day-card__header,
 .master-slot-card__header,
@@ -1912,12 +1906,64 @@ h2 {
   align-items: flex-start;
 }
 
-.master-booking-item__header h3,
 .master-day-card__header h2 {
   margin: 6px 0 16px;
 }
 
-.master-booking-item__grid,
+.master-bookings-table-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(65, 43, 32, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 24px rgba(71, 44, 31, 0.04);
+}
+
+.master-bookings-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+
+.master-bookings-table th,
+.master-bookings-table td {
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.master-bookings-table thead th {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(248, 241, 236, 0.88);
+}
+
+.master-bookings-row {
+  border-bottom: 1px solid rgba(65, 43, 32, 0.06);
+  transition: background 160ms ease;
+}
+
+.master-bookings-row:hover {
+  background: rgba(255, 248, 244, 0.72);
+}
+
+.master-bookings-table tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.master-bookings-table__link {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.master-bookings-table__link:hover {
+  color: var(--accent-dark);
+}
+
 .master-slot-card__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
