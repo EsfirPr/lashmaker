@@ -566,6 +566,27 @@ h3 {
   letter-spacing: -0.04em;
 }
 
+.panel.landing-section,
+.panel.landing-cta {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 16px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.panel.landing-section img,
+.panel.landing-cta img {
+  max-width: 100%;
+  height: auto;
+}
+
+.panel.landing-section .landing-section__heading,
+.panel.landing-cta .landing-cta__actions {
+  flex-wrap: wrap;
+}
+
 .landing-section__title-nowrap {
   white-space: nowrap;
   overflow: hidden;
@@ -592,6 +613,20 @@ h3 {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .panel.landing-section,
+  .panel.landing-cta {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .panel.landing-section,
+  .panel.landing-cta {
+    padding: 32px;
+  }
 }
 
 .landing-feature-grid {
