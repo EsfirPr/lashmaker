@@ -1732,13 +1732,26 @@ h2 {
 .master-schedule-calendar .week-calendar {
   grid-template-columns: repeat(7, minmax(180px, 1fr));
   min-width: 1320px;
+  align-items: start;
+}
+
+.master-schedule-calendar .week-day-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  align-self: start;
 }
 
 .master-schedule-calendar .week-day-column__head {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
+  margin-top: 0;
+  flex-shrink: 0;
+  order: 0;
+  align-self: stretch;
 }
 
 .master-schedule-calendar .week-day-column__head span,
@@ -1750,6 +1763,13 @@ h2 {
 
 .master-schedule-calendar .week-day-column__head span {
   margin: 0;
+}
+
+.master-schedule-calendar .week-day-column__slots {
+  margin-top: 0;
+  flex: 1 1 auto;
+  align-content: start;
+  justify-items: stretch;
 }
 
 .master-stats-grid {

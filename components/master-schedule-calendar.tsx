@@ -205,7 +205,7 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
               : "master-schedule-slot__name master-schedule-slot__name--muted"
           }
         >
-          {slot.activeBooking ? slot.activeBooking.name : "Свободное окно"}
+          {slot.activeBooking ? slot.activeBooking.name : "свободно"}
         </span>
       </Link>
     );

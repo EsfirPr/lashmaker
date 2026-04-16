@@ -55,7 +55,7 @@ export default async function MasterSlotDetailsPage({ params }: MasterSlotDetail
             </div>
             <div className="booking-meta">
               <strong>Клиент</strong>
-              <span>{slot.activeBooking ? slot.activeBooking.name : "Свободное окно"}</span>
+              <span>{slot.activeBooking ? slot.activeBooking.name : "свободно"}</span>
             </div>
           </div>
 
