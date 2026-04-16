@@ -1,7 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { MasterPlaceholderIcon } from "@/components/master-placeholder-icon";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getLandingMasterProfile, getLandingPortfolioItems } from "@/lib/portfolio-service";
@@ -103,7 +102,11 @@ export default async function HomePage() {
 
           <aside className="panel landing-hero__aside">
             <div className="landing-hero__image master-image">
-              <MasterPlaceholderIcon />
+              <img
+                alt="Мастер"
+                className="landing-hero__img"
+                src="/images/master-placeholder.svg"
+              />
             </div>
           </aside>
         </section>
