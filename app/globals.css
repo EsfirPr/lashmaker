@@ -712,6 +712,8 @@ h2 {
   overflow-x: auto;
   overflow-y: hidden;
   gap: 14px;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   padding: 2px 2px 12px;
   scroll-behavior: smooth;
@@ -866,10 +868,13 @@ h2 {
 
 .master-portfolio-stack {
   grid-template-columns: 1fr 1.1fr;
+  min-width: 0;
 }
 
-.master-portfolio-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.master-portfolio-stack > .master-section {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .legal-shell {
