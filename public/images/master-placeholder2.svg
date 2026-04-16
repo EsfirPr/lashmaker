@@ -1,0 +1,20 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="40" fill="#F6E9E1"/>
+  <rect x="48" y="48" width="804" height="1004" rx="32" fill="url(#bg)"/>
+  <circle cx="450" cy="350" r="165" fill="#F3D2C7"/>
+  <path d="M260 900C260 760 345 675 450 675C555 675 640 760 640 900V980H260V900Z" fill="#E7C0B0"/>
+  <path d="M355 335C355 276.458 402.458 229 461 229H478C536.542 229 584 276.458 584 335V421C584 499.424 520.424 563 442 563H427C387.788 563 356 531.212 356 492V335H355Z" fill="#F8E5DB"/>
+  <path d="M340 344C340 254.53 412.53 182 502 182C591.47 182 664 254.53 664 344V410L626 398V344C626 275.517 570.483 220 502 220C433.517 220 378 275.517 378 344V392L340 410V344Z" fill="#5D4037"/>
+  <path d="M298 979C311.215 844.503 369.467 777.255 472.756 777.255C574.526 777.255 629.421 844.503 643 979H298Z" fill="#D69277"/>
+  <circle cx="376" cy="366" r="10" fill="#5D4037"/>
+  <circle cx="515" cy="366" r="10" fill="#5D4037"/>
+  <path d="M413 456C429.817 470.2 464.183 470.2 481 456" stroke="#D57A63" stroke-width="10" stroke-linecap="round"/>
+  <rect x="96" y="80" width="240" height="50" rx="25" fill="rgba(255,255,255,0.72)"/>
+  <text x="216" y="112" text-anchor="middle" fill="#AF583F" font-family="Arial, sans-serif" font-size="24" font-weight="700">Lash artist</text>
+  <defs>
+    <linearGradient id="bg" x1="94" y1="100" x2="790" y2="1004" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8F4"/>
+      <stop offset="1" stop-color="#F1D8CC"/>
+    </linearGradient>
+  </defs>
+</svg>

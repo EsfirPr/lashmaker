@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { MasterPlaceholderIcon } from "@/components/master-placeholder-icon";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getLandingMasterProfile, getLandingPortfolioItems } from "@/lib/portfolio-service";
@@ -62,11 +63,8 @@ export default async function HomePage() {
         <nav className="top-nav">
           <div className="brand">LashMaker</div>
           <div className="nav-links">
-            <a className="ghost-button" href="#portfolio">
-              Портфолио
-            </a>
-            <a className="ghost-button" href="#about">
-              О мастере
+            <a className="header-phone" href="tel:+79998886655">
+              +7 (999) 888 66-55
             </a>
             <Link className="ghost-button" href={headerCta}>
               {user ? "Кабинет" : "Войти"}
@@ -104,11 +102,9 @@ export default async function HomePage() {
           </div>
 
           <aside className="panel landing-hero__aside">
-            <img
-              alt="Мастер по наращиванию ресниц"
-              className="landing-hero__image"
-              src="/images/master-placeholder.svg"
-            />
+            <div className="landing-hero__image master-image">
+              <MasterPlaceholderIcon />
+            </div>
           </aside>
         </section>
 
@@ -165,11 +161,7 @@ export default async function HomePage() {
                 <Link className="ghost-button" href="/login">
                   Войти
                 </Link>
-              ) : (
-                <a className="ghost-button" href="#portfolio">
-                  Смотреть портфолио
-                </a>
-              )}
+              ) : null}
             </div>
           </aside>
         </section>
