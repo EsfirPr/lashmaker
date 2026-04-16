@@ -186,6 +186,16 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
           </div>
         </section>
 
+        <section className="panel stack-card section-space master-section" id="schedule">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Расписание</span>
+              <h2>Календарь мастера</h2>
+            </div>
+          </div>
+          <MasterScheduleCalendar initialDays={days} />
+        </section>
+
         <section className="panel stack-card section-space master-section" id="bookings">
           <div className="account-section__heading">
             <div>
@@ -296,16 +306,6 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               </div>
             </nav>
           ) : null}
-        </section>
-
-        <section className="panel stack-card section-space master-section" id="schedule">
-          <div className="account-section__heading">
-            <div>
-              <span className="eyebrow">Расписание</span>
-              <h2>Календарь мастера</h2>
-            </div>
-          </div>
-          <MasterScheduleCalendar initialDays={days} />
         </section>
 
         <section className="panel stack-card section-space master-section" id="clients">

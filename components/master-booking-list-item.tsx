@@ -42,7 +42,7 @@ export function MasterBookingListItem({ booking }: MasterBookingListItemProps) {
 
       <div className="master-booking-item__grid">
         <div className="booking-meta">
-          <strong>Дата и время</strong>
+          <strong>Дата и время: </strong>
           <span>
             {booking.time_slots
               ? `${formatDateLabel(booking.time_slots.slot_date)}, ${formatSlotRange(
@@ -52,16 +52,8 @@ export function MasterBookingListItem({ booking }: MasterBookingListItemProps) {
           </span>
         </div>
         <div className="booking-meta">
-          <strong>Контакт</strong>
+          <strong>Контакт: </strong>
           <span>{booking.phone}</span>
-        </div>
-        <div className="booking-meta">
-          <strong>Стиль</strong>
-          <span>{booking.style}</span>
-        </div>
-        <div className="booking-meta">
-          <strong>Пожелания</strong>
-          <span>{booking.notes || "Не указаны"}</span>
         </div>
       </div>
 
@@ -73,4 +65,3 @@ export function MasterBookingListItem({ booking }: MasterBookingListItemProps) {
     </article>
   );
 }
-
