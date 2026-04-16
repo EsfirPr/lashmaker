@@ -515,8 +515,7 @@ h2 {
 
 .landing-badge-grid,
 .portfolio-grid,
-.master-portfolio-stack,
-.master-portfolio-list {
+.master-portfolio-stack {
   display: grid;
   gap: 16px;
 }
@@ -707,6 +706,42 @@ h2 {
   display: none;
 }
 
+.master-portfolio-list {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 14px;
+  min-width: 0;
+  padding: 2px 2px 12px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(210, 118, 93, 0.6) rgba(244, 232, 225, 0.92);
+}
+
+.master-portfolio-list::-webkit-scrollbar {
+  height: 10px;
+}
+
+.master-portfolio-list::-webkit-scrollbar-track {
+  background: rgba(244, 232, 225, 0.92);
+  border-radius: 999px;
+}
+
+.master-portfolio-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(210, 118, 93, 0.82), rgba(175, 88, 63, 0.76));
+  border-radius: 999px;
+}
+
+.master-portfolio-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(210, 118, 93, 0.95), rgba(175, 88, 63, 0.9));
+}
+
+.master-portfolio-list > * {
+  flex: 0 0 auto;
+}
+
 .portfolio-card,
 .master-portfolio-item {
   overflow: hidden;
@@ -722,6 +757,13 @@ h2 {
   display: flex;
   flex-direction: column;
   scroll-snap-align: start;
+}
+
+.master-portfolio-item {
+  flex: 0 0 auto;
+  width: min(78vw, 300px);
+  display: flex;
+  flex-direction: column;
 }
 
 .portfolio-card__image-wrap,
@@ -1778,7 +1820,6 @@ h2 {
   scroll-margin-top: 24px;
 }
 
-.master-client-card,
 .master-booking-item,
 .master-slot-card {
   border: 1px solid var(--border);
@@ -1786,14 +1827,8 @@ h2 {
   background: rgba(255, 255, 255, 0.78);
 }
 
-.master-client-card,
 .master-booking-item {
   padding: 18px;
-}
-
-.master-client-card strong {
-  display: block;
-  margin-bottom: 8px;
 }
 
 .master-filters {
@@ -1896,7 +1931,6 @@ h2 {
   pointer-events: none;
 }
 
-.master-client-card__head,
 .master-day-card__header,
 .master-slot-card__header,
 .master-schedule-slot__top {
@@ -1958,6 +1992,50 @@ h2 {
 }
 
 .master-bookings-table tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.master-clients-table-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(65, 43, 32, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 24px rgba(71, 44, 31, 0.04);
+}
+
+.master-clients-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.master-clients-table th,
+.master-clients-table td {
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.master-clients-table thead th {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(248, 241, 236, 0.88);
+}
+
+.master-clients-row {
+  border-bottom: 1px solid rgba(65, 43, 32, 0.06);
+  transition: background 160ms ease;
+}
+
+.master-clients-row:hover {
+  background: rgba(255, 248, 244, 0.72);
+}
+
+.master-clients-table tbody tr:last-child {
   border-bottom: 0;
 }
 
@@ -2037,10 +2115,6 @@ h2 {
   gap: 12px;
 }
 
-.master-clients-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .loading-line {
   height: 14px;
   border-radius: 999px;
@@ -2097,9 +2171,7 @@ h2 {
   .account-booking-card__grid,
   .master-stats-grid,
   .master-booking-item__grid,
-  .master-slot-card__grid,
-  .master-clients-list,
-  .master-portfolio-list {
+  .master-slot-card__grid {
     grid-template-columns: 1fr;
   }
 
@@ -2147,7 +2219,6 @@ h2 {
   .account-booking-card__header,
   .account-section__heading,
   .master-booking-item__header,
-  .master-client-card__head,
   .master-day-card__header,
   .master-slot-card__header,
   .master-schedule-slot__top {

@@ -4,6 +4,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { logoutAction } from "@/app/auth-actions";
 import { AdminSlotForm } from "@/components/admin-slot-form";
 import { MasterBookingsTable } from "@/components/master-bookings-table";
+import { MasterClientsTable } from "@/components/master-clients-table";
 import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
 import { MasterPortfolioManager } from "@/components/master-portfolio-manager";
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
@@ -313,21 +314,7 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               <h2>Клиентская база</h2>
             </div>
           </div>
-          <div className="master-clients-list section-space">
-            {clients.length === 0 ? <p className="empty-state">Клиентов пока нет.</p> : null}
-            {clients.map((client) => (
-              <article className="master-client-card" key={client.id}>
-                <div className="master-client-card__head">
-                  <strong>{client.displayName || client.phone || "Клиент без имени"}</strong>
-                  <span className="status-pill status-free">{client.bookingsCount} записей</span>
-                </div>
-                <p className="muted">{client.phone || "Телефон не указан"}</p>
-                <p className="muted">
-                  Ближайшая запись: {client.nextBookingLabel || "Пока не запланирована"}
-                </p>
-              </article>
-            ))}
-          </div>
+          <MasterClientsTable clients={clients} />
         </section>
 
         <section className="section-space">

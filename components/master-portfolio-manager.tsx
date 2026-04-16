@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { SubmitButton } from "@/components/submit-button";
 import {
   deletePortfolioItemAction,
@@ -102,29 +103,30 @@ export function MasterPortfolioManager({ items, profile }: MasterPortfolioManage
           <SubmitButton>Загрузить работу</SubmitButton>
         </form>
 
-        <div className="master-portfolio-list section-space">
-          {items.length === 0 ? (
-            <p className="empty-state">Портфолио пока пустое. Загрузите первую работу.</p>
-          ) : null}
-          {items.map((item) => (
-            <article className="master-portfolio-item" key={item.id}>
-              <div className="master-portfolio-item__image-wrap">
-                <img
-                  alt={item.caption || "Работа мастера"}
-                  className="master-portfolio-item__image"
-                  src={item.image_url}
-                />
-              </div>
-              <div className="master-portfolio-item__body">
-                <p>{item.caption || "Без подписи"}</p>
-                <form action={deletePortfolioItemAction}>
-                  <input name="itemId" type="hidden" value={item.id} />
-                  <SubmitButton className="danger-button">Удалить</SubmitButton>
-                </form>
-              </div>
-            </article>
-          ))}
-        </div>
+        {items.length === 0 ? (
+          <p className="empty-state section-space">Портфолио пока пустое. Загрузите первую работу.</p>
+        ) : (
+          <HorizontalScrollGallery className="master-portfolio-list section-space">
+            {items.map((item) => (
+              <article className="master-portfolio-item" key={item.id}>
+                <div className="master-portfolio-item__image-wrap">
+                  <img
+                    alt={item.caption || "Работа мастера"}
+                    className="master-portfolio-item__image"
+                    src={item.image_url}
+                  />
+                </div>
+                <div className="master-portfolio-item__body">
+                  <p>{item.caption || "Без подписи"}</p>
+                  <form action={deletePortfolioItemAction}>
+                    <input name="itemId" type="hidden" value={item.id} />
+                    <SubmitButton className="danger-button">Удалить</SubmitButton>
+                  </form>
+                </div>
+              </article>
+            ))}
+          </HorizontalScrollGallery>
+        )}
       </section>
     </section>
   );
