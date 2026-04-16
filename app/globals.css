@@ -1665,10 +1665,24 @@ h2 {
 .master-hero__copy {
   display: grid;
   gap: 12px;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+
+.master-hero__copy .eyebrow {
+  display: block;
+}
+
+.master-hero__copy .lead {
+  max-width: none;
 }
 
 .master-hero__actions {
   display: flex;
+  width: 100%;
+  grid-column: 1 / -1;
   justify-content: flex-end;
   align-items: flex-start;
   gap: 12px;
