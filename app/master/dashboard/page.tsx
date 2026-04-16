@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { logoutAction } from "@/app/auth-actions";
@@ -9,15 +10,44 @@ import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/servic
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
 import { getPortfolioDashboardData, resolveMasterProfile } from "@/lib/portfolio-service";
-import { formatDateLabel, formatSlotRange, getSlotEndDate } from "@/lib/utils";
+import { getSlotEndDate } from "@/lib/utils";
 
 type MasterDashboardPageProps = {
   searchParams?: Promise<{
     status?: string;
     date?: string;
+    page?: string;
     query?: string;
   }>;
 };
+
+const bookingsPerPage = 5;
+
+function buildDashboardPageHref(
+  filters: Awaited<NonNullable<MasterDashboardPageProps["searchParams"]>>,
+  page: number
+): Route {
+  const params = new URLSearchParams();
+
+  if (filters.status) {
+    params.set("status", filters.status);
+  }
+
+  if (filters.date) {
+    params.set("date", filters.date);
+  }
+
+  if (filters.query) {
+    params.set("query", filters.query);
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+  return `/master/dashboard${query ? `?${query}` : ""}#bookings` as Route;
+}
 
 function getBookingVisualState(booking: Awaited<ReturnType<typeof listBookingsForMaster>>[number]) {
   if (booking.status === "cancelled") {
@@ -50,10 +80,15 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
   const activeCount = allBookings.filter((booking) => getBookingVisualState(booking) === "confirmed").length;
   const freeCount = allSlots.filter((slot) => !slot.activeBooking).length;
   const cancelledCount = allBookings.filter((booking) => booking.status === "cancelled").length;
-  const upcomingBookings = allBookings
-    .filter((booking) => booking.time_slots && getBookingVisualState(booking) === "confirmed")
-    .slice(0, 4);
-  const cancelledBookings = allBookings.filter((booking) => booking.status === "cancelled");
+  const totalBookingPages = Math.max(1, Math.ceil(bookings.length / bookingsPerPage));
+  const requestedPage = Number.parseInt(filters.page || "1", 10);
+  const currentBookingPage =
+    Number.isFinite(requestedPage) && requestedPage > 0
+      ? Math.min(requestedPage, totalBookingPages)
+      : 1;
+  const bookingPageStart = (currentBookingPage - 1) * bookingsPerPage;
+  const visibleBookings = bookings.slice(bookingPageStart, bookingPageStart + bookingsPerPage);
+  const bookingPageNumbers = Array.from({ length: totalBookingPages }, (_, index) => index + 1);
 
   return (
     <main className="page-shell">
@@ -93,9 +128,6 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               </a>
               <a className="ghost-button" href="#portfolio-manager">
                 Портфолио
-              </a>
-              <a className="ghost-button" href="#cancellations">
-                Отмены
               </a>
             </div>
           </div>
@@ -139,50 +171,19 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
           </article>
         </section>
 
-        <section className="page-columns section-space">
-          <section className="panel stack-card master-section">
-            <div className="account-section__heading">
-              <div>
-                <span className="eyebrow">Ближайшие записи</span>
-                <h2>Что запланировано дальше</h2>
-              </div>
+        <section className="panel stack-card master-section section-space" id="slots">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Добавить окна</span>
+              <h2>Управление доступностью</h2>
             </div>
-            <div className="master-upcoming-list section-space">
-              {upcomingBookings.length === 0 ? (
-                <p className="empty-state">Ближайших активных записей пока нет.</p>
-              ) : null}
-              {upcomingBookings.map((booking) => (
-                <div className="master-upcoming-card" key={booking.id}>
-                  <strong>{booking.name}</strong>
-                  <p className="muted">
-                    {booking.time_slots
-                      ? `${formatDateLabel(booking.time_slots.slot_date)}, ${formatSlotRange(
-                          booking.time_slots
-                        )}`
-                      : "Нет времени"}
-                  </p>
-                  <p className="muted">
-                    {booking.phone} • {booking.style}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <aside className="panel stack-card master-section" id="slots">
-            <div className="account-section__heading">
-              <div>
-                <span className="eyebrow">Добавить окна</span>
-                <h2>Управление доступностью</h2>
-              </div>
-            </div>
-            <p className="muted">
-              Можно создать одно окно или сразу несколько интервалов на выбранную дату.
-            </p>
-            <div className="section-space">
-              <AdminSlotForm />
-            </div>
-          </aside>
+          </div>
+          <p className="muted">
+            Можно создать одно окно или сразу несколько интервалов на выбранную дату.
+          </p>
+          <div className="section-space">
+            <AdminSlotForm />
+          </div>
         </section>
 
         <section className="panel stack-card section-space master-section" id="bookings">
@@ -231,10 +232,70 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
             {bookings.length === 0 ? (
               <p className="empty-state">По выбранным фильтрам записи не найдены.</p>
             ) : null}
-            {bookings.map((booking) => (
+            {visibleBookings.map((booking) => (
               <MasterBookingListItem booking={booking} key={booking.id} />
             ))}
           </div>
+
+          {bookings.length > bookingsPerPage ? (
+            <nav aria-label="Пагинация бронирований" className="master-pagination section-space">
+              <div className="master-pagination__track">
+                {currentBookingPage > 1 ? (
+                  <Link
+                    className="master-pagination__item master-pagination__item--nav"
+                    href={buildDashboardPageHref(filters, currentBookingPage - 1)}
+                  >
+                    Назад
+                  </Link>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    className="master-pagination__item master-pagination__item--nav is-disabled"
+                  >
+                    Назад
+                  </span>
+                )}
+
+                <div className="master-pagination__pages">
+                  {bookingPageNumbers.map((page) =>
+                    page === currentBookingPage ? (
+                      <span
+                        aria-current="page"
+                        className="master-pagination__item is-active"
+                        key={page}
+                      >
+                        {page}
+                      </span>
+                    ) : (
+                      <Link
+                        className="master-pagination__item"
+                        href={buildDashboardPageHref(filters, page)}
+                        key={page}
+                      >
+                        {page}
+                      </Link>
+                    )
+                  )}
+                </div>
+
+                {currentBookingPage < totalBookingPages ? (
+                  <Link
+                    className="master-pagination__item master-pagination__item--nav"
+                    href={buildDashboardPageHref(filters, currentBookingPage + 1)}
+                  >
+                    Вперёд
+                  </Link>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    className="master-pagination__item master-pagination__item--nav is-disabled"
+                  >
+                    Вперёд
+                  </span>
+                )}
+              </div>
+            </nav>
+          ) : null}
         </section>
 
         <section className="panel stack-card section-space master-section" id="schedule">
@@ -273,42 +334,6 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
 
         <section className="section-space">
           <MasterPortfolioManager items={portfolioData.items} profile={portfolioProfile} />
-        </section>
-
-        <section className="panel stack-card section-space master-section" id="cancellations">
-          <div className="account-section__heading">
-            <div>
-              <span className="eyebrow">Отмены</span>
-              <h2>Отменённые записи</h2>
-            </div>
-          </div>
-          <p className="helper">Инициатор отмены пока не сохраняется отдельно в базе.</p>
-          <div className="master-cancellations-list section-space">
-            {cancelledBookings.length === 0 ? (
-              <p className="empty-state">Пока нет отменённых записей.</p>
-            ) : null}
-            {cancelledBookings.map((booking) => (
-              <div className="cancelled-item" key={booking.id}>
-                <header>
-                  <strong>
-                    {booking.time_slots
-                      ? `${formatDateLabel(booking.time_slots.slot_date)}, ${formatSlotRange(
-                          booking.time_slots
-                        )}`
-                      : "Без времени"}
-                  </strong>
-                  <span className="status-pill status-cancelled">Отменена</span>
-                </header>
-                <p>
-                  {booking.name} • {booking.phone}
-                </p>
-                <p className="muted">
-                  {booking.style}
-                  {booking.notes ? ` • ${booking.notes}` : ""}
-                </p>
-              </div>
-            ))}
-          </div>
         </section>
       </div>
     </main>

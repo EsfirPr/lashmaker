@@ -1706,11 +1706,9 @@ h2 {
 
 .master-dashboard-nav,
 .master-stats-grid,
-.master-upcoming-list,
 .master-bookings-list,
 .master-schedule-list,
-.master-clients-list,
-.master-cancellations-list {
+.master-clients-list {
   display: grid;
   gap: 16px;
 }
@@ -1780,11 +1778,6 @@ h2 {
   scroll-margin-top: 24px;
 }
 
-.master-upcoming-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.master-upcoming-card,
 .master-client-card,
 .master-booking-item,
 .master-slot-card {
@@ -1793,13 +1786,11 @@ h2 {
   background: rgba(255, 255, 255, 0.78);
 }
 
-.master-upcoming-card,
 .master-client-card,
 .master-booking-item {
   padding: 18px;
 }
 
-.master-upcoming-card strong,
 .master-client-card strong {
   display: block;
   margin-bottom: 8px;
@@ -1815,6 +1806,99 @@ h2 {
 .master-booking-item {
   display: grid;
   gap: 16px;
+}
+
+.master-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.master-pagination__track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: 100%;
+  padding: 6px;
+  border-radius: 20px;
+  border: 1px solid rgba(65, 43, 32, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 241, 236, 0.92)),
+    rgba(255, 255, 255, 0.84);
+  box-shadow:
+    0 16px 30px rgba(71, 44, 31, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.master-pagination__track::-webkit-scrollbar {
+  display: none;
+}
+
+.master-pagination__pages {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.master-pagination__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 46px;
+  min-height: 44px;
+  padding: 0 15px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 700;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease,
+    color 160ms ease;
+}
+
+.master-pagination__item:hover {
+  transform: translateY(-1px);
+  color: var(--accent-dark);
+  border-color: rgba(210, 118, 93, 0.18);
+  background: rgba(255, 248, 244, 0.86);
+}
+
+.master-pagination__item:focus-visible {
+  outline: 2px solid rgba(210, 118, 93, 0.28);
+  outline-offset: 2px;
+  border-color: rgba(210, 118, 93, 0.28);
+}
+
+.master-pagination__item--nav {
+  padding-inline: 18px;
+}
+
+.master-pagination__item.is-active {
+  color: #fff;
+  border-color: #d2765d;
+  background: linear-gradient(135deg, #d2765d 0%, #af583f 100%);
+  box-shadow: 0 14px 24px rgba(210, 118, 93, 0.18);
+}
+
+.master-pagination__item.is-disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
 }
 
 .master-booking-item__header,
@@ -1969,7 +2053,6 @@ h2 {
   .slot-segmented,
   .account-booking-card__grid,
   .master-stats-grid,
-  .master-upcoming-list,
   .master-booking-item__grid,
   .master-slot-card__grid,
   .master-clients-list,
@@ -1979,6 +2062,10 @@ h2 {
 
   .master-filters {
     grid-template-columns: 1fr;
+  }
+
+  .master-pagination {
+    justify-content: flex-start;
   }
 
   .master-dashboard-nav {
