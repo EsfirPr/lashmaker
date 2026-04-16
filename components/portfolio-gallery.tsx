@@ -23,7 +23,7 @@ export function PortfolioGallery({
   }
 
   return (
-    <HorizontalScrollGallery className="portfolio-grid">
+    <HorizontalScrollGallery className="portfolio-grid" showAffordance>
       {items.map((item) => (
         <article className="portfolio-card" key={item.id}>
           <div className="portfolio-card__image-wrap">

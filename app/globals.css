@@ -654,20 +654,112 @@ h2 {
   min-width: 0;
 }
 
-.certificates-list {
+.horizontal-scroll-shell {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.horizontal-scroll {
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
-  gap: 12px;
-  padding-bottom: 8px;
+  gap: var(--horizontal-scroll-gap, 14px);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--horizontal-scroll-padding, 2px 2px 12px);
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(210, 118, 93, 0.6) rgba(244, 232, 225, 0.92);
 }
 
-.certificates-list::-webkit-scrollbar {
-  display: none;
+.horizontal-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-track {
+  background: rgba(244, 232, 225, 0.92);
+  border-radius: 999px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(210, 118, 93, 0.82), rgba(175, 88, 63, 0.76));
+  border-radius: 999px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(210, 118, 93, 0.95), rgba(175, 88, 63, 0.9));
+}
+
+.horizontal-scroll > * {
+  flex: 0 0 auto;
+}
+
+.horizontal-scroll-fade {
+  position: absolute;
+  top: 0;
+  bottom: 16px;
+  width: 54px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.horizontal-scroll-fade--left {
+  left: 0;
+  background: linear-gradient(90deg, rgba(250, 245, 241, 0.98), rgba(250, 245, 241, 0));
+}
+
+.horizontal-scroll-fade--right {
+  right: 0;
+  background: linear-gradient(270deg, rgba(250, 245, 241, 0.98), rgba(250, 245, 241, 0));
+}
+
+.horizontal-scroll-shell.can-scroll-left .horizontal-scroll-fade--left,
+.horizontal-scroll-shell.can-scroll-right .horizontal-scroll-fade--right {
+  opacity: 1;
+}
+
+.horizontal-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--accent-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  box-shadow: 0 10px 24px rgba(71, 44, 31, 0.08);
+  transform: translateX(-50%) translateY(8px);
+  opacity: 0;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+  pointer-events: none;
+}
+
+.horizontal-scroll-shell.is-hint-visible .horizontal-scroll-hint {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.certificates-list {
+  --horizontal-scroll-gap: 12px;
+  --horizontal-scroll-padding: 2px 2px 12px;
 }
 
 .certificate-card {
@@ -691,57 +783,13 @@ h2 {
 }
 
 .portfolio-grid {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  gap: 16px;
-  padding-bottom: 8px;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.portfolio-grid::-webkit-scrollbar {
-  display: none;
+  --horizontal-scroll-gap: 16px;
+  --horizontal-scroll-padding: 2px 2px 12px;
 }
 
 .master-portfolio-list {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  gap: 14px;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  padding: 2px 2px 12px;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: auto;
-  scrollbar-color: rgba(210, 118, 93, 0.6) rgba(244, 232, 225, 0.92);
-}
-
-.master-portfolio-list::-webkit-scrollbar {
-  height: 10px;
-}
-
-.master-portfolio-list::-webkit-scrollbar-track {
-  background: rgba(244, 232, 225, 0.92);
-  border-radius: 999px;
-}
-
-.master-portfolio-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, rgba(210, 118, 93, 0.82), rgba(175, 88, 63, 0.76));
-  border-radius: 999px;
-}
-
-.master-portfolio-list::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, rgba(210, 118, 93, 0.95), rgba(175, 88, 63, 0.9));
-}
-
-.master-portfolio-list > * {
-  flex: 0 0 auto;
+  --horizontal-scroll-gap: 14px;
+  --horizontal-scroll-padding: 2px 2px 12px;
 }
 
 .portfolio-card,
@@ -816,20 +864,12 @@ h2 {
 }
 
 @media (min-width: 801px) {
-  .certificates-list,
-  .portfolio-grid {
-    padding-inline: 20px;
-    scroll-padding-inline: 20px;
+  .horizontal-scroll {
+    padding-inline: var(--horizontal-scroll-inline-padding, 20px);
+    scroll-padding-inline: var(--horizontal-scroll-inline-padding, 20px);
     scroll-snap-type: x mandatory;
   }
 
-  .certificate-card,
-  .portfolio-card {
-    scroll-snap-stop: always;
-  }
-}
-
-@media (min-width: 801px) {
   .gallery-scroll {
     cursor: grab;
   }
@@ -840,29 +880,9 @@ h2 {
     user-select: none;
   }
 
-  .gallery-scroll > * {
-    flex: 0 0 auto;
+  .horizontal-scroll > * {
     scroll-snap-align: start;
-  }
-}
-
-@media (min-width: 1024px) {
-  .certificates-list,
-  .portfolio-grid {
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      #000 36px,
-      #000 calc(100% - 36px),
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      #000 36px,
-      #000 calc(100% - 36px),
-      transparent 100%
-    );
+    scroll-snap-stop: always;
   }
 }
 

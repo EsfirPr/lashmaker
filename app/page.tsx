@@ -143,7 +143,7 @@ export default async function HomePage() {
                 "Работаю в спокойном темпе, уделяю внимание форме глаза, носибельности и чистоте каждой работы, чтобы результат выглядел дорого и гармонично."}
             </p>
             <div className="certificates-gallery section-space">
-              <HorizontalScrollGallery className="certificates-list">
+              <HorizontalScrollGallery className="certificates-list" showAffordance>
                 {certificatePlaceholderIds.map((certificateId) => (
                   <article className="certificate-card" key={certificateId}>
                     <img alt="Сертификат мастера" src="/images/cert-placeholder.svg" />
