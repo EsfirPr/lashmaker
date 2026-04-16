@@ -14,9 +14,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="page-shell auth-shell">
       <section className="panel auth-card">
-        <div className="inline-actions">
+        <div className="inline-actions login-header">
           <Link className="ghost-button" href="/">
             На главную
+          </Link>
+          <Link className="ghost-button" href="/register">
+            Регистрация
           </Link>
         </div>
         <h1 className="page-title">Вход</h1>
@@ -62,12 +65,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </Link>
           .
         </p>
-
-        <div className="inline-actions section-space">
-          <Link className="ghost-button" href="/register">
-            Регистрация
-          </Link>
-        </div>
       </section>
     </main>
   );

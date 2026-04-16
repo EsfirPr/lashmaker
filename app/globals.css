@@ -771,12 +771,23 @@ h2 {
   text-align: center;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .certificates-list,
   .portfolio-grid {
     padding-inline: 20px;
     scroll-padding-inline: 20px;
     scroll-snap-type: x mandatory;
+  }
+
+  .certificate-card,
+  .portfolio-card {
+    scroll-snap-stop: always;
+  }
+}
+
+@media (min-width: 1024px) {
+  .certificates-list,
+  .portfolio-grid {
     -webkit-mask-image: linear-gradient(
       to right,
       transparent 0,
@@ -791,11 +802,6 @@ h2 {
       #000 calc(100% - 36px),
       transparent 100%
     );
-  }
-
-  .certificate-card,
-  .portfolio-card {
-    scroll-snap-stop: always;
   }
 }
 
@@ -1025,6 +1031,14 @@ h2 {
 .auth-card {
   width: min(100%, 520px);
   padding: 28px;
+}
+
+.login-header {
+  justify-content: space-between;
+}
+
+.login-header .ghost-button {
+  margin-top: 0;
 }
 
 .inline-actions {
