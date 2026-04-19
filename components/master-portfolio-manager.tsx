@@ -2,6 +2,7 @@
 
 import type { ChangeEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { initialMasterFormState } from "@/app/master/dashboard/state";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { SubmitButton } from "@/components/submit-button";
 import {
@@ -18,11 +19,6 @@ type MasterPortfolioManagerProps = {
   certificates: MasterCertificate[];
   items: PortfolioItem[];
   profile: MasterProfile;
-};
-
-const initialMasterFormState = {
-  status: "idle" as const,
-  message: ""
 };
 
 export function MasterPortfolioManager({

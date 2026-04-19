@@ -1,5 +1,6 @@
 "use server";
 
+import type { MasterFormState } from "@/app/master/dashboard/state";
 import { requireUserRole } from "@/lib/auth/server";
 import {
   createMasterService,
@@ -12,11 +13,6 @@ import {
   uploadMasterCertificates,
   uploadPortfolioItem
 } from "@/lib/portfolio-service";
-
-export type MasterFormState = {
-  status: "idle" | "success" | "error";
-  message: string;
-};
 
 export async function saveMasterProfileAction(
   _previousState: MasterFormState,

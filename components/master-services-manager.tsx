@@ -1,22 +1,17 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { initialMasterFormState, type MasterFormState } from "@/app/master/dashboard/state";
 import { SubmitButton } from "@/components/submit-button";
 import {
   createMasterServiceAction,
   deleteMasterServiceAction,
-  type MasterFormState,
   updateMasterServiceAction
 } from "@/app/master/dashboard/actions";
 import type { MasterService } from "@/lib/types";
 
 type MasterServicesManagerProps = {
   services: MasterService[];
-};
-
-const initialState: MasterFormState = {
-  status: "idle",
-  message: ""
 };
 
 const priceFormatter = new Intl.NumberFormat("ru-RU", {
@@ -26,8 +21,8 @@ const priceFormatter = new Intl.NumberFormat("ru-RU", {
 });
 
 function MasterServiceRow({ service }: { service: MasterService }) {
-  const [updateState, updateAction] = useActionState(updateMasterServiceAction, initialState);
-  const [deleteState, deleteAction] = useActionState(deleteMasterServiceAction, initialState);
+  const [updateState, updateAction] = useActionState(updateMasterServiceAction, initialMasterFormState);
+  const [deleteState, deleteAction] = useActionState(deleteMasterServiceAction, initialMasterFormState);
 
   return (
     <article className="master-service-editor">
@@ -106,7 +101,7 @@ function MasterServiceRow({ service }: { service: MasterService }) {
 }
 
 export function MasterServicesManager({ services }: MasterServicesManagerProps) {
-  const [createState, createAction] = useActionState(createMasterServiceAction, initialState);
+  const [createState, createAction] = useActionState(createMasterServiceAction, initialMasterFormState);
   const createFormRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {

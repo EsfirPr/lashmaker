@@ -2,16 +2,7 @@
 
 import { requireUserRole } from "@/lib/auth/server";
 import { createTimeSlot, createTimeSlots, deleteFreeTimeSlot } from "@/lib/booking-service";
-
-export type AdminSlotFormState = {
-  status: "idle" | "success" | "error";
-  message: string;
-};
-
-export const initialAdminSlotFormState: AdminSlotFormState = {
-  status: "idle",
-  message: ""
-};
+import type { AdminSlotFormState } from "@/app/admin/state";
 
 type SlotSelection = {
   slotDate: string;

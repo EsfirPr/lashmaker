@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { addTimeSlotAction, initialAdminSlotFormState } from "@/app/admin/actions";
+import { addTimeSlotAction } from "@/app/admin/actions";
+import { initialAdminSlotFormState } from "@/app/admin/state";
 import { SubmitButton } from "@/components/submit-button";
 import { readJsonResponse } from "@/lib/http";
 import {
