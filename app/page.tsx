@@ -7,7 +7,8 @@ import { getCurrentUser } from "@/lib/auth/server";
 import {
   getLandingCertificates,
   getLandingMasterProfile,
-  getLandingPortfolioItems
+  getLandingPortfolioItems,
+  getLandingServices
 } from "@/lib/portfolio-service";
 
 function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
@@ -47,18 +48,44 @@ function getHeaderCta(userRole: "master" | "client" | null): Route {
   return "/login";
 }
 
+function formatServicePrice(price: number) {
+  return new Intl.NumberFormat("ru-RU", {
+    style: "currency",
+    currency: "RUB",
+    maximumFractionDigits: 0
+  }).format(price);
+}
+
+function getServiceBookingHref(userRole: "master" | "client" | null, style: string): Route {
+  const params = new URLSearchParams({
+    style
+  });
+
+  if (userRole === "master") {
+    return `/master/dashboard/bookings/new?${params.toString()}` as Route;
+  }
+
+  if (userRole === "client") {
+    return `/account?${params.toString()}#new-booking` as Route;
+  }
+
+  return "/register" as Route;
+}
+
 export default async function HomePage() {
   noStore();
-  const [userResult, profileResult, portfolioResult, certificateResult] = await Promise.allSettled([
+  const [userResult, profileResult, portfolioResult, certificateResult, servicesResult] = await Promise.allSettled([
     getCurrentUser(),
     getLandingMasterProfile(),
     getLandingPortfolioItems(),
-    getLandingCertificates()
+    getLandingCertificates(),
+    getLandingServices()
   ]);
   const user = getSettledValue(userResult, null);
   const profile = getSettledValue(profileResult, null);
   const portfolioItems = getSettledValue(portfolioResult, []);
   const certificates = getSettledValue(certificateResult, []);
+  const services = getSettledValue(servicesResult, []);
   const primaryCta = getPrimaryCta(user?.role || null);
   const headerCta = getHeaderCta(user?.role || null);
   const masterName = profile?.display_name || "Sulamita";
@@ -134,6 +161,42 @@ export default async function HomePage() {
             <PortfolioGallery items={portfolioItems} />
           </div>
         </section>
+
+        {services.length > 0 ? (
+          <section className="panel landing-section pricing-section section-space" id="pricing">
+            <div className="landing-section__heading">
+              <div>
+                <span className="eyebrow">Прайс</span>
+                <h2>Услуги и цены</h2>
+                <p className="pricing-section__subtitle muted">
+                  Прозрачные цены без скрытых доплат и с понятным объёмом работы.
+                </p>
+              </div>
+            </div>
+            <div className="services-list section-space">
+              {services.map((service) => (
+                <article className="service-row" key={service.id}>
+                  <div className="service-row__content">
+                    <div className="service-row__top">
+                      <strong>{service.name}</strong>
+                      {service.duration ? <span className="muted">{service.duration}</span> : null}
+                    </div>
+                    {service.description ? <p className="muted">{service.description}</p> : null}
+                  </div>
+                  <div className="service-row__side">
+                    <strong className="service-row__price">{formatServicePrice(service.price)}</strong>
+                    <Link
+                      className="ghost-button service-row__cta"
+                      href={getServiceBookingHref(user?.role || null, service.name)}
+                    >
+                      Записаться
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="landing-about section-space" id="about">
           <section className="panel landing-section">

@@ -113,3 +113,19 @@ export const masterLoginSchema = z.object({
 export const bookingIdSchema = z.object({
   bookingId: z.string().uuid("Некорректный идентификатор записи")
 });
+
+export const masterServiceInputSchema = z.object({
+  name: z.string().trim().min(2, "Укажите название услуги").max(120, "Слишком длинное название"),
+  price: z.coerce
+    .number({
+      invalid_type_error: "Укажите цену"
+    })
+    .int("Цена должна быть целым числом")
+    .min(0, "Цена не может быть отрицательной"),
+  duration: z.string().trim().max(80, "Слишком длинная длительность").optional().default(""),
+  description: z.string().trim().max(280, "Слишком длинное описание").optional().default("")
+});
+
+export const masterServiceIdSchema = z.object({
+  serviceId: z.string().uuid("Некорректный идентификатор услуги")
+});

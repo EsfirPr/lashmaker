@@ -2,9 +2,12 @@
 
 import { requireUserRole } from "@/lib/auth/server";
 import {
+  createMasterService,
   deleteMasterCertificate,
   deletePortfolioItem,
+  deleteMasterService,
   updateMasterProfile,
+  updateMasterService,
   uploadMasterAvatar,
   uploadMasterCertificates,
   uploadPortfolioItem
@@ -145,4 +148,79 @@ export async function deletePortfolioItemAction(formData: FormData) {
 export async function deleteMasterCertificateAction(formData: FormData) {
   const master = await requireUserRole("master", "/login");
   await deleteMasterCertificate(String(formData.get("certificateId") || ""), master.id);
+}
+
+export async function createMasterServiceAction(
+  _previousState: MasterFormState,
+  formData: FormData
+): Promise<MasterFormState> {
+  try {
+    const master = await requireUserRole("master", "/login");
+
+    await createMasterService({
+      ownerId: master.id,
+      name: String(formData.get("name") || ""),
+      price: Number(formData.get("price") || 0),
+      duration: String(formData.get("duration") || ""),
+      description: String(formData.get("description") || "")
+    });
+
+    return {
+      status: "success",
+      message: "Услуга добавлена"
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Не удалось добавить услугу"
+    };
+  }
+}
+
+export async function updateMasterServiceAction(
+  _previousState: MasterFormState,
+  formData: FormData
+): Promise<MasterFormState> {
+  try {
+    const master = await requireUserRole("master", "/login");
+
+    await updateMasterService({
+      ownerId: master.id,
+      serviceId: String(formData.get("serviceId") || ""),
+      name: String(formData.get("name") || ""),
+      price: Number(formData.get("price") || 0),
+      duration: String(formData.get("duration") || ""),
+      description: String(formData.get("description") || "")
+    });
+
+    return {
+      status: "success",
+      message: "Услуга обновлена"
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Не удалось обновить услугу"
+    };
+  }
+}
+
+export async function deleteMasterServiceAction(
+  _previousState: MasterFormState,
+  formData: FormData
+): Promise<MasterFormState> {
+  try {
+    const master = await requireUserRole("master", "/login");
+    await deleteMasterService(String(formData.get("serviceId") || ""), master.id);
+
+    return {
+      status: "success",
+      message: "Услуга удалена"
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Не удалось удалить услугу"
+    };
+  }
 }

@@ -6,14 +6,25 @@ import { AccountProfileSettings } from "@/components/account-profile-settings";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForClient } from "@/lib/booking-service";
 import { getGreetingByTime } from "@/lib/utils";
+import { STYLE_OPTIONS } from "@/lib/validators";
 
-export default async function AccountPage() {
+type AccountPageProps = {
+  searchParams?: Promise<{
+    style?: string;
+  }>;
+};
+
+export default async function AccountPage({ searchParams }: AccountPageProps) {
   noStore();
   const user = await requireUserRole("client", "/login");
+  const filters = (await searchParams) || {};
   const bookings = await listBookingsForClient(user.id);
   const profileName = user.name || bookings.find((booking) => booking.name.trim())?.name || null;
   const displayIdentity = profileName || user.phone || "гостья";
   const greeting = getGreetingByTime();
+  const requestedStyle = STYLE_OPTIONS.includes(filters.style as (typeof STYLE_OPTIONS)[number])
+    ? filters.style
+    : undefined;
 
   return (
     <main className="page-shell">
@@ -59,7 +70,7 @@ export default async function AccountPage() {
           <p className="muted">
             Выберите стиль, период и свободное время, затем подтвердите запись.
           </p>
-          <AccountBookingForm />
+          <AccountBookingForm initialStyle={requestedStyle} />
         </section>
 
         <section className="panel stack-card section-space account-section">

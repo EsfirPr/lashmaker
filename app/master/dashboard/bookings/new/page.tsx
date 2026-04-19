@@ -1,9 +1,20 @@
 import Link from "next/link";
 import { requireUserRole } from "@/lib/auth/server";
 import { MasterBookingCreateForm } from "@/components/master-booking-create-form";
+import { STYLE_OPTIONS } from "@/lib/validators";
 
-export default async function MasterNewBookingPage() {
+type MasterNewBookingPageProps = {
+  searchParams?: Promise<{
+    style?: string;
+  }>;
+};
+
+export default async function MasterNewBookingPage({ searchParams }: MasterNewBookingPageProps) {
   await requireUserRole("master", "/login");
+  const filters = (await searchParams) || {};
+  const requestedStyle = STYLE_OPTIONS.includes(filters.style as (typeof STYLE_OPTIONS)[number])
+    ? filters.style
+    : undefined;
 
   return (
     <main className="page-shell">
@@ -24,7 +35,7 @@ export default async function MasterNewBookingPage() {
             для ручной записи.
           </p>
 
-          <MasterBookingCreateForm />
+          <MasterBookingCreateForm initialStyle={requestedStyle} />
         </section>
       </div>
     </main>

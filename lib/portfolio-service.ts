@@ -5,10 +5,12 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type {
   MasterCertificate,
   MasterProfile,
+  MasterService,
   PortfolioItem,
   SafeUser,
   User
 } from "@/lib/types";
+import { masterServiceIdSchema, masterServiceInputSchema } from "@/lib/validators";
 
 const portfolioBucket = "portfolio";
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -160,6 +162,31 @@ export async function getLandingCertificates() {
   return (data || []) as MasterCertificate[];
 }
 
+export async function getLandingServices() {
+  const master = await getMasterUser();
+
+  if (!master) {
+    return [] as MasterService[];
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("master_services")
+    .select("*")
+    .eq("owner_id", master.id)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    if (isMissingRelationError(error)) {
+      return [] as MasterService[];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return (data || []) as MasterService[];
+}
+
 export async function getLandingMasterProfile() {
   const master = await getMasterUser();
 
@@ -173,7 +200,7 @@ export async function getLandingMasterProfile() {
 
 export async function getPortfolioDashboardData(ownerId: string) {
   const supabase = getSupabaseAdminClient();
-  const [profile, portfolioItems, certificates] = await Promise.all([
+  const [profile, portfolioItems, certificates, services] = await Promise.all([
     getMasterProfileByUserId(ownerId),
     supabase
       .from("portfolio_items")
@@ -184,7 +211,12 @@ export async function getPortfolioDashboardData(ownerId: string) {
       .from("master_certificates")
       .select("*")
       .eq("owner_id", ownerId)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("master_services")
+      .select("*")
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: true })
   ]);
 
   if (portfolioItems.error) {
@@ -195,10 +227,15 @@ export async function getPortfolioDashboardData(ownerId: string) {
     throw new Error(certificates.error.message);
   }
 
+  if (services.error && !isMissingRelationError(services.error)) {
+    throw new Error(services.error.message);
+  }
+
   return {
     profile,
     items: (portfolioItems.data || []) as PortfolioItem[],
-    certificates: (certificates.data || []) as MasterCertificate[]
+    certificates: (certificates.data || []) as MasterCertificate[],
+    services: (services.data || []) as MasterService[]
   };
 }
 
@@ -363,6 +400,78 @@ export async function deleteMasterCertificate(certificateId: string, ownerId: st
 
   if (deleteError) {
     throw new Error(deleteError.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/master/dashboard");
+}
+
+export async function createMasterService(input: {
+  ownerId: string;
+  name: string;
+  price: number;
+  duration?: string;
+  description?: string;
+}) {
+  const payload = masterServiceInputSchema.parse(input);
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase.from("master_services").insert({
+    owner_id: input.ownerId,
+    name: payload.name,
+    price: payload.price,
+    duration: payload.duration || null,
+    description: payload.description || null
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/master/dashboard");
+}
+
+export async function updateMasterService(input: {
+  ownerId: string;
+  serviceId: string;
+  name: string;
+  price: number;
+  duration?: string;
+  description?: string;
+}) {
+  const payload = masterServiceInputSchema.parse(input);
+  const parsedId = masterServiceIdSchema.parse({ serviceId: input.serviceId });
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("master_services")
+    .update({
+      name: payload.name,
+      price: payload.price,
+      duration: payload.duration || null,
+      description: payload.description || null
+    })
+    .eq("id", parsedId.serviceId)
+    .eq("owner_id", input.ownerId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/master/dashboard");
+}
+
+export async function deleteMasterService(serviceId: string, ownerId: string) {
+  const parsedId = masterServiceIdSchema.parse({ serviceId });
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("master_services")
+    .delete()
+    .eq("id", parsedId.serviceId)
+    .eq("owner_id", ownerId);
+
+  if (error) {
+    throw new Error(error.message);
   }
 
   revalidatePath("/");

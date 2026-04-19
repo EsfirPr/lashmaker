@@ -34,8 +34,18 @@ type SlotGroup = {
   slots: TimeSlot[];
 };
 
+type AccountBookingFormProps = {
+  initialStyle?: string;
+};
+
+function resolveInitialStyle(value?: string) {
+  return STYLE_OPTIONS.includes(value as (typeof STYLE_OPTIONS)[number])
+    ? (value as string)
+    : STYLE_OPTIONS[0];
+}
+
 const initialState: FormState = {
-  style: STYLE_OPTIONS[0],
+  style: resolveInitialStyle(),
   notes: "",
   date: "",
   slotId: ""
@@ -59,11 +69,14 @@ function groupSlotsByDay(slots: TimeSlot[]) {
   }, []);
 }
 
-export function AccountBookingForm() {
+export function AccountBookingForm({ initialStyle }: AccountBookingFormProps = {}) {
   const router = useRouter();
   const today = getTodayDate();
   const [isMobile, setIsMobile] = useState(false);
-  const [form, setForm] = useState<FormState>(initialState);
+  const [form, setForm] = useState<FormState>({
+    ...initialState,
+    style: resolveInitialStyle(initialStyle)
+  });
   const [periodMode, setPeriodMode] = useState<PeriodMode>("week");
   const [anchorDate, setAnchorDate] = useState(getTodayDate());
   const [monthFocusedDate, setMonthFocusedDate] = useState(getTodayDate());
@@ -121,6 +134,21 @@ export function AccountBookingForm() {
 
     return () => mediaQuery.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    const nextStyle = resolveInitialStyle(initialStyle);
+
+    setForm((current) => {
+      if (current.style === nextStyle) {
+        return current;
+      }
+
+      return {
+        ...current,
+        style: nextStyle
+      };
+    });
+  }, [initialStyle]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -261,7 +289,10 @@ export function AccountBookingForm() {
       const payload = await readJsonResponse<{ token: string }>(response);
 
       setSuccessToken(payload.token);
-      setForm(initialState);
+      setForm({
+        ...initialState,
+        style: resolveInitialStyle(initialStyle)
+      });
       setAnchorDate(getTodayDate());
       setMonthFocusedDate(getTodayDate());
       router.refresh();

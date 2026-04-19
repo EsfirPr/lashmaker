@@ -36,13 +36,23 @@ type SlotGroup = {
   slots: TimeSlot[];
 };
 
+type MasterBookingCreateFormProps = {
+  initialStyle?: string;
+};
+
+function resolveInitialStyle(value?: string) {
+  return STYLE_OPTIONS.includes(value as (typeof STYLE_OPTIONS)[number])
+    ? (value as string)
+    : STYLE_OPTIONS[0];
+}
+
 const initialState: FormState = {
   date: "",
   name: "",
   notes: "",
   phone: "",
   slotId: "",
-  style: STYLE_OPTIONS[0]
+  style: resolveInitialStyle()
 };
 
 function groupSlotsByDay(slots: TimeSlot[]) {
@@ -63,12 +73,15 @@ function groupSlotsByDay(slots: TimeSlot[]) {
   }, []);
 }
 
-export function MasterBookingCreateForm() {
+export function MasterBookingCreateForm({ initialStyle }: MasterBookingCreateFormProps = {}) {
   const router = useRouter();
   const redirectTimeoutRef = useRef<number | null>(null);
   const today = getTodayDate();
   const [isMobile, setIsMobile] = useState(false);
-  const [form, setForm] = useState<FormState>(initialState);
+  const [form, setForm] = useState<FormState>({
+    ...initialState,
+    style: resolveInitialStyle(initialStyle)
+  });
   const [periodMode, setPeriodMode] = useState<PeriodMode>("week");
   const [anchorDate, setAnchorDate] = useState(getTodayDate());
   const [monthFocusedDate, setMonthFocusedDate] = useState(getTodayDate());
@@ -78,6 +91,21 @@ export function MasterBookingCreateForm() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [successToken, setSuccessToken] = useState("");
+
+  useEffect(() => {
+    const nextStyle = resolveInitialStyle(initialStyle);
+
+    setForm((current) => {
+      if (current.style === nextStyle) {
+        return current;
+      }
+
+      return {
+        ...current,
+        style: nextStyle
+      };
+    });
+  }, [initialStyle]);
 
   const period = useMemo(
     () => getPeriodRange(anchorDate, periodMode, isMobile),

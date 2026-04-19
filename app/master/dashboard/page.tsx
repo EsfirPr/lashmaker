@@ -7,6 +7,7 @@ import { MasterBookingsTable } from "@/components/master-bookings-table";
 import { MasterClientsTable } from "@/components/master-clients-table";
 import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
 import { MasterPortfolioManager } from "@/components/master-portfolio-manager";
+import { MasterServicesManager } from "@/components/master-services-manager";
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
@@ -129,6 +130,9 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               </a>
               <a className="ghost-button" href="#portfolio-manager">
                 Портфолио
+              </a>
+              <a className="ghost-button" href="#services-manager">
+                Прайс
               </a>
             </div>
           </div>
@@ -326,6 +330,10 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
             items={portfolioData.items}
             profile={portfolioProfile}
           />
+        </section>
+
+        <section className="section-space">
+          <MasterServicesManager services={portfolioData.services} />
         </section>
       </div>
     </main>

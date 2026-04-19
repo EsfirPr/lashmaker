@@ -101,3 +101,13 @@ export type MasterCertificate = {
   image_url: string;
   created_at: string;
 };
+
+export type MasterService = {
+  id: string;
+  owner_id: string;
+  name: string;
+  price: number;
+  duration: string | null;
+  description: string | null;
+  created_at: string;
+};
