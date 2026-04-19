@@ -161,6 +161,48 @@ function normalizeBookingsWithSlot(
     .filter((booking): booking is BookingWithSlot => booking !== null);
 }
 
+function rangesOverlap(
+  left: Pick<CreateSlotInput, "startTime" | "endTime">,
+  right: Pick<CreateSlotInput, "startTime" | "endTime">
+) {
+  return left.startTime < right.endTime && right.startTime < left.endTime;
+}
+
+async function assertNoSlotOverlaps(
+  slotDate: string,
+  ranges: Array<Pick<CreateSlotInput, "startTime" | "endTime">>
+) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("time_slots")
+    .select("start_time, end_time")
+    .eq("slot_date", slotDate)
+    .order("start_time", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const existingRanges = ((data || []) as Array<Pick<TimeSlot, "start_time" | "end_time">>).map((slot) => ({
+    startTime: slot.start_time,
+    endTime: slot.end_time
+  }));
+  const nextRanges = [...ranges].sort((left, right) => left.startTime.localeCompare(right.startTime));
+
+  for (let index = 0; index < nextRanges.length; index += 1) {
+    const current = nextRanges[index];
+    const next = nextRanges[index + 1];
+
+    if (next && rangesOverlap(current, next)) {
+      throw new Error("Окна не должны пересекаться между собой");
+    }
+
+    if (existingRanges.some((range) => rangesOverlap(current, range))) {
+      throw new Error("Окно пересекается с существующим расписанием");
+    }
+  }
+}
+
 function buildConfirmationMessage(booking: BookingWithSlot) {
   if (!booking.time_slots) {
     return "Вы записаны.";
@@ -582,6 +624,12 @@ export async function getScheduleSlotDetail(slotId: string) {
 export async function createTimeSlot(input: CreateSlotInput) {
   const payload = createSlotSchema.parse(input);
   const supabase = getSupabaseAdminClient();
+  await assertNoSlotOverlaps(payload.slotDate, [
+    {
+      startTime: payload.startTime,
+      endTime: payload.endTime
+    }
+  ]);
 
   const { error } = await supabase.from("time_slots").insert({
     slot_date: payload.slotDate,
@@ -610,6 +658,13 @@ export async function createTimeSlots(input: CreateManySlotsInput) {
       endTime: range.endTime
     })
   );
+  await assertNoSlotOverlaps(
+    input.slotDate,
+    validRanges.map((range) => ({
+      startTime: range.startTime,
+      endTime: range.endTime
+    }))
+  );
 
   const { error } = await supabase.from("time_slots").insert(
     validRanges.map((range) => ({
@@ -630,6 +685,7 @@ export async function createTimeSlots(input: CreateManySlotsInput) {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/master/dashboard");
+  revalidatePath("/master/stats");
 }
 
 export async function deleteFreeTimeSlot(slotId: string) {

@@ -126,10 +126,10 @@ export default async function MasterDashboardPage() {
             </div>
           </div>
           <p className="muted">
-            Можно создать одно окно или сразу несколько интервалов на выбранную дату.
+            Выберите день или неделю и просто прокликайте стартовые слоты. Каждый выбранный слот создаёт окно на 2 часа.
           </p>
           <div className="section-space">
-            <AdminSlotForm />
+            <AdminSlotForm initialDays={days} />
           </div>
         </section>
       </div>
