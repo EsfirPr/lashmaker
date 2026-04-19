@@ -48,6 +48,9 @@ export default async function MasterDashboardPage() {
             <div className="master-hero__header">
               <span className="eyebrow master-hero__label">Кабинет мастера</span>
               <div className="master-hero__actions">
+                <Link className="button" href="/master/dashboard/bookings/new">
+                  Записать клиента
+                </Link>
                 <Link
                   aria-label="Настройки профиля мастера"
                   className="icon-button"
@@ -103,20 +106,6 @@ export default async function MasterDashboardPage() {
             <div className="stat section-space">
               <strong>{freeCount}</strong>
               <span className="muted">свободных слотов</span>
-            </div>
-          </article>
-          <article className="panel stack-card">
-            <span className="eyebrow">Отмены</span>
-            <div className="stat section-space">
-              <strong>{cancelledCount}</strong>
-              <span className="muted">отменённых записей</span>
-            </div>
-          </article>
-          <article className="panel stack-card">
-            <span className="eyebrow">Клиенты</span>
-            <div className="stat section-space">
-              <strong>{clients.length}</strong>
-              <span className="muted">клиентов в базе</span>
             </div>
           </article>
           <article className="panel stack-card">

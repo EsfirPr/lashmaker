@@ -6,6 +6,7 @@ import { MasterClientsTable } from "@/components/master-clients-table";
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster } from "@/lib/booking-service";
+import { getSlotEndDate } from "@/lib/utils";
 
 type MasterStatsPageProps = {
   searchParams?: Promise<{
@@ -17,6 +18,18 @@ type MasterStatsPageProps = {
 };
 
 const bookingsPerPage = 5;
+
+function getBookingVisualState(booking: Awaited<ReturnType<typeof listBookingsForMaster>>[number]) {
+  if (booking.status === "cancelled") {
+    return "cancelled";
+  }
+
+  if (booking.time_slots && getSlotEndDate(booking.time_slots) < new Date()) {
+    return "completed";
+  }
+
+  return "confirmed";
+}
 
 function buildStatsPageHref(
   filters: Awaited<NonNullable<MasterStatsPageProps["searchParams"]>>,
@@ -50,10 +63,12 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
   await requireUserRole("master", "/login");
   const filters = (await searchParams) || {};
 
-  const [clients, bookings] = await Promise.all([
+  const [clients, allBookings, bookings] = await Promise.all([
     listClientsForMaster(),
+    listBookingsForMaster(),
     listBookingsForMaster(filters)
   ]);
+  const cancelledCount = allBookings.filter((booking) => getBookingVisualState(booking) === "cancelled").length;
 
   const totalBookingPages = Math.max(1, Math.ceil(bookings.length / bookingsPerPage));
   const requestedPage = Number.parseInt(filters.page || "1", 10);
@@ -95,6 +110,23 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
               </a>
             </div>
           </div>
+        </section>
+
+        <section className="master-stats-grid section-space">
+          <article className="panel stack-card">
+            <span className="eyebrow">Отмены</span>
+            <div className="stat section-space">
+              <strong>{cancelledCount}</strong>
+              <span className="muted">отменённых записей</span>
+            </div>
+          </article>
+          <article className="panel stack-card">
+            <span className="eyebrow">Клиенты</span>
+            <div className="stat section-space">
+              <strong>{clients.length}</strong>
+              <span className="muted">клиентов в базе</span>
+            </div>
+          </article>
         </section>
 
         <section className="panel stack-card section-space master-section" id="bookings">
