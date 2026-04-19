@@ -162,7 +162,7 @@ export function MasterPortfolioManager({
               />
             </div>
             <div className="field">
-              <label htmlFor="lashExperienceYears">Опыт в наращивании, лет</label>
+              <label htmlFor="lashExperienceYears">Время наращивания</label>
               <input
                 defaultValue={profile.lash_experience_years ?? ""}
                 id="lashExperienceYears"

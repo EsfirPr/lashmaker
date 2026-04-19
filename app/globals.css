@@ -1046,6 +1046,31 @@ h2 {
   gap: 14px;
 }
 
+.master-profile-preview-grid,
+.master-profile-overview {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.master-profile-preview-card {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(65, 43, 32, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.master-profile-preview-card strong {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.master-profile-hero .master-dashboard-nav {
+  margin-top: 12px;
+}
+
 .master-service-editor {
   display: grid;
   gap: 12px;

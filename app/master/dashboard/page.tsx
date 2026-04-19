@@ -5,13 +5,12 @@ import { logoutAction } from "@/app/auth-actions";
 import { AdminSlotForm } from "@/components/admin-slot-form";
 import { MasterBookingsTable } from "@/components/master-bookings-table";
 import { MasterClientsTable } from "@/components/master-clients-table";
+import { MasterDashboardGreeting } from "@/components/master-dashboard-greeting";
 import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
-import { MasterPortfolioManager } from "@/components/master-portfolio-manager";
-import { MasterServicesManager } from "@/components/master-services-manager";
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
-import { getPortfolioDashboardData, resolveMasterProfile } from "@/lib/portfolio-service";
+import { getPortfolioDashboardData } from "@/lib/portfolio-service";
 import { getSlotEndDate } from "@/lib/utils";
 
 type MasterDashboardPageProps = {
@@ -76,12 +75,12 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
     listBookingsForMaster(filters),
     getPortfolioDashboardData(master.id)
   ]);
-  const portfolioProfile = resolveMasterProfile(master, portfolioData.profile);
 
   const allSlots = days.flatMap((day) => day.slots);
   const activeCount = allBookings.filter((booking) => getBookingVisualState(booking) === "confirmed").length;
   const freeCount = allSlots.filter((slot) => !slot.activeBooking).length;
   const cancelledCount = allBookings.filter((booking) => booking.status === "cancelled").length;
+  const serviceCount = portfolioData.services.length;
   const totalBookingPages = Math.max(1, Math.ceil(bookings.length / bookingsPerPage));
   const requestedPage = Number.parseInt(filters.page || "1", 10);
   const currentBookingPage =
@@ -110,7 +109,7 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
                 </form>
               </div>
             </div>
-            <h1 className="page-title">Здравствуйте, {master.nickname}</h1>
+            <MasterDashboardGreeting nickname={master.nickname || "мастер"} />
             <p className="lead">
               Здесь собраны расписание, записи, клиенты и быстрые действия. Все данные доступны
               только мастеру с ролью `master`.
@@ -128,12 +127,9 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               <a className="ghost-button" href="#slots">
                 Добавить окна
               </a>
-              <a className="ghost-button" href="#portfolio-manager">
-                Портфолио
-              </a>
-              <a className="ghost-button" href="#services-manager">
-                Прайс
-              </a>
+              <Link className="ghost-button" href="/master/profile">
+                Профиль мастера
+              </Link>
             </div>
           </div>
         </section>
@@ -174,6 +170,51 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               <span className="muted">работ на главной</span>
             </div>
           </article>
+          <article className="panel stack-card">
+            <span className="eyebrow">Прайс</span>
+            <div className="stat section-space">
+              <strong>{serviceCount}</strong>
+              <span className="muted">услуг в прайсе</span>
+            </div>
+          </article>
+        </section>
+
+        <section className="panel stack-card master-section section-space">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Профиль мастера</span>
+              <h2>Публичная страница и контент</h2>
+            </div>
+            <Link className="button" href="/master/profile">
+              Управление профилем
+            </Link>
+          </div>
+          <p className="muted">
+            Информацию о мастере, портфолио и прайс мы вынесли на отдельную страницу, чтобы кабинет
+            оставался быстрым и сфокусированным на работе с расписанием, записями и клиентами.
+          </p>
+          <div className="master-profile-preview-grid section-space">
+            <article className="master-profile-preview-card">
+              <strong>{portfolioData.profile?.display_name || master.nickname || "Без имени"}</strong>
+              <span className="muted">имя и тексты профиля</span>
+            </article>
+            <article className="master-profile-preview-card">
+              <strong>{portfolioData.items.length}</strong>
+              <span className="muted">изображений в портфолио</span>
+            </article>
+            <article className="master-profile-preview-card">
+              <strong>{serviceCount}</strong>
+              <span className="muted">услуг доступны клиентам</span>
+            </article>
+          </div>
+          <div className="inline-actions">
+            <Link className="ghost-button" href="/master/profile">
+              Редактировать профиль
+            </Link>
+            <Link className="ghost-button" href="/#pricing">
+              Посмотреть публичную страницу
+            </Link>
+          </div>
         </section>
 
         <section className="panel stack-card master-section section-space" id="slots">
@@ -322,18 +363,6 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
             </div>
           </div>
           <MasterClientsTable clients={clients} />
-        </section>
-
-        <section className="section-space">
-          <MasterPortfolioManager
-            certificates={portfolioData.certificates}
-            items={portfolioData.items}
-            profile={portfolioProfile}
-          />
-        </section>
-
-        <section className="section-space">
-          <MasterServicesManager services={portfolioData.services} />
         </section>
       </div>
     </main>

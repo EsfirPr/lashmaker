@@ -125,7 +125,7 @@ export default async function HomePage() {
                 </div>
                 <div className="stat">
                   <strong>{lashExperienceYears}+</strong>
-                  <span className="muted">лет в наращивании</span>
+                  <span className="muted">время наращивания</span>
                 </div>
               </div>
               <div className="landing-actions">
