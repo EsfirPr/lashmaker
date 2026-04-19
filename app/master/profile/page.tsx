@@ -11,7 +11,16 @@ export default async function MasterProfilePage() {
   noStore();
   await createMasterIfNotExists();
   const master = await requireUserRole("master", "/login");
-  const portfolioData = await getPortfolioDashboardData(master.id);
+  const portfolioDataResult = await Promise.allSettled([getPortfolioDashboardData(master.id)]);
+  const portfolioData =
+    portfolioDataResult[0]?.status === "fulfilled"
+      ? portfolioDataResult[0].value
+      : {
+          profile: null,
+          items: [],
+          certificates: [],
+          services: []
+        };
   const profile = resolveMasterProfile(master, portfolioData.profile);
 
   return (

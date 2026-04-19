@@ -57,17 +57,24 @@ function buildStatsPageHref(
   return `/master/stats${query ? `?${query}` : ""}#bookings` as Route;
 }
 
+function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
+  return result.status === "fulfilled" ? result.value : fallback;
+}
+
 export default async function MasterStatsPage({ searchParams }: MasterStatsPageProps) {
   noStore();
   await createMasterIfNotExists();
   await requireUserRole("master", "/login");
   const filters = (await searchParams) || {};
 
-  const [clients, allBookings, bookings] = await Promise.all([
+  const [clientsResult, allBookingsResult, bookingsResult] = await Promise.allSettled([
     listClientsForMaster(),
     listBookingsForMaster(),
     listBookingsForMaster(filters)
   ]);
+  const clients = getSettledValue(clientsResult, []);
+  const allBookings = getSettledValue(allBookingsResult, []);
+  const bookings = getSettledValue(bookingsResult, []);
   const cancelledCount = allBookings.filter((booking) => getBookingVisualState(booking) === "cancelled").length;
 
   const totalBookingPages = Math.max(1, Math.ceil(bookings.length / bookingsPerPage));

@@ -117,6 +117,10 @@ async function getMasterProfileByUserId(userId: string) {
     .maybeSingle();
 
   if (error) {
+    if (isMissingRelationError(error)) {
+      return null;
+    }
+
     throw new Error(error.message);
   }
 
@@ -233,9 +237,11 @@ export async function getPortfolioDashboardData(ownerId: string) {
 
   return {
     profile,
-    items: (portfolioItems.data || []) as PortfolioItem[],
-    certificates: (certificates.data || []) as MasterCertificate[],
-    services: (services.data || []) as MasterService[]
+    items: Array.isArray(portfolioItems.data) ? (portfolioItems.data as PortfolioItem[]) : [],
+    certificates: Array.isArray(certificates.data)
+      ? (certificates.data as MasterCertificate[])
+      : [],
+    services: Array.isArray(services.data) ? (services.data as MasterService[]) : []
   };
 }
 

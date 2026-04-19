@@ -21,17 +21,23 @@ function getBookingVisualState(booking: Awaited<ReturnType<typeof listBookingsFo
   return "confirmed";
 }
 
+function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
+  return result.status === "fulfilled" ? result.value : fallback;
+}
+
 export default async function MasterDashboardPage() {
   noStore();
   await createMasterIfNotExists();
   const master = await requireUserRole("master", "/login");
 
-  const [days, allBookings] = await Promise.all([
+  const [daysResult, bookingsResult] = await Promise.allSettled([
     listScheduleDays(),
     listBookingsForMaster()
   ]);
+  const days = getSettledValue(daysResult, []);
+  const allBookings = getSettledValue(bookingsResult, []);
 
-  const allSlots = days.flatMap((day) => day.slots);
+  const allSlots = days.flatMap((day) => (Array.isArray(day.slots) ? day.slots : []));
   const activeCount = allBookings.filter((booking) => getBookingVisualState(booking) === "confirmed").length;
   const freeCount = allSlots.filter((slot) => !slot.activeBooking).length;
 
