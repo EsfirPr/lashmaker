@@ -122,6 +122,10 @@ export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
     if (state.status === "success") {
       setSelectedSlots([]);
       formRef.current?.reset();
+      document.getElementById("slots")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
       router.refresh();
     }
   }, [router, state.status]);

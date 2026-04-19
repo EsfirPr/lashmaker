@@ -63,13 +63,6 @@ export default async function MasterProfilePage() {
         </section>
 
         <section className="master-profile-overview section-space">
-          <article className="panel stack-card">
-            <span className="eyebrow">Профиль</span>
-            <div className="stat section-space">
-              <strong>{profile.display_name || master.nickname || "Без имени"}</strong>
-              <span className="muted">отображается в hero и блоке «О мастере»</span>
-            </div>
-          </article>
           <a className="master-profile-preview-card master-profile-preview-card--link" href="#portfolio-manager">
             <span className="eyebrow">Портфолио</span>
             <strong>{portfolioData.items.length}</strong>
