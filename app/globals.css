@@ -91,19 +91,19 @@ main {
 .stack-card,
 .day-card,
 .booking-card {
-  padding: 28px;
+  padding: 22px;
 }
 
 .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
-  padding: 8px 12px;
+  margin-bottom: 12px;
+  padding: 7px 11px;
   border-radius: 999px;
   color: var(--accent-dark);
   background: rgba(210, 118, 93, 0.12);
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   font-weight: 700;
 }
 
@@ -140,17 +140,17 @@ h2 {
 .meta-grid,
 .booking-layout {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .feature-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 28px;
+  margin-top: 22px;
 }
 
 .stats-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 22px;
+  margin-top: 18px;
 }
 
 .admin-grid {
@@ -176,7 +176,7 @@ h2 {
 .stat,
 .slot-item,
 .cancelled-item {
-  padding: 18px;
+  padding: 14px;
 }
 
 .feature h3,
@@ -184,7 +184,7 @@ h2 {
 .stack-card h2,
 .stack-card h3,
 .booking-card h2 {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
 }
 
 .feature p,
@@ -193,13 +193,13 @@ h2 {
 .empty-state {
   margin: 0;
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 .stat strong {
   display: block;
-  margin-bottom: 8px;
-  font-size: 1.6rem;
+  margin-bottom: 6px;
+  font-size: 1.42rem;
   letter-spacing: -0.03em;
 }
 
@@ -1062,6 +1062,22 @@ h2 {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.master-profile-preview-card--link {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.master-profile-preview-card--link:hover,
+.master-profile-preview-card--link:focus-visible {
+  border-color: rgba(210, 118, 93, 0.18);
+  box-shadow: 0 12px 24px rgba(210, 118, 93, 0.1);
+  transform: translateY(-1px);
+}
+
 .master-profile-preview-card strong {
   font-size: 1rem;
   line-height: 1.35;
@@ -1222,7 +1238,7 @@ h2 {
 }
 
 .section-space {
-  margin-top: 26px;
+  margin-top: 20px;
 }
 
 .day-list,
@@ -1233,7 +1249,7 @@ h2 {
 
 .slot-item {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .slot-item header,
@@ -1251,7 +1267,7 @@ h2 {
 }
 
 .booking-meta {
-  padding: 16px;
+  padding: 14px;
 }
 
 .meta-grid {
@@ -1405,7 +1421,7 @@ h2 {
 .list-row {
   display: grid;
   gap: 10px;
-  padding: 16px;
+  padding: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.72);
@@ -2029,7 +2045,7 @@ h2 {
 .master-schedule-list,
 .master-clients-list {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .master-dashboard-nav {
@@ -2499,7 +2515,7 @@ h2 {
   .stack-card,
   .day-card,
   .booking-card {
-    padding: 22px;
+    padding: 18px;
   }
 
   .top-nav,

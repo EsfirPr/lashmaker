@@ -4,10 +4,9 @@ import { unstable_noStore as noStore } from "next/cache";
 import { AdminSlotForm } from "@/components/admin-slot-form";
 import { MasterDashboardGreeting } from "@/components/master-dashboard-greeting";
 import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
-import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
+import { createMasterIfNotExists } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
-import { getPortfolioDashboardData } from "@/lib/portfolio-service";
 import { getSlotEndDate } from "@/lib/utils";
 
 function getBookingVisualState(booking: Awaited<ReturnType<typeof listBookingsForMaster>>[number]) {
@@ -27,18 +26,14 @@ export default async function MasterDashboardPage() {
   await createMasterIfNotExists();
   const master = await requireUserRole("master", "/login");
 
-  const [days, clients, allBookings, portfolioData] = await Promise.all([
+  const [days, allBookings] = await Promise.all([
     listScheduleDays(),
-    listClientsForMaster(),
-    listBookingsForMaster(),
-    getPortfolioDashboardData(master.id)
+    listBookingsForMaster()
   ]);
 
   const allSlots = days.flatMap((day) => day.slots);
   const activeCount = allBookings.filter((booking) => getBookingVisualState(booking) === "confirmed").length;
   const freeCount = allSlots.filter((slot) => !slot.activeBooking).length;
-  const cancelledCount = allBookings.filter((booking) => booking.status === "cancelled").length;
-  const serviceCount = portfolioData.services.length;
 
   return (
     <main className="page-shell">
@@ -83,12 +78,12 @@ export default async function MasterDashboardPage() {
               <a className="ghost-button" href="#schedule">
                 Расписание
               </a>
-              <Link className="ghost-button" href="/master/stats">
-                Статистика
-              </Link>
               <a className="ghost-button" href="#slots">
                 Добавить окна
               </a>
+              <Link className="ghost-button" href="/master/stats">
+                Статистика
+              </Link>
             </div>
           </div>
         </section>
@@ -108,20 +103,19 @@ export default async function MasterDashboardPage() {
               <span className="muted">свободных слотов</span>
             </div>
           </article>
-          <article className="panel stack-card">
-            <span className="eyebrow">Портфолио</span>
-            <div className="stat section-space">
-              <strong>{portfolioData.items.length}</strong>
-              <span className="muted">работ на главной</span>
+        </section>
+
+        <section className="panel stack-card section-space master-section" id="schedule">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Расписание</span>
+              <h2>Календарь мастера</h2>
             </div>
-          </article>
-          <article className="panel stack-card">
-            <span className="eyebrow">Прайс</span>
-            <div className="stat section-space">
-              <strong>{serviceCount}</strong>
-              <span className="muted">услуг в прайсе</span>
-            </div>
-          </article>
+            <Link className="button" href="/master/stats">
+              Статистика
+            </Link>
+          </div>
+          <MasterScheduleCalendar initialDays={days} />
         </section>
 
         <section className="panel stack-card master-section section-space" id="slots">
@@ -137,19 +131,6 @@ export default async function MasterDashboardPage() {
           <div className="section-space">
             <AdminSlotForm />
           </div>
-        </section>
-
-        <section className="panel stack-card section-space master-section" id="schedule">
-          <div className="account-section__heading">
-            <div>
-              <span className="eyebrow">Расписание</span>
-              <h2>Календарь мастера</h2>
-            </div>
-            <Link className="button" href="/master/stats">
-              Статистика
-            </Link>
-          </div>
-          <MasterScheduleCalendar initialDays={days} />
         </section>
       </div>
     </main>

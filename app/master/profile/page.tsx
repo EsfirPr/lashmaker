@@ -61,20 +61,16 @@ export default async function MasterProfilePage() {
               <span className="muted">отображается в hero и блоке «О мастере»</span>
             </div>
           </article>
-          <article className="panel stack-card">
+          <a className="master-profile-preview-card master-profile-preview-card--link" href="#portfolio-manager">
             <span className="eyebrow">Портфолио</span>
-            <div className="stat section-space">
-              <strong>{portfolioData.items.length}</strong>
-              <span className="muted">работ на публичной странице</span>
-            </div>
-          </article>
-          <article className="panel stack-card">
+            <strong>{portfolioData.items.length}</strong>
+            <span className="muted">работ на публичной странице</span>
+          </a>
+          <a className="master-profile-preview-card master-profile-preview-card--link" href="#services-manager">
             <span className="eyebrow">Прайс</span>
-            <div className="stat section-space">
-              <strong>{portfolioData.services.length}</strong>
-              <span className="muted">услуг доступны клиентам</span>
-            </div>
-          </article>
+            <strong>{portfolioData.services.length}</strong>
+            <span className="muted">услуг доступны клиентам</span>
+          </a>
         </section>
 
         <div className="section-space" id="about-manager">
