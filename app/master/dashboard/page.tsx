@@ -203,6 +203,9 @@ export default async function MasterDashboardPage({ searchParams }: MasterDashbo
               <span className="eyebrow">Записи</span>
               <h2>Все бронирования</h2>
             </div>
+            <Link className="button" href="/master/dashboard/bookings/new">
+              Записать клиента
+            </Link>
           </div>
 
           <form className="master-filters section-space" method="get">
