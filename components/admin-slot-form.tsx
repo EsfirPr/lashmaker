@@ -91,7 +91,10 @@ export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
       try {
         setIsLoading(true);
         setError("");
-        const response = await fetch(`/api/master/schedule?start=${period.start}&end=${period.end}`);
+        const response = await fetch(`/api/master/schedule?start=${period.start}&end=${period.end}`, {
+          credentials: "include",
+          cache: "no-store"
+        });
         const payload = await readJsonResponse<{ days: DaySchedule[] }>(response);
 
         if (!isCancelled) {
