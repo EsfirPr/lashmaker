@@ -17,7 +17,7 @@ function getBookingViewState(booking: BookingWithSlot) {
     return {
       label: "Отменена",
       className: "status-cancelled",
-      compactIcon: "lock" as const
+      compactIcon: "cancel" as const
     };
   }
 
@@ -36,7 +36,7 @@ function getBookingViewState(booking: BookingWithSlot) {
   };
 }
 
-function renderStatusIcon(icon: "check" | "lock" | null) {
+function renderStatusIcon(icon: "check" | "cancel" | null) {
   if (icon === "check") {
     return (
       <svg
@@ -57,7 +57,7 @@ function renderStatusIcon(icon: "check" | "lock" | null) {
     );
   }
 
-  if (icon === "lock") {
+  if (icon === "cancel") {
     return (
       <svg
         aria-hidden="true"
@@ -67,20 +67,18 @@ function renderStatusIcon(icon: "check" | "lock" | null) {
         width="14"
       >
         <path
-          d="M4.25 6V4.75a2.75 2.75 0 1 1 5.5 0V6"
+          d="M4 4 10 10"
           stroke="currentColor"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="1.4"
+          strokeWidth="1.8"
         />
-        <rect
-          height="5.75"
-          rx="1.5"
+        <path
+          d="M10 4 4 10"
           stroke="currentColor"
-          strokeWidth="1.4"
-          width="7.5"
-          x="3.25"
-          y="6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
         />
       </svg>
     );
