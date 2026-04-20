@@ -145,8 +145,13 @@ export default async function HomePage() {
               <ResilientImage
                 alt={masterName}
                 className="landing-hero__img"
+                decoding="async"
                 fallbackSrc="/images/master-placeholder.svg"
+                fetchPriority="high"
+                height={640}
+                loading="eager"
                 src={profile?.avatar_url || "/images/master-placeholder.svg"}
+                width={640}
               />
             </div>
           </aside>

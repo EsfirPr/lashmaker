@@ -1,5 +1,6 @@
 "use client";
 
+import type { ImgHTMLAttributes } from "react";
 import { useEffect, useState } from "react";
 
 type ResilientImageProps = {
@@ -7,9 +8,15 @@ type ResilientImageProps = {
   className?: string;
   fallbackSrc: string;
   src: string | null | undefined;
-};
+} & Omit<ImgHTMLAttributes<HTMLImageElement>, "alt" | "className" | "src">;
 
-export function ResilientImage({ alt, className, fallbackSrc, src }: ResilientImageProps) {
+export function ResilientImage({
+  alt,
+  className,
+  fallbackSrc,
+  src,
+  ...imgProps
+}: ResilientImageProps) {
   const normalizedSrc = typeof src === "string" && src.trim() ? src.trim() : fallbackSrc;
   const [currentSrc, setCurrentSrc] = useState(normalizedSrc);
 
@@ -27,6 +34,7 @@ export function ResilientImage({ alt, className, fallbackSrc, src }: ResilientIm
         }
       }}
       src={currentSrc}
+      {...imgProps}
     />
   );
 }

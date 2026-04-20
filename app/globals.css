@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Doppelganger_RUS";
-  src: url("/fonts/Doppelganger_RUS.woff2") format("woff2");
+  src: url("/fonts/Doppelganger_RUS.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;

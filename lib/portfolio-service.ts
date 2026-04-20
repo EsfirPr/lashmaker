@@ -16,6 +16,7 @@ const portfolioBucket = "portfolio";
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxImageSize = 5 * 1024 * 1024;
 const missingRelationErrorCodes = new Set(["42P01", "42703"]);
+const staticImageCacheControl = "31536000";
 
 function toSafeUser(user: User): SafeUser {
   const { password_hash: _passwordHash, ...safeUser } = user;
@@ -81,7 +82,7 @@ async function uploadImageToBucket(ownerId: string, folder: string, file: File) 
   const { error: uploadError } = await supabase.storage
     .from(portfolioBucket)
     .upload(path, file, {
-      cacheControl: "3600",
+      cacheControl: staticImageCacheControl,
       upsert: false,
       contentType: file.type
     });
