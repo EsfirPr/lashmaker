@@ -12,6 +12,7 @@ import {
   CALENDAR_PERIOD_OPTIONS,
   formatMonthDayNumber,
   formatReadableDate,
+  formatWindowsCountLabel,
   formatWeekday,
   getPeriodRange,
   getVisibleWeekDays,
@@ -73,6 +74,7 @@ export function AccountBookingForm({ initialStyle }: AccountBookingFormProps = {
   const router = useRouter();
   const today = getTodayDate();
   const [isMobile, setIsMobile] = useState(false);
+  const [isCompactSlotsLabel, setIsCompactSlotsLabel] = useState(false);
   const [form, setForm] = useState<FormState>({
     ...initialState,
     style: resolveInitialStyle(initialStyle)
@@ -128,6 +130,16 @@ export function AccountBookingForm({ initialStyle }: AccountBookingFormProps = {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsCompactSlotsLabel(mediaQuery.matches);
 
     update();
     mediaQuery.addEventListener("change", update);
@@ -437,31 +449,35 @@ export function AccountBookingForm({ initialStyle }: AccountBookingFormProps = {
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    key={day.date}
-                    disabled={isPast}
-                    onClick={() => setMonthFocusedDate(day.date)}
-                    type="button"
-                  >
-                    <span className="month-day__number">{formatMonthDayNumber(day.date)}</span>
-                    {daySlots.length > 0 ? (
-                      <span className="month-day__indicator">{daySlots.length} окна</span>
+                  key={day.date}
+                  disabled={isPast}
+                  onClick={() => setMonthFocusedDate(day.date)}
+                  type="button"
+                >
+                  <span className="month-day__number">{formatMonthDayNumber(day.date)}</span>
+                  {daySlots.length > 0 ? (
+                      <span className="month-day__indicator">
+                        {formatWindowsCountLabel(daySlots.length, isCompactSlotsLabel)}
+                      </span>
                     ) : (
                       <span className="month-day__indicator month-day__indicator--empty"> </span>
                     )}
-                  </button>
+                </button>
                 );
               })}
             </div>
 
             <div className="month-day-detail">
-              <div className="month-day-detail__head">
-                <strong>{formatReadableDate(monthFocusedDate)}</strong>
-                <span className="muted">
-                  {(slotsByDate.get(monthFocusedDate) || []).length > 0
-                    ? `${(slotsByDate.get(monthFocusedDate) || []).length} свободных окон`
+            <div className="month-day-detail__head">
+              <strong>{formatReadableDate(monthFocusedDate)}</strong>
+              <span className="muted">
+                  {monthVisibleSlots.length > 0
+                    ? isCompactSlotsLabel
+                      ? formatWindowsCountLabel(monthVisibleSlots.length, true)
+                      : `${formatWindowsCountLabel(monthVisibleSlots.length)} доступно`
                     : "Свободных окон нет"}
-                </span>
-              </div>
+              </span>
+            </div>
               {monthVisibleSlots.length > 0 ? (
                 <div className="day-slots-list">
                   {monthVisibleSlots.map((slot) => renderSlotButton(slot, false))}

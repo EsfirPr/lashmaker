@@ -1885,6 +1885,7 @@ h2 {
 }
 
 .account-booking-card {
+  position: relative;
   display: grid;
   gap: 12px;
   padding: 14px;
@@ -1948,10 +1949,17 @@ h2 {
   display: grid;
   justify-items: end;
   gap: 8px;
+  padding-top: 36px;
 }
 
 .account-booking-card__status-block .ghost-button {
   margin-top: 0;
+}
+
+.account-booking-card__status-block .status-pill {
+  position: absolute;
+  top: 14px;
+  right: 14px;
 }
 
 .status-completed {

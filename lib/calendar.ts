@@ -74,7 +74,11 @@ export function formatMonthDayNumber(dateKey: string) {
   }).format(parseDateKey(dateKey));
 }
 
-export function formatSlotsCountLabel(count: number, compact = false) {
+function formatCountLabel(
+  count: number,
+  forms: [one: string, few: string, many: string],
+  compact = false
+) {
   if (compact) {
     return String(count);
   }
@@ -83,18 +87,26 @@ export function formatSlotsCountLabel(count: number, compact = false) {
   const mod100 = count % 100;
 
   if (mod100 >= 11 && mod100 <= 14) {
-    return `${count} слотов`;
+    return `${count} ${forms[2]}`;
   }
 
   if (mod10 === 1) {
-    return `${count} слот`;
+    return `${count} ${forms[0]}`;
   }
 
   if (mod10 >= 2 && mod10 <= 4) {
-    return `${count} слота`;
+    return `${count} ${forms[1]}`;
   }
 
-  return `${count} слотов`;
+  return `${count} ${forms[2]}`;
+}
+
+export function formatSlotsCountLabel(count: number, compact = false) {
+  return formatCountLabel(count, ["слот", "слота", "слотов"], compact);
+}
+
+export function formatWindowsCountLabel(count: number, compact = false) {
+  return formatCountLabel(count, ["окно", "окна", "окон"], compact);
 }
 
 export function getPeriodRange(anchorDate: string, mode: PeriodMode, useShortLabel = false) {
