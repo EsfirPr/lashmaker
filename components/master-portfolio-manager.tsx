@@ -4,6 +4,7 @@ import type { ChangeEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { initialMasterFormState } from "@/app/master/dashboard/state";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
+import { ResilientImage } from "@/components/resilient-image";
 import { SubmitButton } from "@/components/submit-button";
 import {
   deleteMasterCertificateAction,
@@ -186,9 +187,10 @@ export function MasterPortfolioManager({
           <div className="master-avatar-card">
             <p className="field__label">Главное фото мастера</p>
             <div className="master-avatar-card__preview">
-              <img
+              <ResilientImage
                 alt={profile.display_name || "Главное фото мастера"}
                 className="master-avatar-card__image"
+                fallbackSrc="/images/master-placeholder.svg"
                 src={avatarPreview || "/images/master-placeholder.svg"}
               />
             </div>
@@ -247,9 +249,10 @@ export function MasterPortfolioManager({
             {items.map((item) => (
               <article className="master-portfolio-item" key={item.id}>
                 <div className="master-portfolio-item__image-wrap">
-                  <img
+                  <ResilientImage
                     alt={item.caption || "Работа мастера"}
                     className="master-portfolio-item__image"
+                    fallbackSrc="/images/cert-placeholder.svg"
                     src={item.image_url}
                   />
                 </div>
@@ -313,9 +316,10 @@ export function MasterPortfolioManager({
               {certificates.map((certificate) => (
                 <article className="master-certificate-card" key={certificate.id}>
                   <div className="master-certificate-card__image-wrap">
-                    <img
+                    <ResilientImage
                       alt="Сертификат мастера"
                       className="master-certificate-card__image"
+                      fallbackSrc="/images/cert-placeholder.svg"
                       src={certificate.image_url}
                     />
                   </div>

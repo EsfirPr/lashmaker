@@ -3,6 +3,7 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
+import { ResilientImage } from "@/components/resilient-image";
 import { getCurrentUser } from "@/lib/auth/server";
 import {
   getLandingCertificates,
@@ -141,9 +142,10 @@ export default async function HomePage() {
 
           <aside className="panel landing-hero__aside">
             <div className="landing-hero__image master-image">
-              <img
+              <ResilientImage
                 alt={masterName}
                 className="landing-hero__img"
+                fallbackSrc="/images/master-placeholder.svg"
                 src={profile?.avatar_url || "/images/master-placeholder.svg"}
               />
             </div>
@@ -215,7 +217,11 @@ export default async function HomePage() {
                 <HorizontalScrollGallery className="certificates-list" showAffordance>
                   {certificates.map((certificate) => (
                     <article className="certificate-card" key={certificate.id}>
-                      <img alt="Сертификат мастера" src={certificate.image_url} />
+                      <ResilientImage
+                        alt="Сертификат мастера"
+                        fallbackSrc="/images/cert-placeholder.svg"
+                        src={certificate.image_url}
+                      />
                     </article>
                   ))}
                 </HorizontalScrollGallery>

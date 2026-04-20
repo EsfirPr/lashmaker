@@ -1,5 +1,6 @@
 import type { PortfolioItem } from "@/lib/types";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
+import { ResilientImage } from "@/components/resilient-image";
 
 type PortfolioGalleryProps = {
   items: PortfolioItem[];
@@ -27,7 +28,12 @@ export function PortfolioGallery({
       {items.map((item) => (
         <article className="portfolio-card" key={item.id}>
           <div className="portfolio-card__image-wrap">
-            <img alt={item.caption || "Работа мастера"} className="portfolio-card__image" src={item.image_url} />
+            <ResilientImage
+              alt={item.caption || "Работа мастера"}
+              className="portfolio-card__image"
+              fallbackSrc="/images/cert-placeholder.svg"
+              src={item.image_url}
+            />
           </div>
           <div className="portfolio-card__body">
             <p className="portfolio-card__caption">{item.caption || "Работа без подписи"}</p>
