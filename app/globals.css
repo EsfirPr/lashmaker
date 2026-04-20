@@ -2829,8 +2829,19 @@ h2 {
 
   .month-day__indicator {
     align-self: center;
-    min-height: 26px;
-    padding: 5px 10px;
+    justify-self: center;
+    min-height: 22px;
+    padding: 3px 6px;
+    font-size: 0.72rem;
+    line-height: 1;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .month-day.has-slots.is-selected {
+    justify-items: center;
+    align-content: center;
+    text-align: center;
   }
 
   .master-dashboard-nav {
