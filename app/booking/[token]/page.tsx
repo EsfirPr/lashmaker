@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { forbidden, notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { SubmitButton } from "@/components/submit-button";
-import { getBookingByToken } from "@/lib/booking-service";
+import { getCurrentUser } from "@/lib/auth/server";
+import { getBookingByToken, resolveBookingAccess } from "@/lib/booking-service";
 import { formatDateLabel, formatSlotRange, formatStatusLabel, isBookingCancelable } from "@/lib/utils";
 import { cancelBookingAction } from "./cancel-action";
 
@@ -15,10 +16,30 @@ type BookingPageProps = {
 export default async function BookingPage({ params }: BookingPageProps) {
   noStore();
   const { token } = await params;
-  const booking = await getBookingByToken(token);
+  const [booking, viewer] = await Promise.all([getBookingByToken(token), getCurrentUser()]);
 
   if (!booking || !booking.time_slots) {
+    console.warn("[booking/page] Booking not found", {
+      token,
+      viewerId: viewer?.id ?? null,
+      viewerRole: viewer?.role ?? null
+    });
     notFound();
+  }
+
+  const access = resolveBookingAccess(booking, viewer);
+
+  if (!access.allowed) {
+    console.warn("[booking/page] Forbidden", {
+      token,
+      bookingId: booking.id,
+      bookingUserId: booking.user_id,
+      bookingSlotId: booking.slot_id,
+      viewerId: viewer?.id ?? null,
+      viewerRole: viewer?.role ?? null,
+      reason: access.reason
+    });
+    forbidden();
   }
 
   const canCancel = booking.status === "confirmed" && isBookingCancelable(booking.time_slots);

@@ -53,6 +53,22 @@ type MasterBookingsFilters = {
   query?: string;
 };
 
+type BookingAccessViewer = {
+  id: string;
+  role: "master" | "client";
+} | null;
+
+export type BookingAccessResult = {
+  allowed: boolean;
+  reason:
+    | "master_access"
+    | "client_owner_access"
+    | "missing_session"
+    | "booking_not_found"
+    | "client_is_not_booking_owner"
+    | "booking_has_no_client_owner";
+};
+
 type BookingWithMaybeSlotArray = Booking & {
   time_slots: TimeSlot | TimeSlot[] | null;
 };
@@ -166,6 +182,51 @@ function rangesOverlap(
   right: Pick<CreateSlotInput, "startTime" | "endTime">
 ) {
   return left.startTime < right.endTime && right.startTime < left.endTime;
+}
+
+export function resolveBookingAccess(
+  booking: BookingWithSlot | null,
+  viewer: BookingAccessViewer
+): BookingAccessResult {
+  if (!booking) {
+    return {
+      allowed: false,
+      reason: "booking_not_found"
+    };
+  }
+
+  if (!viewer) {
+    return {
+      allowed: false,
+      reason: "missing_session"
+    };
+  }
+
+  if (viewer.role === "master") {
+    return {
+      allowed: true,
+      reason: "master_access"
+    };
+  }
+
+  if (!booking.user_id) {
+    return {
+      allowed: false,
+      reason: "booking_has_no_client_owner"
+    };
+  }
+
+  if (booking.user_id !== viewer.id) {
+    return {
+      allowed: false,
+      reason: "client_is_not_booking_owner"
+    };
+  }
+
+  return {
+    allowed: true,
+    reason: "client_owner_access"
+  };
 }
 
 async function assertNoSlotOverlaps(
