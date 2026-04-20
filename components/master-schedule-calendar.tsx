@@ -28,6 +28,7 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
   const today = getTodayDate();
   const hasHydratedRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isCompactSlotsLabel, setIsCompactSlotsLabel] = useState(false);
   const [periodMode, setPeriodMode] = useState<PeriodMode>("week");
   const [anchorDate, setAnchorDate] = useState(today);
   const [monthFocusedDate, setMonthFocusedDate] = useState(today);
@@ -83,6 +84,16 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsCompactSlotsLabel(mediaQuery.matches);
 
     update();
     mediaQuery.addEventListener("change", update);
@@ -212,6 +223,29 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
         </span>
       </Link>
     );
+  }
+
+  function formatSlotsLabel(count: number) {
+    if (isCompactSlotsLabel) {
+      return String(count);
+    }
+
+    const mod10 = count % 10;
+    const mod100 = count % 100;
+
+    if (mod100 >= 11 && mod100 <= 14) {
+      return `${count} слотов`;
+    }
+
+    if (mod10 === 1) {
+      return `${count} слот`;
+    }
+
+    if (mod10 >= 2 && mod10 <= 4) {
+      return `${count} слота`;
+    }
+
+    return `${count} слотов`;
   }
 
   return (
@@ -349,7 +383,7 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
                 >
                   <span className="month-day__number">{formatMonthDayNumber(day.date)}</span>
                   {daySlots.length > 0 ? (
-                    <span className="month-day__indicator">{daySlots.length} слота</span>
+                    <span className="month-day__indicator">{formatSlotsLabel(daySlots.length)}</span>
                   ) : (
                     <span className="month-day__indicator month-day__indicator--empty"> </span>
                   )}
@@ -363,7 +397,9 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
               <strong>{formatReadableDate(monthFocusedDate)}</strong>
               <span className="muted">
                 {monthVisibleSlots.length > 0
-                  ? `${monthVisibleSlots.length} слота в расписании`
+                  ? isCompactSlotsLabel
+                    ? formatSlotsLabel(monthVisibleSlots.length)
+                    : `${formatSlotsLabel(monthVisibleSlots.length)} в расписании`
                   : "Слотов на этот день нет"}
               </span>
             </div>

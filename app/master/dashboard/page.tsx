@@ -161,9 +161,6 @@ export default async function MasterDashboardPage() {
               <h2>Управление доступностью</h2>
             </div>
           </div>
-          <p className="muted">
-            Выберите день или неделю и просто прокликайте стартовые слоты. Каждый выбранный слот создаёт окно на {slotDurationLabel}.
-          </p>
           <div className="section-space">
             <AdminSlotForm initialDays={days} slotDurationMinutes={slotDurationMinutes} />
           </div>
