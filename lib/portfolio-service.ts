@@ -202,6 +202,10 @@ export async function getLandingMasterProfile() {
   return resolveMasterProfile(master, profile);
 }
 
+export async function getMasterProfileForOwner(ownerId: string) {
+  return getMasterProfileByUserId(ownerId);
+}
+
 export async function getPortfolioDashboardData(ownerId: string) {
   const supabase = getSupabaseAdminClient();
   const [profile, portfolioItems, certificates, services] = await Promise.all([

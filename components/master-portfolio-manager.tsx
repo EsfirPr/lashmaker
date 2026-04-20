@@ -162,8 +162,10 @@ export function MasterPortfolioManager({
               <input
                 defaultValue={profile.lash_experience_years ?? ""}
                 id="lashExperienceYears"
-                min="0"
+                min="0.5"
                 name="lashExperienceYears"
+                placeholder="Например, 1.5"
+                step="0.5"
                 type="number"
               />
             </div>

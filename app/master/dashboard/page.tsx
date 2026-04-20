@@ -7,6 +7,7 @@ import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
 import { createMasterIfNotExists } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
+import { getMasterProfileForOwner, resolveMasterProfile } from "@/lib/portfolio-service";
 import { getSlotEndDate } from "@/lib/utils";
 
 function getBookingVisualState(booking: Awaited<ReturnType<typeof listBookingsForMaster>>[number]) {
@@ -25,17 +26,46 @@ function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
   return result.status === "fulfilled" ? result.value : fallback;
 }
 
+function getSlotDurationMinutes(durationInHours: number | null | undefined) {
+  const numericValue = Number(durationInHours);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return 120;
+  }
+
+  return Math.max(30, Math.round(numericValue * 60));
+}
+
+function formatDurationLabel(totalMinutes: number) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours} ч ${minutes} мин`;
+  }
+
+  if (hours > 0) {
+    return `${hours} ч`;
+  }
+
+  return `${minutes} мин`;
+}
+
 export default async function MasterDashboardPage() {
   noStore();
   await createMasterIfNotExists();
   const master = await requireUserRole("master", "/login");
 
-  const [daysResult, bookingsResult] = await Promise.allSettled([
+  const [daysResult, bookingsResult, profileResult] = await Promise.allSettled([
     listScheduleDays(),
-    listBookingsForMaster()
+    listBookingsForMaster(),
+    getMasterProfileForOwner(master.id)
   ]);
   const days = getSettledValue(daysResult, []);
   const allBookings = getSettledValue(bookingsResult, []);
+  const profile = resolveMasterProfile(master, getSettledValue(profileResult, null));
+  const slotDurationMinutes = getSlotDurationMinutes(profile.lash_experience_years);
+  const slotDurationLabel = formatDurationLabel(slotDurationMinutes);
 
   const allSlots = days.flatMap((day) => (Array.isArray(day.slots) ? day.slots : []));
   const activeCount = allBookings.filter((booking) => getBookingVisualState(booking) === "confirmed").length;
@@ -132,10 +162,10 @@ export default async function MasterDashboardPage() {
             </div>
           </div>
           <p className="muted">
-            Выберите день или неделю и просто прокликайте стартовые слоты. Каждый выбранный слот создаёт окно на 2 часа.
+            Выберите день или неделю и просто прокликайте стартовые слоты. Каждый выбранный слот создаёт окно на {slotDurationLabel}.
           </p>
           <div className="section-space">
-            <AdminSlotForm initialDays={days} />
+            <AdminSlotForm initialDays={days} slotDurationMinutes={slotDurationMinutes} />
           </div>
         </section>
       </div>

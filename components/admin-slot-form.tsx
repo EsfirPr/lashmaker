@@ -20,6 +20,7 @@ import { getTodayDate } from "@/lib/utils";
 
 type AdminSlotFormProps = {
   initialDays: DaySchedule[];
+  slotDurationMinutes?: number;
 };
 
 type SlotSelection = {
@@ -31,7 +32,7 @@ type SlotSelection = {
 const WORKDAY_START_MINUTES = 9 * 60;
 const WORKDAY_END_MINUTES = 21 * 60;
 const SLOT_STEP_MINUTES = 30;
-const SLOT_DURATION_MINUTES = 120;
+const DEFAULT_SLOT_DURATION_MINUTES = 120;
 const SLOT_PERIOD_OPTIONS = CALENDAR_PERIOD_OPTIONS.filter(
   (option) => option.value === "day" || option.value === "week"
 );
@@ -55,7 +56,7 @@ function getSelectionId(selection: SlotSelection) {
   return `${selection.slotDate}-${selection.startTime}-${selection.endTime}`;
 }
 
-export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
+export function AdminSlotForm({ initialDays, slotDurationMinutes }: AdminSlotFormProps) {
   const router = useRouter();
   const today = getTodayDate();
   const formRef = useRef<HTMLFormElement>(null);
@@ -67,6 +68,13 @@ export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedSlots, setSelectedSlots] = useState<SlotSelection[]>([]);
+  const effectiveSlotDurationMinutes = useMemo(() => {
+    if (!Number.isFinite(slotDurationMinutes) || !slotDurationMinutes || slotDurationMinutes <= 0) {
+      return DEFAULT_SLOT_DURATION_MINUTES;
+    }
+
+    return Math.max(30, Math.round(slotDurationMinutes));
+  }, [slotDurationMinutes]);
 
   const period = useMemo(() => getPeriodRange(anchorDate, periodMode), [anchorDate, periodMode]);
   const visibleDays = useMemo(
@@ -161,7 +169,7 @@ export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
           startMinutes += SLOT_STEP_MINUTES
         ) {
           const startTime = minutesToTime(startMinutes);
-          const endTime = minutesToTime(startMinutes + SLOT_DURATION_MINUTES);
+          const endTime = minutesToTime(startMinutes + effectiveSlotDurationMinutes);
           const selectionId = getSelectionId({
             slotDate: dateKey,
             startTime,
@@ -179,7 +187,7 @@ export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
             continue;
           }
 
-          if (startMinutes + SLOT_DURATION_MINUTES > WORKDAY_END_MINUTES) {
+          if (startMinutes + effectiveSlotDurationMinutes > WORKDAY_END_MINUTES) {
             options.push({
               id: selectionId,
               startTime,
@@ -192,7 +200,7 @@ export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
           const overlapsBusy = busyIntervals.some(
             (interval) =>
               startMinutes < interval.endMinutes &&
-              interval.startMinutes < startMinutes + SLOT_DURATION_MINUTES
+              interval.startMinutes < startMinutes + effectiveSlotDurationMinutes
           );
 
           if (overlapsBusy) {
@@ -208,7 +216,7 @@ export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
           const overlapsSelected = selectedIntervals.some(
             (interval) =>
               startMinutes < interval.endMinutes &&
-              interval.startMinutes < startMinutes + SLOT_DURATION_MINUTES
+              interval.startMinutes < startMinutes + effectiveSlotDurationMinutes
           );
 
           if (overlapsSelected) {
@@ -232,7 +240,7 @@ export function AdminSlotForm({ initialDays }: AdminSlotFormProps) {
         return [dateKey, options] as const;
       })
     );
-  }, [selectedSlots, selectionIds, slotsByDate, visibleDays]);
+  }, [effectiveSlotDurationMinutes, selectedSlots, selectionIds, slotsByDate, visibleDays]);
 
   const selectedCount = selectedSlots.length;
 
