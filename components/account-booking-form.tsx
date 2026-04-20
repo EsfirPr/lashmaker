@@ -406,7 +406,7 @@ export function AccountBookingForm({ initialStyle }: AccountBookingFormProps = {
 
                 return (
                   <section className="week-day-column" key={day}>
-                    <header className="week-day-column__head">
+                    <header className="week-day-column__head week-day-column__head--inline">
                       <span>{formatWeekday(day)}</span>
                       <strong>{formatMonthDayNumber(day)}</strong>
                     </header>

@@ -1715,6 +1715,19 @@ h2 {
   flex-shrink: 0;
 }
 
+.week-day-column__head--inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.week-day-column__head--inline span,
+.week-day-column__head--inline strong {
+  display: inline-flex;
+  align-items: center;
+}
+
 .week-day-column__head span {
   color: var(--muted);
   text-transform: uppercase;
