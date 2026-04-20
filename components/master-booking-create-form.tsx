@@ -12,6 +12,7 @@ import {
   CALENDAR_PERIOD_OPTIONS,
   formatMonthDayNumber,
   formatReadableDate,
+  formatSlotsCountLabel,
   formatWeekday,
   getPeriodRange,
   getVisibleWeekDays,
@@ -78,6 +79,7 @@ export function MasterBookingCreateForm({ initialStyle }: MasterBookingCreateFor
   const redirectTimeoutRef = useRef<number | null>(null);
   const today = getTodayDate();
   const [isMobile, setIsMobile] = useState(false);
+  const [isCompactSlotsLabel, setIsCompactSlotsLabel] = useState(false);
   const [form, setForm] = useState<FormState>({
     ...initialState,
     style: resolveInitialStyle(initialStyle)
@@ -145,6 +147,16 @@ export function MasterBookingCreateForm({ initialStyle }: MasterBookingCreateFor
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     const update = () => setIsMobile(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsCompactSlotsLabel(mediaQuery.matches);
 
     update();
     mediaQuery.addEventListener("change", update);
@@ -483,37 +495,41 @@ export function MasterBookingCreateForm({ initialStyle }: MasterBookingCreateFor
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    key={day.date}
-                    disabled={isPast}
-                    onClick={() => setMonthFocusedDate(day.date)}
-                    type="button"
-                  >
-                    <span className="month-day__number">{formatMonthDayNumber(day.date)}</span>
-                    {daySlots.length > 0 ? (
-                      <span className="month-day__indicator">{daySlots.length} окна</span>
+                  key={day.date}
+                  disabled={isPast}
+                  onClick={() => setMonthFocusedDate(day.date)}
+                  type="button"
+                >
+                  <span className="month-day__number">{formatMonthDayNumber(day.date)}</span>
+                  {daySlots.length > 0 ? (
+                      <span className="month-day__indicator">
+                        {formatSlotsCountLabel(daySlots.length, isCompactSlotsLabel)}
+                      </span>
                     ) : (
                       <span className="month-day__indicator month-day__indicator--empty"> </span>
                     )}
-                  </button>
+                </button>
                 );
               })}
             </div>
 
             <div className="month-day-detail">
-              <div className="month-day-detail__head">
-                <strong>{formatReadableDate(monthFocusedDate)}</strong>
-                <span className="muted">
-                  {(slotsByDate.get(monthFocusedDate) || []).length > 0
-                    ? `${(slotsByDate.get(monthFocusedDate) || []).length} свободных окон`
-                    : "Свободных окон нет"}
-                </span>
+            <div className="month-day-detail__head">
+              <strong>{formatReadableDate(monthFocusedDate)}</strong>
+              <span className="muted">
+                  {monthVisibleSlots.length > 0
+                    ? isCompactSlotsLabel
+                      ? formatSlotsCountLabel(monthVisibleSlots.length, true)
+                      : `${formatSlotsCountLabel(monthVisibleSlots.length)} в расписании`
+                    : "Слотов на этот день нет"}
+              </span>
+            </div>
+            {monthVisibleSlots.length > 0 ? (
+              <div className="day-slots-list">
+                {monthVisibleSlots.map((slot) => renderSlotButton(slot, false))}
               </div>
-              {monthVisibleSlots.length > 0 ? (
-                <div className="day-slots-list">
-                  {monthVisibleSlots.map((slot) => renderSlotButton(slot, false))}
-                </div>
-              ) : (
-                <div className="week-day-column__empty">На этот день свободных окон нет</div>
+            ) : (
+                <div className="week-day-column__empty">На этот день слотов нет</div>
               )}
             </div>
           </div>

@@ -1432,9 +1432,11 @@ h2 {
 }
 
 .account-hero {
+  position: relative;
   display: grid;
   gap: 18px;
   padding: 28px;
+  padding-right: 92px;
   margin-bottom: 24px;
   background:
     radial-gradient(circle at top right, rgba(210, 118, 93, 0.12), transparent 34%),
@@ -1443,7 +1445,6 @@ h2 {
 
 .account-hero__top {
   display: flex;
-  justify-content: space-between;
   gap: 16px;
   align-items: flex-start;
 }
@@ -1458,6 +1459,13 @@ h2 {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.account-hero__header-actions {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  z-index: 2;
 }
 
 .account-section {
@@ -2756,6 +2764,15 @@ h2 {
     padding: 22px;
   }
 
+  .account-hero {
+    padding-right: 78px;
+  }
+
+  .account-hero__header-actions {
+    top: 22px;
+    right: 22px;
+  }
+
   .beauty-calendar {
     padding: 18px;
   }
@@ -2864,5 +2881,13 @@ h2 {
   .landing-cta__actions,
   .nav-links {
     width: 100%;
+  }
+}
+
+@media (max-width: 375px) {
+  .account-hero .page-title {
+    display: block;
+    width: 100%;
+    max-width: none;
   }
 }

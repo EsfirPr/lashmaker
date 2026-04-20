@@ -170,9 +170,6 @@ export default async function HomePage() {
               <div>
                 <span className="eyebrow">Прайс</span>
                 <h2>Услуги и цены</h2>
-                <p className="pricing-section__subtitle muted">
-                  Прозрачные цены без скрытых доплат и с понятным объёмом работы.
-                </p>
               </div>
             </div>
             <HorizontalScrollGallery className="services-list section-space" showAffordance>
@@ -233,7 +230,7 @@ export default async function HomePage() {
 
           <aside className="panel landing-cta">
             <span className="eyebrow">Следующий шаг</span>
-            <h2>Запись и история визитов теперь в личном кабинете</h2>
+            <h2>Запись и история визитов в личном кабинете</h2>
             <p className="muted">
               Авторизуйтесь, чтобы выбрать свободный слот, хранить свои записи и быстро возвращаться к последним визитам.
             </p>

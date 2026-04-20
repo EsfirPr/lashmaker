@@ -11,6 +11,7 @@ import {
   CALENDAR_PERIOD_OPTIONS,
   formatMonthDayNumber,
   formatReadableDate,
+  formatSlotsCountLabel,
   formatWeekday,
   getPeriodRange,
   getVisibleWeekDays,
@@ -225,29 +226,6 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
     );
   }
 
-  function formatSlotsLabel(count: number) {
-    if (isCompactSlotsLabel) {
-      return String(count);
-    }
-
-    const mod10 = count % 10;
-    const mod100 = count % 100;
-
-    if (mod100 >= 11 && mod100 <= 14) {
-      return `${count} слотов`;
-    }
-
-    if (mod10 === 1) {
-      return `${count} слот`;
-    }
-
-    if (mod10 >= 2 && mod10 <= 4) {
-      return `${count} слота`;
-    }
-
-    return `${count} слотов`;
-  }
-
   return (
     <section className="beauty-calendar master-schedule-calendar">
       <div className="master-schedule-calendar__controls">
@@ -383,7 +361,9 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
                 >
                   <span className="month-day__number">{formatMonthDayNumber(day.date)}</span>
                   {daySlots.length > 0 ? (
-                    <span className="month-day__indicator">{formatSlotsLabel(daySlots.length)}</span>
+                    <span className="month-day__indicator">
+                      {formatSlotsCountLabel(daySlots.length, isCompactSlotsLabel)}
+                    </span>
                   ) : (
                     <span className="month-day__indicator month-day__indicator--empty"> </span>
                   )}
@@ -398,8 +378,8 @@ export function MasterScheduleCalendar({ initialDays }: MasterScheduleCalendarPr
               <span className="muted">
                 {monthVisibleSlots.length > 0
                   ? isCompactSlotsLabel
-                    ? formatSlotsLabel(monthVisibleSlots.length)
-                    : `${formatSlotsLabel(monthVisibleSlots.length)} в расписании`
+                    ? formatSlotsCountLabel(monthVisibleSlots.length, true)
+                    : `${formatSlotsCountLabel(monthVisibleSlots.length)} в расписании`
                   : "Слотов на этот день нет"}
               </span>
             </div>
