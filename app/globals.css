@@ -1689,12 +1689,17 @@ h2 {
   grid-template-columns: repeat(7, minmax(160px, 1fr));
   gap: 14px;
   min-width: 1180px;
+  align-items: start;
   animation: slot-fade 220ms ease;
 }
 
 .week-day-column,
 .month-day-detail {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  align-self: start;
   gap: 12px;
   padding: 16px;
   border-radius: 18px;
@@ -1706,6 +1711,8 @@ h2 {
 .week-day-column__head {
   display: grid;
   gap: 6px;
+  margin-top: 0;
+  flex-shrink: 0;
 }
 
 .week-day-column__head span {
@@ -1724,6 +1731,8 @@ h2 {
 .week-day-column__slots {
   display: grid;
   gap: 10px;
+  margin-top: 0;
+  flex: 1 1 auto;
   align-content: start;
 }
 
