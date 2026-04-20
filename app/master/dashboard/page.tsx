@@ -147,9 +147,6 @@ export default async function MasterDashboardPage() {
               <span className="eyebrow">Расписание</span>
               <h2>Календарь мастера</h2>
             </div>
-            <Link className="button" href="/master/stats">
-              Статистика
-            </Link>
           </div>
           <MasterScheduleCalendar initialDays={days} />
         </section>

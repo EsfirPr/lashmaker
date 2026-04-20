@@ -175,7 +175,7 @@ export default async function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="services-list section-space">
+            <HorizontalScrollGallery className="services-list section-space" showAffordance>
               {services.map((service) => (
                 <article className="service-row" key={service.id}>
                   <div className="service-row__content">
@@ -196,7 +196,7 @@ export default async function HomePage() {
                   </div>
                 </article>
               ))}
-            </div>
+            </HorizontalScrollGallery>
           </section>
         ) : null}
 

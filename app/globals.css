@@ -896,37 +896,37 @@ h2 {
 }
 
 .services-list {
-  display: grid;
-  gap: 10px;
+  --horizontal-scroll-gap: 16px;
+  --horizontal-scroll-padding: 2px 2px 12px;
 }
 
 .service-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 18px 0;
-  border-bottom: 1px solid rgba(65, 43, 32, 0.08);
-  transition: border-color 160ms ease, transform 160ms ease;
-}
-
-.service-row:first-child {
-  padding-top: 0;
-}
-
-.service-row:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+  flex: 0 0 auto;
+  width: min(82vw, 320px);
+  display: grid;
+  align-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(65, 43, 32, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 16px 30px rgba(71, 44, 31, 0.06);
+  scroll-snap-align: start;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .service-row:hover {
   border-color: rgba(210, 118, 93, 0.18);
   transform: translateY(-1px);
+  box-shadow: 0 20px 34px rgba(71, 44, 31, 0.08);
 }
 
 .service-row__content {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -948,7 +948,7 @@ h2 {
 
 .service-row__side {
   display: grid;
-  justify-items: end;
+  justify-items: start;
   gap: 12px;
   flex: 0 0 auto;
 }
@@ -2704,6 +2704,7 @@ h2 {
 
   .service-row {
     flex-direction: column;
+    width: min(84vw, 300px);
   }
 
   .service-row__side {
