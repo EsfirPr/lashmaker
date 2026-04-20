@@ -16,21 +16,77 @@ function getBookingViewState(booking: BookingWithSlot) {
   if (booking.status === "cancelled") {
     return {
       label: "Отменена",
-      className: "status-cancelled"
+      className: "status-cancelled",
+      compactIcon: "lock" as const
     };
   }
 
   if (booking.time_slots && getSlotEndDate(booking.time_slots) < new Date()) {
     return {
       label: "Прошла",
-      className: "status-completed"
+      className: "status-completed",
+      compactIcon: null
     };
   }
 
   return {
     label: "Подтверждена",
-    className: "status-confirmed"
+    className: "status-confirmed",
+    compactIcon: "check" as const
   };
+}
+
+function renderStatusIcon(icon: "check" | "lock" | null) {
+  if (icon === "check") {
+    return (
+      <svg
+        aria-hidden="true"
+        fill="none"
+        height="14"
+        viewBox="0 0 14 14"
+        width="14"
+      >
+        <path
+          d="M2.5 7.5 5.5 10.5 11.5 3.5"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
+  }
+
+  if (icon === "lock") {
+    return (
+      <svg
+        aria-hidden="true"
+        fill="none"
+        height="14"
+        viewBox="0 0 14 14"
+        width="14"
+      >
+        <path
+          d="M4.25 6V4.75a2.75 2.75 0 1 1 5.5 0V6"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.4"
+        />
+        <rect
+          height="5.75"
+          rx="1.5"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          width="7.5"
+          x="3.25"
+          y="6"
+        />
+      </svg>
+    );
+  }
+
+  return null;
 }
 
 export function AccountBookingCard({ booking }: AccountBookingCardProps) {
@@ -55,7 +111,17 @@ export function AccountBookingCard({ booking }: AccountBookingCardProps) {
           )}
         </div>
         <div className="account-booking-card__status-block">
-          <span className={`status-pill ${viewState.className}`}>{viewState.label}</span>
+          <span
+            aria-label={viewState.label}
+            className={`status-pill ${viewState.className}`}
+          >
+            {viewState.compactIcon ? (
+              <span aria-hidden="true" className="status-pill__icon">
+                {renderStatusIcon(viewState.compactIcon)}
+              </span>
+            ) : null}
+            <span className="status-pill__text">{viewState.label}</span>
+          </span>
           <Link className="ghost-button" href={`/booking/${booking.public_token}`}>
             Детали записи
           </Link>

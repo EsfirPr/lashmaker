@@ -1216,10 +1216,22 @@ h2 {
 
 .status-pill {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 7px 12px;
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 800;
+}
+
+.status-pill__icon {
+  display: none;
+  line-height: 0;
+}
+
+.status-pill__text {
+  display: inline;
 }
 
 .status-confirmed {
@@ -1996,6 +2008,28 @@ h2 {
 
 .account-booking-card.status-completed {
   background: rgba(248, 250, 253, 0.94);
+}
+
+@media (max-width: 379px) {
+  .account-booking-card .status-pill.status-confirmed,
+  .account-booking-card .status-pill.status-cancelled {
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0 9px;
+    gap: 0;
+  }
+
+  .account-booking-card .status-pill.status-confirmed .status-pill__icon,
+  .account-booking-card .status-pill.status-cancelled .status-pill__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .account-booking-card .status-pill.status-confirmed .status-pill__text,
+  .account-booking-card .status-pill.status-cancelled .status-pill__text {
+    display: none;
+  }
 }
 
 .account-empty {
