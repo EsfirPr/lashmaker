@@ -238,6 +238,66 @@ h2 {
   color: var(--text);
 }
 
+.field input[type="file"] {
+  display: block;
+  min-height: 56px;
+  padding: 8px;
+  border-style: dashed;
+  border-color: rgba(210, 118, 93, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 242, 237, 0.88));
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.field input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(210, 118, 93, 0.14), rgba(175, 88, 63, 0.18));
+  color: var(--accent-dark);
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.field input[type="file"]::-webkit-file-upload-button {
+  margin-right: 12px;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(210, 118, 93, 0.14), rgba(175, 88, 63, 0.18));
+  color: var(--accent-dark);
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.field input[type="file"]:hover {
+  border-color: rgba(210, 118, 93, 0.32);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(252, 243, 239, 0.92));
+}
+
+.field input[type="file"]:hover::file-selector-button,
+.field input[type="file"]:hover::-webkit-file-upload-button {
+  background: linear-gradient(135deg, rgba(210, 118, 93, 0.18), rgba(175, 88, 63, 0.24));
+  box-shadow: 0 10px 18px rgba(210, 118, 93, 0.12);
+}
+
 .field select {
   appearance: none;
   -webkit-appearance: none;
@@ -991,8 +1051,9 @@ h2 {
 }
 
 .master-portfolio-stack {
-  grid-template-columns: 1fr 1.1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   min-width: 0;
+  align-items: start;
 }
 
 .master-portfolio-stack > .master-section {
