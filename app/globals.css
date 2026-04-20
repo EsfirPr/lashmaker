@@ -1,11 +1,3 @@
-@font-face {
-  font-family: "Doppelganger_RUS";
-  src: url("/fonts/Doppelganger_RUS.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
   --background: #f6f1eb;
   --surface: rgba(255, 255, 255, 0.82);
@@ -24,7 +16,7 @@
   --radius-sm: 12px;
   --container: 1120px;
   --font-sans: "Manrope", "Segoe UI", sans-serif;
-  --font-heading: "Doppelganger_RUS", "Manrope", "Segoe UI", sans-serif;
+  --font-heading: "Manrope", "Segoe UI", sans-serif;
 }
 
 * {
