@@ -51,6 +51,24 @@ function formatDurationLabel(totalMinutes: number) {
   return `${minutes} мин`;
 }
 
+function collectSlots(
+  days: Awaited<ReturnType<typeof listScheduleDays>>
+) {
+  const slots: Awaited<ReturnType<typeof listScheduleDays>>[number]["slots"][number][] = [];
+
+  for (const day of days) {
+    if (!Array.isArray(day.slots)) {
+      continue;
+    }
+
+    for (const slot of day.slots) {
+      slots.push(slot);
+    }
+  }
+
+  return slots;
+}
+
 export default async function MasterDashboardPage() {
   noStore();
   await createMasterIfNotExists();
@@ -67,7 +85,7 @@ export default async function MasterDashboardPage() {
   const slotDurationMinutes = getSlotDurationMinutes(profile.lash_experience_years);
   const slotDurationLabel = formatDurationLabel(slotDurationMinutes);
 
-  const allSlots = days.flatMap((day) => (Array.isArray(day.slots) ? day.slots : []));
+  const allSlots = collectSlots(days);
   const activeCount = allBookings.filter((booking) => getBookingVisualState(booking) === "confirmed").length;
   const freeCount = allSlots.filter((slot) => !slot.activeBooking).length;
 

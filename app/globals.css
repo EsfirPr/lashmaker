@@ -724,6 +724,27 @@ h2 {
   border: 0;
 }
 
+.contact-map-placeholder {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 16px;
+  min-height: 380px;
+  padding: 28px;
+}
+
+.contact-map-placeholder__copy {
+  display: grid;
+  gap: 10px;
+}
+
+.contact-map-placeholder h3 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
 .landing-cta__actions {
   display: flex;
   gap: 12px;
@@ -3149,6 +3170,11 @@ h2 {
 
   .contact-map-frame {
     min-height: 320px;
+  }
+
+  .contact-map-placeholder {
+    min-height: 320px;
+    padding: 22px;
   }
 }
 

@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { DeferredMapEmbed } from "@/components/deferred-map-embed";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
 import { ResilientImage } from "@/components/resilient-image";
@@ -286,16 +287,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className="contact-map-frame-wrap">
-              <iframe
-                allowFullScreen
-                className="contact-map-frame"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                src={yandexMapWidgetSrc}
-                title={`Яндекс Карта: ${masterAddress}`}
-              />
-            </div>
+            <DeferredMapEmbed address={masterAddress} src={yandexMapWidgetSrc} />
           </div>
         </section>
 

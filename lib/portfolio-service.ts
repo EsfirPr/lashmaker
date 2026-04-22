@@ -16,6 +16,7 @@ const portfolioBucket = "portfolio";
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxImageSize = 5 * 1024 * 1024;
 const missingRelationErrorCodes = new Set(["42P01", "42703"]);
+// Uploaded asset URLs are versioned with timestamp + uuid, so a long browser cache is safe.
 const staticImageCacheControl = "31536000";
 
 function toSafeUser(user: User): SafeUser {

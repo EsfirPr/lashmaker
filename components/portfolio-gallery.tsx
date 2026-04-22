@@ -1,6 +1,6 @@
 import type { PortfolioItem } from "@/lib/types";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
-import { ResilientImage } from "@/components/resilient-image";
+import { OptimizedPortfolioImage } from "@/components/optimized-portfolio-image";
 
 type PortfolioGalleryProps = {
   items: PortfolioItem[];
@@ -28,7 +28,7 @@ export function PortfolioGallery({
       {items.map((item) => (
         <article className="portfolio-card" key={item.id}>
           <div className="portfolio-card__image-wrap">
-            <ResilientImage
+            <OptimizedPortfolioImage
               alt={item.caption || "Работа мастера"}
               className="portfolio-card__image"
               fallbackSrc="/images/cert-placeholder.svg"
