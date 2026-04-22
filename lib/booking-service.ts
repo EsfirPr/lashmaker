@@ -49,7 +49,8 @@ type CreateManySlotsInput = {
 
 type MasterBookingsFilters = {
   status?: string;
-  date?: string;
+  startDate?: string;
+  endDate?: string;
   query?: string;
 };
 
@@ -919,6 +920,14 @@ export async function listBookingsForClient(userId: string) {
 
 export async function listBookingsForMaster(filters: MasterBookingsFilters = {}) {
   const supabase = getSupabaseAdminClient();
+  const normalizedStartDate =
+    filters.startDate && filters.endDate && filters.startDate > filters.endDate
+      ? filters.endDate
+      : filters.startDate;
+  const normalizedEndDate =
+    filters.startDate && filters.endDate && filters.startDate > filters.endDate
+      ? filters.startDate
+      : filters.endDate;
   let query = supabase
     .from("bookings")
     .select(
@@ -945,8 +954,12 @@ export async function listBookingsForMaster(filters: MasterBookingsFilters = {})
     )
     .order("created_at", { ascending: false });
 
-  if (filters.date) {
-    query = query.eq("time_slots.slot_date", filters.date);
+  if (normalizedStartDate) {
+    query = query.gte("time_slots.slot_date", normalizedStartDate);
+  }
+
+  if (normalizedEndDate) {
+    query = query.lte("time_slots.slot_date", normalizedEndDate);
   }
 
   if (filters.status === "confirmed" || filters.status === "cancelled") {

@@ -11,7 +11,8 @@ import { getSlotEndDate } from "@/lib/utils";
 type MasterStatsPageProps = {
   searchParams?: Promise<{
     status?: string;
-    date?: string;
+    startDate?: string;
+    endDate?: string;
     page?: string;
     query?: string;
   }>;
@@ -41,8 +42,12 @@ function buildStatsPageHref(
     params.set("status", filters.status);
   }
 
-  if (filters.date) {
-    params.set("date", filters.date);
+  if (filters.startDate) {
+    params.set("startDate", filters.startDate);
+  }
+
+  if (filters.endDate) {
+    params.set("endDate", filters.endDate);
   }
 
   if (filters.query) {
@@ -86,6 +91,14 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
   const bookingPageStart = (currentBookingPage - 1) * bookingsPerPage;
   const visibleBookings = bookings.slice(bookingPageStart, bookingPageStart + bookingsPerPage);
   const bookingPageNumbers = Array.from({ length: totalBookingPages }, (_, index) => index + 1);
+  const normalizedStartDate =
+    filters.startDate && filters.endDate && filters.startDate > filters.endDate
+      ? filters.endDate
+      : filters.startDate || "";
+  const normalizedEndDate =
+    filters.startDate && filters.endDate && filters.startDate > filters.endDate
+      ? filters.startDate
+      : filters.endDate || "";
 
   return (
     <main className="page-shell">
@@ -147,7 +160,7 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
           <form className="master-filters section-space" method="get">
             <div className="field">
               <label htmlFor="status">Статус</label>
-              <select defaultValue={filters.status || ""} id="status" name="status">
+              <select className="status" defaultValue={filters.status || ""} id="status" name="status">
                 <option value="">Все</option>
                 <option value="active">Активные</option>
                 <option value="confirmed">Подтверждённые</option>
@@ -156,8 +169,12 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
               </select>
             </div>
             <div className="field">
-              <label htmlFor="date">Дата</label>
-              <input defaultValue={filters.date || ""} id="date" name="date" type="date" />
+              <label htmlFor="startDate">С</label>
+              <input defaultValue={normalizedStartDate} id="startDate" name="startDate" type="date" />
+            </div>
+            <div className="field">
+              <label htmlFor="endDate">По</label>
+              <input defaultValue={normalizedEndDate} id="endDate" name="endDate" type="date" />
             </div>
             <div className="field">
               <label htmlFor="query">Поиск</label>

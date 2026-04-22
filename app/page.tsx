@@ -12,6 +12,11 @@ import {
   getLandingServices
 } from "@/lib/portfolio-service";
 
+const masterAddress = "улица Карла Маркса, 6, Новороссийск, Краснодарский край, 353900";
+const encodedMasterAddress = encodeURIComponent(masterAddress);
+const yandexMapWidgetSrc = `https://yandex.ru/map-widget/v1/?mode=search&text=${encodedMasterAddress}&z=17`;
+const yandexMapPageHref = `https://yandex.ru/maps/?text=${encodedMasterAddress}`;
+
 function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
   return result.status === "fulfilled" ? result.value : fallback;
 }
@@ -250,6 +255,48 @@ export default async function HomePage() {
               ) : null}
             </div>
           </aside>
+        </section>
+
+        <section className="panel landing-section section-space contact-map-section" id="location">
+          <div className="landing-section__heading">
+            <div>
+              <span className="eyebrow">Адрес</span>
+              <h2>Как нас найти</h2>
+            </div>
+          </div>
+
+          <div className="contact-map-layout section-space">
+            <div className="contact-map-copy">
+              <p className="lead">
+                Мы находимся в центре Новороссийска. Ниже карта с точкой по адресу, чтобы было проще
+                сориентироваться перед визитом.
+              </p>
+              <div className="contact-map-address">
+                <strong>{masterAddress}</strong>
+              </div>
+              <div className="landing-cta__actions section-space">
+                <a
+                  className="button"
+                  href={yandexMapPageHref}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Открыть в Яндекс Картах
+                </a>
+              </div>
+            </div>
+
+            <div className="contact-map-frame-wrap">
+              <iframe
+                allowFullScreen
+                className="contact-map-frame"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                src={yandexMapWidgetSrc}
+                title={`Яндекс Карта: ${masterAddress}`}
+              />
+            </div>
+          </div>
         </section>
 
         <footer className="site-footer">
