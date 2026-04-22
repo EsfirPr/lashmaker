@@ -2519,6 +2519,9 @@ h2 {
 }
 
 .master-filters .status {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
   font-size: 16px;
   line-height: 1.35;
   min-height: 52px;
@@ -2526,6 +2529,7 @@ h2 {
 }
 
 .master-filters .status option {
+  width: 100%;
   font-size: 16px;
   line-height: 1.35;
 }
