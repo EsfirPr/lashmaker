@@ -93,12 +93,10 @@ export default async function HomePage() {
   const services = getSettledValue(servicesResult, []);
   const primaryCta = getPrimaryCta(user?.role || null);
   const headerCta = getHeaderCta(user?.role || null);
-  const masterName = profile?.display_name || "Sulamita";
+  const masterName = profile?.display_name || "Суламита";
   const heroHeadline =
     profile?.headline ||
-    "Наращивание ресниц, которое подчёркивает взгляд и не спорит с вашим стилем";
-  const yearsExperience = profile?.years_experience ?? 3;
-  const lashExperienceYears = profile?.lash_experience_years ?? 2;
+    "Наращивание ресниц, которое подчеркивает взгляд и не спорит с вашим стилем";
 
   return (
     <main className="page-shell">
@@ -115,27 +113,80 @@ export default async function HomePage() {
           </div>
         </nav>
 
-        <section className="landing-hero">
-          <div className="panel landing-hero__copy">
-            <span className="eyebrow">О мастере</span>
-            <h1>{masterName}</h1>
-            <p className="lead">
-              {heroHeadline}
-            </p>
-            <div className="landing-bottom">
-              <div className="stats-grid landing-stats">
-                <div className="stat">
-                  <strong>{yearsExperience}+</strong>
-                  <span className="muted">лет деликатной практики</span>
-                </div>
-                <div className="stat">
-                  <strong>{lashExperienceYears}+</strong>
-                  <span className="muted">время наращивания</span>
-                </div>
+        <section className="landing-hero" aria-labelledby="landing-hero-title">
+          <div className="panel landing-hero__shell">
+            <div className="landing-hero__media">
+              <div className="landing-hero__frame">
+                <img
+                  alt="Портрет девушки в декоративной стилистике"
+                  className="landing-hero__illustration"
+                  fetchPriority="high"
+                  height={1230}
+                  loading="eager"
+                  src="/images/lady.png"
+                  width={940}
+                />
               </div>
-              <div className="landing-actions">
+            </div>
+
+            <div className="landing-hero__content">
+              <div className="landing-hero__intro">
+                <span className="eyebrow landing-hero__eyebrow">О мастере</span>
+                <h1 className="landing-hero__title" id="landing-hero-title">
+                  {masterName}
+                </h1>
+                <p className="landing-hero__subtitle">slavic stare</p>
+              </div>
+
+              <div aria-hidden="true" className="landing-hero__divider">
+                <span />
+              </div>
+
+              <p className="landing-hero__lead">
+                {heroHeadline}
+              </p>
+
+              <div className="landing-hero__stats">
+                <article className="landing-hero__stat-card">
+                  <div className="landing-hero__stat-bird">
+                    <img
+                      alt=""
+                      aria-hidden="true"
+                      className="landing-hero__stat-bird-image"
+                      height={144}
+                      loading="lazy"
+                      src="/images/cockerel.png"
+                      width={104}
+                    />
+                  </div>
+                  <div className="landing-hero__stat-copy">
+                    <strong>1+</strong>
+                    <span>лет деликатной практики</span>
+                  </div>
+                </article>
+
+                <article className="landing-hero__stat-card">
+                  <div className="landing-hero__stat-bird">
+                    <img
+                      alt=""
+                      aria-hidden="true"
+                      className="landing-hero__stat-bird-image"
+                      height={144}
+                      loading="lazy"
+                      src="/images/cockerel.png"
+                      width={104}
+                    />
+                  </div>
+                  <div className="landing-hero__stat-copy">
+                    <strong>2+</strong>
+                    <span>время наращивания</span>
+                  </div>
+                </article>
+              </div>
+
+              <div className="landing-actions landing-hero__actions">
                 <a className="button" href={primaryCta.href}>
-                  {primaryCta.label}
+                  Личный кабинет
                 </a>
                 <a className="ghost-button" href="#portfolio">
                   Смотреть работы
@@ -143,22 +194,6 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-
-          <aside className="panel landing-hero__aside">
-            <div className="landing-hero__image master-image">
-              <ResilientImage
-                alt={masterName}
-                className="landing-hero__img"
-                decoding="async"
-                fallbackSrc="/images/master-placeholder.svg"
-                fetchPriority="high"
-                height={640}
-                loading="eager"
-                src={profile?.avatar_url || "/images/master-placeholder.svg"}
-                width={640}
-              />
-            </div>
-          </aside>
         </section>
 
         <section className="panel landing-section section-space" id="portfolio">
