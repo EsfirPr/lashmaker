@@ -1,6 +1,7 @@
 import type { BookingStatus, TimeSlot } from "@/lib/types";
 
 const appTimeZone = process.env.APP_TIMEZONE || "Europe/Moscow";
+const bookingLeadTimeInMs = 2 * 60 * 60 * 1000;
 const dateFormatter = new Intl.DateTimeFormat("ru-RU", {
   timeZone: appTimeZone,
   day: "numeric",
@@ -118,6 +119,17 @@ export function getSlotEndDate(slot: Pick<TimeSlot, "slot_date" | "end_time">) {
 
 export function getBookingCancelDeadline(slot: Pick<TimeSlot, "slot_date" | "start_time">) {
   return new Date(getSlotStartDate(slot).getTime() - 5 * 60 * 1000);
+}
+
+export function getBookingStartLeadDeadline(slot: Pick<TimeSlot, "slot_date" | "start_time">) {
+  return new Date(getSlotStartDate(slot).getTime() - bookingLeadTimeInMs);
+}
+
+export function isSlotAvailableForBooking(
+  slot: Pick<TimeSlot, "slot_date" | "start_time">,
+  now = new Date()
+) {
+  return now <= getBookingStartLeadDeadline(slot);
 }
 
 export function isBookingCancelable(slot: Pick<TimeSlot, "slot_date" | "start_time">, now = new Date()) {

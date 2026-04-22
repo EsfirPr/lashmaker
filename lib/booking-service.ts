@@ -17,6 +17,7 @@ import {
   formatDateLabel,
   formatSlotRange,
   isBookingCancelable,
+  isSlotAvailableForBooking,
   getRelativeDate,
   getSlotEndDate,
   getSlotStartDate,
@@ -432,7 +433,11 @@ export async function listAvailableSlotsInRange(startDate: string, endDate: stri
   }
 
   const busySlotIds = new Set((activeBookings || []).map((booking) => booking.slot_id));
-  return safeSlots.filter((slot) => !busySlotIds.has(slot.id) && getSlotEndDate(slot) > new Date());
+  const now = new Date();
+
+  return safeSlots.filter(
+    (slot) => !busySlotIds.has(slot.id) && isSlotAvailableForBooking(slot, now)
+  );
 }
 
 export async function createBooking(input: CreateBookingInput) {
@@ -443,6 +448,10 @@ export async function createBooking(input: CreateBookingInput) {
 
   if (!slot || slot.slot_date !== payload.date) {
     throw new Error("Выбранный слот недоступен");
+  }
+
+  if (!isSlotAvailableForBooking(slot)) {
+    throw new Error("До начала этого окна осталось меньше двух часов. Выберите другое время.");
   }
 
   const token = generateToken();
