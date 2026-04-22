@@ -3,6 +3,7 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { MasterBookingsTable } from "@/components/master-bookings-table";
 import { MasterClientsTable } from "@/components/master-clients-table";
+import { MasterStatusFilterSelect } from "@/components/master-status-filter-select";
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster } from "@/lib/booking-service";
@@ -19,6 +20,13 @@ type MasterStatsPageProps = {
 };
 
 const bookingsPerPage = 5;
+const statusFilterOptions = [
+  { label: "Все", value: "" },
+  { label: "Активные", value: "active" },
+  { label: "Подтверждённые", value: "confirmed" },
+  { label: "Отменённые", value: "cancelled" },
+  { label: "Прошедшие", value: "completed" }
+];
 
 function getBookingVisualState(booking: Awaited<ReturnType<typeof listBookingsForMaster>>[number]) {
   if (booking.status === "cancelled") {
@@ -160,13 +168,12 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
           <form className="master-filters section-space" method="get">
             <div className="field">
               <label htmlFor="status">Статус</label>
-              <select className="status" defaultValue={filters.status || ""} id="status" name="status">
-                <option value="">Все</option>
-                <option value="active">Активные</option>
-                <option value="confirmed">Подтверждённые</option>
-                <option value="cancelled">Отменённые</option>
-                <option value="completed">Прошедшие</option>
-              </select>
+              <MasterStatusFilterSelect
+                defaultValue={filters.status || ""}
+                id="status"
+                name="status"
+                options={statusFilterOptions}
+              />
             </div>
             <div className="field">
               <label htmlFor="startDate">С</label>
