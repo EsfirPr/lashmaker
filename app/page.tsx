@@ -1,5 +1,3 @@
-import type { Route } from "next";
-import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { DeferredMapEmbed } from "@/components/deferred-map-embed";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
@@ -25,25 +23,25 @@ function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
 function getPrimaryCta(userRole: "master" | "client" | null) {
   if (userRole === "master") {
     return {
-      href: "/master/dashboard" as Route,
+      href: "/master/dashboard",
       label: "Кабинет мастера"
     };
   }
 
   if (userRole === "client") {
     return {
-      href: "/account" as Route,
+      href: "/account",
       label: "Личный кабинет"
     };
   }
 
   return {
-    href: "/register" as Route,
+    href: "/register",
     label: "Зарегистрироваться"
   };
 }
 
-function getHeaderCta(userRole: "master" | "client" | null): Route {
+function getHeaderCta(userRole: "master" | "client" | null) {
   if (userRole === "master") {
     return "/master/dashboard";
   }
@@ -63,20 +61,20 @@ function formatServicePrice(price: number) {
   }).format(price);
 }
 
-function getServiceBookingHref(userRole: "master" | "client" | null, style: string): Route {
+function getServiceBookingHref(userRole: "master" | "client" | null, style: string) {
   const params = new URLSearchParams({
     style
   });
 
   if (userRole === "master") {
-    return `/master/dashboard/bookings/new?${params.toString()}` as Route;
+    return `/master/dashboard/bookings/new?${params.toString()}`;
   }
 
   if (userRole === "client") {
-    return `/account?${params.toString()}#new-booking` as Route;
+    return `/account?${params.toString()}#new-booking`;
   }
 
-  return "/register" as Route;
+  return "/register";
 }
 
 export default async function HomePage() {
@@ -111,9 +109,9 @@ export default async function HomePage() {
             <a className="header-phone" href="tel:+79998886655">
               +7 (999) 888 66-55
             </a>
-            <Link className="ghost-button" href={headerCta}>
+            <a className="ghost-button" href={headerCta}>
               {user ? "Кабинет" : "Войти"}
-            </Link>
+            </a>
           </div>
         </nav>
 
@@ -136,9 +134,9 @@ export default async function HomePage() {
                 </div>
               </div>
               <div className="landing-actions">
-                <Link className="button" href={primaryCta.href}>
+                <a className="button" href={primaryCta.href}>
                   {primaryCta.label}
-                </Link>
+                </a>
                 <a className="ghost-button" href="#portfolio">
                   Смотреть работы
                 </a>
@@ -195,12 +193,12 @@ export default async function HomePage() {
                   </div>
                   <div className="service-row__side">
                     <strong className="service-row__price">{formatServicePrice(service.price)}</strong>
-                    <Link
+                    <a
                       className="ghost-button service-row__cta"
                       href={getServiceBookingHref(user?.role || null, service.name)}
                     >
                       Записаться
-                    </Link>
+                    </a>
                   </div>
                 </article>
               ))}
@@ -246,13 +244,13 @@ export default async function HomePage() {
               Авторизуйтесь, чтобы выбрать свободный слот, хранить свои записи и быстро возвращаться к последним визитам.
             </p>
             <div className="landing-cta__actions section-space">
-              <Link className="button" href={primaryCta.href}>
+              <a className="button" href={primaryCta.href}>
                 {primaryCta.label}
-              </Link>
+              </a>
               {!user ? (
-                <Link className="ghost-button" href="/login">
+                <a className="ghost-button" href="/login">
                   Войти
-                </Link>
+                </a>
               ) : null}
             </div>
           </aside>
@@ -292,9 +290,9 @@ export default async function HomePage() {
         </section>
 
         <footer className="site-footer">
-          <Link className="footer-link" href="/privacy">
+          <a className="footer-link" href="/privacy">
             Политика конфиденциальности
-          </Link>
+          </a>
         </footer>
       </div>
     </main>
