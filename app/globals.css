@@ -72,8 +72,10 @@ html {
 }
 
 body {
+  position: relative;
   margin: 0;
   min-width: 320px;
+  min-height: 100vh;
   font-family: var(--font-sans);
   color: var(--text);
   background:
@@ -81,6 +83,29 @@ body {
     radial-gradient(circle at right 18%, rgba(119, 9, 16, 0.05), transparent 22%),
     linear-gradient(180deg, #f2efed 0%, #ecebeb 38%, #e8e3df 100%);
   letter-spacing: 0.01em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--accent);
+  opacity: 0.5;
+  -webkit-mask-image: url("/images/bg.svg");
+  mask-image: url("/images/bg.svg");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center center;
+  mask-position: center center;
+  -webkit-mask-size: auto 100vh;
+  mask-size: auto 100vh;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 a {

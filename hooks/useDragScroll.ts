@@ -33,6 +33,7 @@ type UseDragScrollResult<T extends HTMLElement> = {
 
 type DragState = {
   didDrag: boolean;
+  hasPointerCapture: boolean;
   pointerId: number | null;
   startScrollLeft: number;
   startX: number;
@@ -54,6 +55,7 @@ export function useDragScroll<T extends HTMLElement>(
 ): UseDragScrollResult<T> {
   const dragStateRef = useRef<DragState>({
     didDrag: false,
+    hasPointerCapture: false,
     pointerId: null,
     startScrollLeft: 0,
     startX: 0
@@ -79,11 +81,17 @@ export function useDragScroll<T extends HTMLElement>(
   const stopDragging = useCallback((pointerId?: number) => {
     const element = ref.current;
 
-    if (element && pointerId !== undefined && element.hasPointerCapture(pointerId)) {
+    if (
+      element &&
+      pointerId !== undefined &&
+      dragStateRef.current.hasPointerCapture &&
+      element.hasPointerCapture(pointerId)
+    ) {
       element.releasePointerCapture(pointerId);
     }
 
     dragStateRef.current.pointerId = null;
+    dragStateRef.current.hasPointerCapture = false;
     setIsDragging(false);
   }, [ref]);
 
@@ -145,12 +153,11 @@ export function useDragScroll<T extends HTMLElement>(
 
     dragStateRef.current = {
       didDrag: false,
+      hasPointerCapture: false,
       pointerId: event.pointerId,
       startScrollLeft: element.scrollLeft,
       startX: event.clientX
     };
-
-    element.setPointerCapture(event.pointerId);
   }, [enabled, isDesktop, ref]);
 
   const handlePointerMove = useCallback((event: ReactPointerEvent<T>) => {
@@ -175,6 +182,10 @@ export function useDragScroll<T extends HTMLElement>(
 
     if (!dragState.didDrag) {
       dragState.didDrag = true;
+      if (!element.hasPointerCapture(event.pointerId)) {
+        element.setPointerCapture(event.pointerId);
+      }
+      dragState.hasPointerCapture = true;
       setIsDragging(true);
     }
 
