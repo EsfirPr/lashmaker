@@ -727,7 +727,18 @@ h2 {
 }
 
 .landing-hero__intro {
+  display: grid;
+  justify-items: end;
   padding-top: 54px;
+}
+
+.landing-hero__headline {
+  display: inline-grid;
+  justify-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  text-align: right;
 }
 
 .eyebrow.landing-hero__eyebrow {
@@ -739,15 +750,18 @@ h2 {
 
 .landing-hero__title {
   margin: 0;
-  width: 100%;
-  max-width: none;
+  width: auto;
+  max-width: 100%;
   font-size: clamp(4.35rem, 9.6vw, 7.4rem);
   line-height: 0.82;
   letter-spacing: -0.055em;
+  text-align: right;
 }
 
 .landing-hero__subtitle {
   margin: 6px 0 0;
+  width: 100%;
+  max-width: 100%;
   color: var(--accent);
   font-size: clamp(1.2rem, 2.4vw, 1.6rem);
   font-style: italic;
@@ -1332,6 +1346,7 @@ h2 {
 
 .service-row__image {
   width: 100%;
+  max-width: 448px;
   height: auto;
   display: block;
   object-fit: contain;
@@ -3676,5 +3691,11 @@ h2 {
     display: block;
     width: 100%;
     max-width: none;
+  }
+}
+
+@media (max-width: 645px) {
+  .brand {
+    display: none;
   }
 }

@@ -40,10 +40,10 @@ export function ServiceRowCard({ bookingHref, formattedPrice, service }: Service
             alt={`Фото услуги ${service.name}`}
             className="service-row__image service-row__image--primary"
             fallbackSrc="/images/cert-placeholder.svg"
-            height={800}
+            height={670}
             loading="lazy"
             src={primaryImageUrl}
-            width={640}
+            width={448}
           />
           {service.secondary_image_url && service.image_url ? (
             <OptimizedServiceImage
@@ -51,10 +51,10 @@ export function ServiceRowCard({ bookingHref, formattedPrice, service }: Service
               aria-hidden="true"
               className="service-row__image service-row__image--secondary"
               fallbackSrc="/images/cert-placeholder.svg"
-              height={800}
+              height={670}
               loading="lazy"
               src={service.secondary_image_url}
-              width={640}
+              width={448}
             />
           ) : null}
           {canToggleSecondary ? <span className="service-row__image-hint">Ещё фото</span> : null}

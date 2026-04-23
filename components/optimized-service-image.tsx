@@ -13,16 +13,16 @@ type OptimizedServiceImageProps = {
   width?: number;
 };
 
-const serviceImageSizes = "(max-width: 640px) 84vw, 320px";
+const serviceImageSizes = "(max-width: 640px) 90vw, (max-width: 1024px) 50vw, 448px";
 
 export function OptimizedServiceImage({
   alt,
   className,
   fallbackSrc,
-  height = 800,
+  height = 670,
   loading = "lazy",
   src,
-  width = 640
+  width = 448
 }: OptimizedServiceImageProps) {
   const normalizedSrc = typeof src === "string" && src.trim() ? src.trim() : fallbackSrc;
   const [currentSrc, setCurrentSrc] = useState(normalizedSrc);
@@ -42,7 +42,7 @@ export function OptimizedServiceImage({
           setCurrentSrc(fallbackSrc);
         }
       }}
-      quality={70}
+      quality={60}
       sizes={serviceImageSizes}
       src={currentSrc}
       width={width}

@@ -125,6 +125,7 @@ export default async function HomePage() {
                   fill
                   fetchPriority="high"
                   priority
+                  quality={65}
                   sizes="(max-width: 960px) 100vw, 54vw"
                   src="/images/lady.webp"
                 />
@@ -134,10 +135,12 @@ export default async function HomePage() {
             <div className="landing-hero__content">
               <div className="landing-hero__intro">
                 <span className="eyebrow landing-hero__eyebrow">О мастере</span>
-                <h1 className="landing-hero__title" id="landing-hero-title">
-                  {masterName}
-                </h1>
-                <p className="landing-hero__subtitle">slavic stare</p>
+                <div className="landing-hero__headline">
+                  <h1 className="landing-hero__title" id="landing-hero-title">
+                    {masterName}
+                  </h1>
+                  <p className="landing-hero__subtitle">slavic stare</p>
+                </div>
               </div>
 
               <div aria-hidden="true" className="landing-hero__divider">
