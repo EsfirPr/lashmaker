@@ -689,8 +689,16 @@ h2 {
   display: none;
 }
 
-.landing-hero__eyebrow {
-  margin-bottom: 10px;
+.landing-hero__intro {
+  position: relative;
+  padding-top: 40px;
+}
+
+.eyebrow.landing-hero__eyebrow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-bottom: 0;
 }
 
 .landing-hero__title {
@@ -706,6 +714,7 @@ h2 {
   font-style: italic;
   font-weight: 300;
   letter-spacing: 0.08em;
+  text-align: right;
 }
 
 .landing-hero__divider {
@@ -716,7 +725,7 @@ h2 {
 
 .landing-hero__divider-image {
   display: block;
-  width: min(100%, 220px);
+  width: 100%;
   height: auto;
   object-fit: contain;
 }
@@ -753,7 +762,6 @@ h2 {
   display: inline-grid;
   place-items: center;
   width: auto;
-  height: 88px;
   border-radius: 18px;
   background: transparent;
 }
@@ -782,7 +790,7 @@ h2 {
   overflow: hidden;
   color: var(--muted);
   font-size: 0.94rem;
-  line-height: 1.45;
+  line-height: 1.16;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -3353,7 +3361,6 @@ h2 {
 
   .landing-hero__stat-bird {
     width: auto;
-    height: 72px;
   }
 
   .landing-hero__stat-bird-image {
