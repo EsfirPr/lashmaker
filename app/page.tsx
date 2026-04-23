@@ -221,7 +221,7 @@ export default async function HomePage() {
             <div className="landing-section__heading">
               <div>
                 <span className="eyebrow">Прайс</span>
-                <h2>Услуги и цены</h2>
+                <h2>Какая ты матрешка?</h2>
               </div>
             </div>
             <HorizontalScrollGallery className="services-list section-space" showAffordance>
