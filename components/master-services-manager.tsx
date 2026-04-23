@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import { initialMasterFormState, type MasterFormState } from "@/app/master/dashboard/state";
 import { ResilientImage } from "@/components/resilient-image";
 import { SubmitButton } from "@/components/submit-button";
 import {
   createMasterServiceAction,
-  deleteMasterServiceImageAction,
   deleteMasterServiceAction,
   updateMasterServiceAction
 } from "@/app/master/dashboard/actions";
@@ -22,13 +22,126 @@ const priceFormatter = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 0
 });
 
+const allowedServiceImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+const maxServiceImageSize = 5 * 1024 * 1024;
+
+type ImageUploadState = {
+  status: "idle" | "loading" | "success" | "error";
+  message: string;
+};
+
+const initialImageUploadState: ImageUploadState = {
+  status: "idle",
+  message: ""
+};
+
+function validateServiceImage(file: File) {
+  if (!allowedServiceImageTypes.has(file.type)) {
+    return "Загрузите JPG, PNG или WEBP";
+  }
+
+  if (file.size > maxServiceImageSize) {
+    return "Файл должен быть не больше 5 МБ";
+  }
+
+  return null;
+}
+
+async function uploadServiceImage(serviceId: string, file: File) {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await fetch(`/api/master/services/${serviceId}/image`, {
+    method: "POST",
+    body: formData,
+    credentials: "include"
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Не удалось загрузить фото");
+  }
+}
+
+async function deleteServiceImage(serviceId: string) {
+  const response = await fetch(`/api/master/services/${serviceId}/image`, {
+    method: "DELETE",
+    credentials: "include"
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Не удалось удалить фото");
+  }
+}
+
 function MasterServiceRow({ service }: { service: MasterService }) {
   const [updateState, updateAction] = useActionState(updateMasterServiceAction, initialMasterFormState);
-  const [deleteImageState, deleteImageAction] = useActionState(
-    deleteMasterServiceImageAction,
-    initialMasterFormState
-  );
   const [deleteState, deleteAction] = useActionState(deleteMasterServiceAction, initialMasterFormState);
+  const [imageState, setImageState] = useState<ImageUploadState>(initialImageUploadState);
+  const router = useRouter();
+
+  async function handleServiceImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const validationError = validateServiceImage(file);
+
+    if (validationError) {
+      setImageState({
+        status: "error",
+        message: validationError
+      });
+      event.target.value = "";
+      return;
+    }
+
+    setImageState({
+      status: "loading",
+      message: "Фото загружается..."
+    });
+
+    try {
+      await uploadServiceImage(service.id, file);
+      event.target.value = "";
+      setImageState({
+        status: "success",
+        message: "Фото услуги обновлено"
+      });
+      router.refresh();
+    } catch (error) {
+      setImageState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Не удалось загрузить фото"
+      });
+    }
+  }
+
+  async function handleDeleteServiceImage() {
+    setImageState({
+      status: "loading",
+      message: "Фото удаляется..."
+    });
+
+    try {
+      await deleteServiceImage(service.id);
+      setImageState({
+        status: "success",
+        message: "Фото услуги удалено"
+      });
+      router.refresh();
+    } catch (error) {
+      setImageState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Не удалось удалить фото"
+      });
+    }
+  }
 
   return (
     <article className="master-service-editor">
@@ -56,8 +169,9 @@ function MasterServiceRow({ service }: { service: MasterService }) {
             </label>
             <input
               accept="image/jpeg,image/png,image/webp"
+              disabled={imageState.status === "loading"}
               id={`service-image-${service.id}`}
-              name="image"
+              onChange={handleServiceImageChange}
               type="file"
             />
             <p className="helper">JPG, PNG или WEBP до 5 МБ.</p>
@@ -124,15 +238,22 @@ function MasterServiceRow({ service }: { service: MasterService }) {
       </form>
 
       {service.image_url ? (
-        <form action={deleteImageAction} className="master-service-editor__delete-image">
-          <input name="serviceId" type="hidden" value={service.id} />
-          {deleteImageState.status !== "idle" ? (
-            <div className={deleteImageState.status === "error" ? "message-error" : "message-success"}>
-              {deleteImageState.message}
-            </div>
-          ) : null}
-          <SubmitButton className="ghost-button">Удалить фото</SubmitButton>
-        </form>
+        <div className="master-service-editor__delete-image">
+          <button
+            className="ghost-button"
+            disabled={imageState.status === "loading"}
+            onClick={handleDeleteServiceImage}
+            type="button"
+          >
+            {imageState.status === "loading" ? "Обновляем..." : "Удалить фото"}
+          </button>
+        </div>
+      ) : null}
+
+      {imageState.status !== "idle" ? (
+        <div className={imageState.status === "error" ? "message-error" : "message-success"}>
+          {imageState.message}
+        </div>
       ) : null}
 
       <form action={deleteAction} className="master-service-editor__delete">
@@ -151,12 +272,86 @@ function MasterServiceRow({ service }: { service: MasterService }) {
 export function MasterServicesManager({ services }: MasterServicesManagerProps) {
   const [createState, createAction] = useActionState(createMasterServiceAction, initialMasterFormState);
   const createFormRef = useRef<HTMLFormElement>(null);
+  const selectedCreateImageRef = useRef<File | null>(null);
+  const [createImageState, setCreateImageState] = useState<ImageUploadState>(initialImageUploadState);
+  const router = useRouter();
 
   useEffect(() => {
-    if (createState.status === "success") {
-      createFormRef.current?.reset();
+    if (createState.status !== "success") {
+      return;
     }
-  }, [createState.status]);
+
+    const selectedImage = selectedCreateImageRef.current;
+
+    if (!selectedImage || !createState.serviceId) {
+      createFormRef.current?.reset();
+      selectedCreateImageRef.current = null;
+      return;
+    }
+
+    let isActive = true;
+
+    async function uploadSelectedCreateImage() {
+      setCreateImageState({
+        status: "loading",
+        message: "Фото загружается..."
+      });
+
+      try {
+        await uploadServiceImage(createState.serviceId as string, selectedImage as File);
+
+        if (!isActive) {
+          return;
+        }
+
+        setCreateImageState({
+          status: "success",
+          message: "Услуга и фото добавлены"
+        });
+        createFormRef.current?.reset();
+        selectedCreateImageRef.current = null;
+        router.refresh();
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+
+        setCreateImageState({
+          status: "error",
+          message: error instanceof Error ? error.message : "Услуга добавлена, но фото не загрузилось"
+        });
+      }
+    }
+
+    uploadSelectedCreateImage();
+
+    return () => {
+      isActive = false;
+    };
+  }, [createState.status, createState.serviceId, router]);
+
+  function handleCreateImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] || null;
+    selectedCreateImageRef.current = null;
+    setCreateImageState(initialImageUploadState);
+
+    if (!file) {
+      return;
+    }
+
+    const validationError = validateServiceImage(file);
+
+    if (validationError) {
+      setCreateImageState({
+        status: "error",
+        message: validationError
+      });
+      event.target.value = "";
+      return;
+    }
+
+    selectedCreateImageRef.current = file;
+  }
 
   return (
     <section className="panel stack-card master-section" id="services-manager">
@@ -177,11 +372,17 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
           <input
             accept="image/jpeg,image/png,image/webp"
             id="newServiceImage"
-            name="image"
+            onChange={handleCreateImageChange}
             type="file"
           />
           <p className="helper">Можно добавить сразу или позже. JPG, PNG или WEBP до 5 МБ.</p>
         </div>
+
+        {createImageState.status !== "idle" ? (
+          <div className={createImageState.status === "error" ? "message-error" : "message-success"}>
+            {createImageState.message}
+          </div>
+        ) : null}
 
         <div className="master-service-editor__grid">
           <div className="field">

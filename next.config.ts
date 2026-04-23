@@ -16,6 +16,11 @@ if (supabaseUrl) {
 
 const nextConfig: NextConfig = {
   typedRoutes: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb"
+    }
+  },
   images: {
     remotePatterns,
     formats: ["image/avif", "image/webp"]
