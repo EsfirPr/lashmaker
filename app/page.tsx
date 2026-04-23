@@ -3,6 +3,7 @@ import { DeferredMapEmbed } from "@/components/deferred-map-embed";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
 import { ResilientImage } from "@/components/resilient-image";
+import { ServiceRowCard } from "@/components/service-row-card";
 import { getCurrentUser } from "@/lib/auth/server";
 import {
   getLandingCertificates,
@@ -225,37 +226,12 @@ export default async function HomePage() {
             </div>
             <HorizontalScrollGallery className="services-list section-space" showAffordance>
               {services.map((service) => (
-                <article className="service-row" key={service.id}>
-                  {service.image_url ? (
-                    <div className="service-row__image-wrap">
-                      <ResilientImage
-                        alt={`Фото услуги ${service.name}`}
-                        className="service-row__image"
-                        fallbackSrc="/images/cert-placeholder.svg"
-                        height={260}
-                        loading="lazy"
-                        src={service.image_url}
-                        width={320}
-                      />
-                    </div>
-                  ) : null}
-                  <div className="service-row__content">
-                    <div className="service-row__top">
-                      <strong>{service.name}</strong>
-                      {service.duration ? <span className="muted">{service.duration}</span> : null}
-                    </div>
-                    {service.description ? <p className="muted">{service.description}</p> : null}
-                  </div>
-                  <div className="service-row__side">
-                    <strong className="service-row__price">{formatServicePrice(service.price)}</strong>
-                    <a
-                      className="ghost-button service-row__cta"
-                      href={getServiceBookingHref(user?.role || null, service.name)}
-                    >
-                      Записаться
-                    </a>
-                  </div>
-                </article>
+                <ServiceRowCard
+                  bookingHref={getServiceBookingHref(user?.role || null, service.name)}
+                  formattedPrice={formatServicePrice(service.price)}
+                  key={service.id}
+                  service={service}
+                />
               ))}
             </HorizontalScrollGallery>
           </section>

@@ -2,10 +2,9 @@
 
 import type {
   PointerEvent as ReactPointerEvent,
-  ReactNode,
-  WheelEvent as ReactWheelEvent
+  ReactNode
 } from "react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useDragScroll } from "@/hooks/useDragScroll";
 
 type HorizontalScrollGalleryProps = {
@@ -23,11 +22,20 @@ export function HorizontalScrollGallery({
 }: HorizontalScrollGalleryProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const markInteracted = useCallback(() => {
+    if (!showAffordance || hasInteracted) {
+      return;
+    }
+
+    setHasInteracted(true);
+  }, [hasInteracted, showAffordance]);
+
   const { bind, canScrollLeft, canScrollRight, isDragging } = useDragScroll(containerRef, {
     desktopMinWidth: 801,
     dragThreshold: 6,
     enableWheelScroll: true,
-    enabled: true
+    enabled: true,
+    onWheelScroll: markInteracted
   });
 
   const classNames = [
@@ -48,14 +56,6 @@ export function HorizontalScrollGallery({
     .filter(Boolean)
     .join(" ");
 
-  function markInteracted() {
-    if (!showAffordance || hasInteracted) {
-      return;
-    }
-
-    setHasInteracted(true);
-  }
-
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     markInteracted();
     bind.onPointerDown(event);
@@ -65,11 +65,6 @@ export function HorizontalScrollGallery({
     if (containerRef.current?.scrollLeft) {
       markInteracted();
     }
-  }
-
-  function handleWheel(event: ReactWheelEvent<HTMLDivElement>) {
-    markInteracted();
-    bind.onWheel(event);
   }
 
   return (
@@ -83,7 +78,6 @@ export function HorizontalScrollGallery({
         onPointerMove={bind.onPointerMove}
         onPointerUp={bind.onPointerUp}
         onScroll={handleScroll}
-        onWheel={handleWheel}
         ref={containerRef}
       >
         {children}

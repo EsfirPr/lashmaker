@@ -111,5 +111,7 @@ export type MasterService = {
   description: string | null;
   image_path: string | null;
   image_url: string | null;
+  secondary_image_path: string | null;
+  secondary_image_url: string | null;
   created_at: string;
 };

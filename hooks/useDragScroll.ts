@@ -3,8 +3,7 @@
 import type {
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
-  RefObject,
-  WheelEvent as ReactWheelEvent
+  RefObject
 } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -13,6 +12,7 @@ type UseDragScrollOptions = {
   enableWheelScroll?: boolean;
   dragThreshold?: number;
   desktopMinWidth?: number;
+  onWheelScroll?: () => void;
 };
 
 type DragScrollBindings<T extends HTMLElement> = {
@@ -22,7 +22,6 @@ type DragScrollBindings<T extends HTMLElement> = {
   onPointerLeave: (event: ReactPointerEvent<T>) => void;
   onPointerMove: (event: ReactPointerEvent<T>) => void;
   onPointerUp: (event: ReactPointerEvent<T>) => void;
-  onWheel: (event: ReactWheelEvent<T>) => void;
 };
 
 type UseDragScrollResult<T extends HTMLElement> = {
@@ -49,7 +48,8 @@ export function useDragScroll<T extends HTMLElement>(
     enabled = true,
     enableWheelScroll = true,
     dragThreshold = 6,
-    desktopMinWidth = 801
+    desktopMinWidth = 801,
+    onWheelScroll
   }: UseDragScrollOptions = {}
 ): UseDragScrollResult<T> {
   const dragStateRef = useRef<DragState>({
@@ -202,7 +202,7 @@ export function useDragScroll<T extends HTMLElement>(
     updateScrollState();
   }, [stopDragging, updateScrollState]);
 
-  const handleWheel = useCallback((event: ReactWheelEvent<T>) => {
+  const handleWheel = useCallback((event: WheelEvent) => {
     const element = ref.current;
 
     if (!enabled || !isDesktop || !enableWheelScroll || !element) {
@@ -219,10 +219,28 @@ export function useDragScroll<T extends HTMLElement>(
       return;
     }
 
-    event.preventDefault();
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+
     element.scrollLeft += delta;
+    onWheelScroll?.();
     updateScrollState();
-  }, [enableWheelScroll, enabled, isDesktop, ref, updateScrollState]);
+  }, [enableWheelScroll, enabled, isDesktop, onWheelScroll, ref, updateScrollState]);
+
+  useEffect(() => {
+    const element = ref.current;
+
+    if (!element || !enabled || !enableWheelScroll) {
+      return undefined;
+    }
+
+    element.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      element.removeEventListener("wheel", handleWheel);
+    };
+  }, [enableWheelScroll, enabled, handleWheel, ref]);
 
   const handleClickCapture = useCallback((event: ReactMouseEvent<T>) => {
     if (!dragStateRef.current.didDrag) {
@@ -241,8 +259,7 @@ export function useDragScroll<T extends HTMLElement>(
       onPointerDown: handlePointerDown,
       onPointerLeave: handlePointerLeave,
       onPointerMove: handlePointerMove,
-      onPointerUp: handlePointerUp,
-      onWheel: handleWheel
+      onPointerUp: handlePointerUp
     },
     canScrollLeft,
     canScrollRight,

@@ -24,6 +24,7 @@ const priceFormatter = new Intl.NumberFormat("ru-RU", {
 
 const allowedServiceImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxServiceImageSize = 5 * 1024 * 1024;
+type ServiceImageVariant = "primary" | "secondary";
 
 type ImageUploadState = {
   status: "idle" | "loading" | "success" | "error";
@@ -47,11 +48,26 @@ function validateServiceImage(file: File) {
   return null;
 }
 
-async function uploadServiceImage(serviceId: string, file: File) {
+function getServiceImageEndpoint(serviceId: string, variant: ServiceImageVariant) {
+  const params = new URLSearchParams();
+
+  if (variant === "secondary") {
+    params.set("variant", "secondary");
+  }
+
+  const queryString = params.toString();
+  return `/api/master/services/${serviceId}/image${queryString ? `?${queryString}` : ""}`;
+}
+
+async function uploadServiceImage(
+  serviceId: string,
+  file: File,
+  variant: ServiceImageVariant = "primary"
+) {
   const formData = new FormData();
   formData.append("image", file);
 
-  const response = await fetch(`/api/master/services/${serviceId}/image`, {
+  const response = await fetch(getServiceImageEndpoint(serviceId, variant), {
     method: "POST",
     body: formData,
     credentials: "include"
@@ -64,8 +80,8 @@ async function uploadServiceImage(serviceId: string, file: File) {
   }
 }
 
-async function deleteServiceImage(serviceId: string) {
-  const response = await fetch(`/api/master/services/${serviceId}/image`, {
+async function deleteServiceImage(serviceId: string, variant: ServiceImageVariant = "primary") {
+  const response = await fetch(getServiceImageEndpoint(serviceId, variant), {
     method: "DELETE",
     credentials: "include"
   });
@@ -81,9 +97,14 @@ function MasterServiceRow({ service }: { service: MasterService }) {
   const [updateState, updateAction] = useActionState(updateMasterServiceAction, initialMasterFormState);
   const [deleteState, deleteAction] = useActionState(deleteMasterServiceAction, initialMasterFormState);
   const [imageState, setImageState] = useState<ImageUploadState>(initialImageUploadState);
+  const [secondaryImageState, setSecondaryImageState] = useState<ImageUploadState>(initialImageUploadState);
   const router = useRouter();
 
-  async function handleServiceImageChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleServiceImageChange(
+    event: ChangeEvent<HTMLInputElement>,
+    variant: ServiceImageVariant,
+    setState: (state: ImageUploadState) => void
+  ) {
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -93,7 +114,7 @@ function MasterServiceRow({ service }: { service: MasterService }) {
     const validationError = validateServiceImage(file);
 
     if (validationError) {
-      setImageState({
+      setState({
         status: "error",
         message: validationError
       });
@@ -101,42 +122,45 @@ function MasterServiceRow({ service }: { service: MasterService }) {
       return;
     }
 
-    setImageState({
+    setState({
       status: "loading",
       message: "Фото загружается..."
     });
 
     try {
-      await uploadServiceImage(service.id, file);
+      await uploadServiceImage(service.id, file, variant);
       event.target.value = "";
-      setImageState({
+      setState({
         status: "success",
-        message: "Фото услуги обновлено"
+        message: variant === "secondary" ? "Дополнительное фото обновлено" : "Фото услуги обновлено"
       });
       router.refresh();
     } catch (error) {
-      setImageState({
+      setState({
         status: "error",
         message: error instanceof Error ? error.message : "Не удалось загрузить фото"
       });
     }
   }
 
-  async function handleDeleteServiceImage() {
-    setImageState({
+  async function handleDeleteServiceImage(
+    variant: ServiceImageVariant,
+    setState: (state: ImageUploadState) => void
+  ) {
+    setState({
       status: "loading",
       message: "Фото удаляется..."
     });
 
     try {
-      await deleteServiceImage(service.id);
-      setImageState({
+      await deleteServiceImage(service.id, variant);
+      setState({
         status: "success",
-        message: "Фото услуги удалено"
+        message: variant === "secondary" ? "Дополнительное фото удалено" : "Фото услуги удалено"
       });
       router.refresh();
     } catch (error) {
-      setImageState({
+      setState({
         status: "error",
         message: error instanceof Error ? error.message : "Не удалось удалить фото"
       });
@@ -171,10 +195,41 @@ function MasterServiceRow({ service }: { service: MasterService }) {
               accept="image/jpeg,image/png,image/webp"
               disabled={imageState.status === "loading"}
               id={`service-image-${service.id}`}
-              onChange={handleServiceImageChange}
+              onChange={(event) => handleServiceImageChange(event, "primary", setImageState)}
               type="file"
             />
             <p className="helper">JPG, PNG или WEBP до 5 МБ.</p>
+          </div>
+        </div>
+
+        <div className="master-service-editor__media-row">
+          <div className="master-service-editor__image-preview">
+            {service.secondary_image_url ? (
+              <ResilientImage
+                alt={`Дополнительное фото услуги ${service.name}`}
+                className="master-service-editor__image"
+                fallbackSrc="/images/cert-placeholder.svg"
+                height={180}
+                src={service.secondary_image_url}
+                width={240}
+              />
+            ) : (
+              <span>Дополнительное фото</span>
+            )}
+          </div>
+
+          <div className="field master-service-editor__image-field">
+            <label htmlFor={`service-secondary-image-${service.id}`}>
+              {service.secondary_image_url ? "Заменить дополнительное фото" : "Добавить дополнительное фото"}
+            </label>
+            <input
+              accept="image/jpeg,image/png,image/webp"
+              disabled={secondaryImageState.status === "loading"}
+              id={`service-secondary-image-${service.id}`}
+              onChange={(event) => handleServiceImageChange(event, "secondary", setSecondaryImageState)}
+              type="file"
+            />
+            <p className="helper">Показывается на главной поверх основного фото по клику.</p>
           </div>
         </div>
 
@@ -242,7 +297,7 @@ function MasterServiceRow({ service }: { service: MasterService }) {
           <button
             className="ghost-button"
             disabled={imageState.status === "loading"}
-            onClick={handleDeleteServiceImage}
+            onClick={() => handleDeleteServiceImage("primary", setImageState)}
             type="button"
           >
             {imageState.status === "loading" ? "Обновляем..." : "Удалить фото"}
@@ -250,9 +305,28 @@ function MasterServiceRow({ service }: { service: MasterService }) {
         </div>
       ) : null}
 
+      {service.secondary_image_url ? (
+        <div className="master-service-editor__delete-image">
+          <button
+            className="ghost-button"
+            disabled={secondaryImageState.status === "loading"}
+            onClick={() => handleDeleteServiceImage("secondary", setSecondaryImageState)}
+            type="button"
+          >
+            {secondaryImageState.status === "loading" ? "Обновляем..." : "Удалить дополнительное фото"}
+          </button>
+        </div>
+      ) : null}
+
       {imageState.status !== "idle" ? (
         <div className={imageState.status === "error" ? "message-error" : "message-success"}>
           {imageState.message}
+        </div>
+      ) : null}
+
+      {secondaryImageState.status !== "idle" ? (
+        <div className={secondaryImageState.status === "error" ? "message-error" : "message-success"}>
+          {secondaryImageState.message}
         </div>
       ) : null}
 
@@ -273,6 +347,7 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
   const [createState, createAction] = useActionState(createMasterServiceAction, initialMasterFormState);
   const createFormRef = useRef<HTMLFormElement>(null);
   const selectedCreateImageRef = useRef<File | null>(null);
+  const selectedCreateSecondaryImageRef = useRef<File | null>(null);
   const [createImageState, setCreateImageState] = useState<ImageUploadState>(initialImageUploadState);
   const router = useRouter();
 
@@ -281,11 +356,29 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
       return;
     }
 
-    const selectedImage = selectedCreateImageRef.current;
+    const selectedImages: Array<{
+      file: File;
+      variant: ServiceImageVariant;
+    }> = [];
 
-    if (!selectedImage || !createState.serviceId) {
+    if (selectedCreateImageRef.current instanceof File) {
+      selectedImages.push({
+        file: selectedCreateImageRef.current,
+        variant: "primary"
+      });
+    }
+
+    if (selectedCreateSecondaryImageRef.current instanceof File) {
+      selectedImages.push({
+        file: selectedCreateSecondaryImageRef.current,
+        variant: "secondary"
+      });
+    }
+
+    if (selectedImages.length === 0 || !createState.serviceId) {
       createFormRef.current?.reset();
       selectedCreateImageRef.current = null;
+      selectedCreateSecondaryImageRef.current = null;
       return;
     }
 
@@ -298,7 +391,9 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
       });
 
       try {
-        await uploadServiceImage(createState.serviceId as string, selectedImage as File);
+        for (const image of selectedImages) {
+          await uploadServiceImage(createState.serviceId as string, image.file, image.variant);
+        }
 
         if (!isActive) {
           return;
@@ -310,6 +405,7 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
         });
         createFormRef.current?.reset();
         selectedCreateImageRef.current = null;
+        selectedCreateSecondaryImageRef.current = null;
         router.refresh();
       } catch (error) {
         if (!isActive) {
@@ -353,6 +449,29 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
     selectedCreateImageRef.current = file;
   }
 
+  function handleCreateSecondaryImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] || null;
+    selectedCreateSecondaryImageRef.current = null;
+    setCreateImageState(initialImageUploadState);
+
+    if (!file) {
+      return;
+    }
+
+    const validationError = validateServiceImage(file);
+
+    if (validationError) {
+      setCreateImageState({
+        status: "error",
+        message: validationError
+      });
+      event.target.value = "";
+      return;
+    }
+
+    selectedCreateSecondaryImageRef.current = file;
+  }
+
   return (
     <section className="panel stack-card master-section" id="services-manager">
       <div className="account-section__heading">
@@ -376,6 +495,17 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
             type="file"
           />
           <p className="helper">Можно добавить сразу или позже. JPG, PNG или WEBP до 5 МБ.</p>
+        </div>
+
+        <div className="field master-service-editor__image-field">
+          <label htmlFor="newServiceSecondaryImage">Дополнительное фото услуги</label>
+          <input
+            accept="image/jpeg,image/png,image/webp"
+            id="newServiceSecondaryImage"
+            onChange={handleCreateSecondaryImageChange}
+            type="file"
+          />
+          <p className="helper">На главной откроется поверх основного фото по клику.</p>
         </div>
 
         {createImageState.status !== "idle" ? (

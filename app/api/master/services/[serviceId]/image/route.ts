@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/server";
-import { deleteMasterServiceImage, uploadMasterServiceImage } from "@/lib/portfolio-service";
+import {
+  deleteMasterServiceImage,
+  uploadMasterServiceImage,
+  type MasterServiceImageVariant
+} from "@/lib/portfolio-service";
 
 type RouteContext = {
   params: Promise<{
@@ -8,9 +12,15 @@ type RouteContext = {
   }>;
 };
 
+function getImageVariant(request: Request): MasterServiceImageVariant {
+  const variant = new URL(request.url).searchParams.get("variant");
+  return variant === "secondary" ? "secondary" : "primary";
+}
+
 export async function POST(request: Request, context: RouteContext) {
   try {
     const master = await getCurrentUser();
+    const variant = getImageVariant(request);
 
     if (!master || master.role !== "master") {
       return NextResponse.json({ error: "Доступ запрещён" }, { status: 403 });
@@ -27,7 +37,8 @@ export async function POST(request: Request, context: RouteContext) {
     const uploadedImage = await uploadMasterServiceImage({
       ownerId: master.id,
       serviceId,
-      file: image
+      file: image,
+      variant
     });
 
     return NextResponse.json(uploadedImage);
@@ -41,16 +52,17 @@ export async function POST(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const master = await getCurrentUser();
+    const variant = getImageVariant(request);
 
     if (!master || master.role !== "master") {
       return NextResponse.json({ error: "Доступ запрещён" }, { status: 403 });
     }
 
     const { serviceId } = await context.params;
-    await deleteMasterServiceImage(serviceId, master.id);
+    await deleteMasterServiceImage(serviceId, master.id, variant);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

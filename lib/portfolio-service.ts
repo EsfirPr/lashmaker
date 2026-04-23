@@ -18,6 +18,27 @@ const maxImageSize = 5 * 1024 * 1024;
 const missingRelationErrorCodes = new Set(["42P01", "42703"]);
 // Uploaded asset URLs are versioned with timestamp + uuid, so a long browser cache is safe.
 const staticImageCacheControl = "31536000";
+export type MasterServiceImageVariant = "primary" | "secondary";
+
+const masterServiceImageFields: Record<
+  MasterServiceImageVariant,
+  {
+    path: "image_path" | "secondary_image_path";
+    url: "image_url" | "secondary_image_url";
+    folder: string;
+  }
+> = {
+  primary: {
+    path: "image_path",
+    url: "image_url",
+    folder: "services"
+  },
+  secondary: {
+    path: "secondary_image_path",
+    url: "secondary_image_url",
+    folder: "services-secondary"
+  }
+};
 
 function toSafeUser(user: User): SafeUser {
   const { password_hash: _passwordHash, ...safeUser } = user;
@@ -495,6 +516,10 @@ export async function deleteMasterService(serviceId: string, ownerId: string) {
     await supabase.storage.from(portfolioBucket).remove([service.image_path]);
   }
 
+  if (service?.secondary_image_path) {
+    await supabase.storage.from(portfolioBucket).remove([service.secondary_image_path]);
+  }
+
   revalidatePath("/");
   revalidatePath("/master/dashboard");
   revalidatePath("/master/profile");
@@ -516,24 +541,31 @@ async function getMasterServiceById(serviceId: string, ownerId: string) {
   return (data as MasterService | null) || null;
 }
 
-export async function deleteMasterServiceImage(serviceId: string, ownerId: string) {
+export async function deleteMasterServiceImage(
+  serviceId: string,
+  ownerId: string,
+  variant: MasterServiceImageVariant = "primary"
+) {
   const parsedId = masterServiceIdSchema.parse({ serviceId });
   const supabase = getSupabaseAdminClient();
   const service = await getMasterServiceById(parsedId.serviceId, ownerId);
+  const imageFields = masterServiceImageFields[variant];
 
   if (!service) {
     throw new Error("Услуга не найдена");
   }
 
-  if (!service.image_path) {
+  const currentImagePath = service[imageFields.path];
+
+  if (!currentImagePath) {
     return;
   }
 
   const { error } = await supabase
     .from("master_services")
     .update({
-      image_path: null,
-      image_url: null
+      [imageFields.path]: null,
+      [imageFields.url]: null
     })
     .eq("id", parsedId.serviceId)
     .eq("owner_id", ownerId);
@@ -542,7 +574,7 @@ export async function deleteMasterServiceImage(serviceId: string, ownerId: strin
     throw new Error(error.message);
   }
 
-  await supabase.storage.from(portfolioBucket).remove([service.image_path]);
+  await supabase.storage.from(portfolioBucket).remove([currentImagePath]);
 
   revalidatePath("/");
   revalidatePath("/master/dashboard");
@@ -553,21 +585,23 @@ export async function uploadMasterServiceImage(input: {
   ownerId: string;
   serviceId: string;
   file: File;
+  variant?: MasterServiceImageVariant;
 }) {
   const parsedId = masterServiceIdSchema.parse({ serviceId: input.serviceId });
   const supabase = getSupabaseAdminClient();
   const currentService = await getMasterServiceById(parsedId.serviceId, input.ownerId);
+  const imageFields = masterServiceImageFields[input.variant || "primary"];
 
   if (!currentService) {
     throw new Error("Услуга не найдена");
   }
 
-  const uploadedImage = await uploadImageToBucket(input.ownerId, "services", input.file);
+  const uploadedImage = await uploadImageToBucket(input.ownerId, imageFields.folder, input.file);
   const { error } = await supabase
     .from("master_services")
     .update({
-      image_path: uploadedImage.path,
-      image_url: uploadedImage.publicUrl
+      [imageFields.path]: uploadedImage.path,
+      [imageFields.url]: uploadedImage.publicUrl
     })
     .eq("id", parsedId.serviceId)
     .eq("owner_id", input.ownerId);
@@ -577,8 +611,10 @@ export async function uploadMasterServiceImage(input: {
     throw new Error(error.message);
   }
 
-  if (currentService.image_path) {
-    await supabase.storage.from(portfolioBucket).remove([currentService.image_path]);
+  const previousImagePath = currentService[imageFields.path];
+
+  if (previousImagePath) {
+    await supabase.storage.from(portfolioBucket).remove([previousImagePath]);
   }
 
   revalidatePath("/");
