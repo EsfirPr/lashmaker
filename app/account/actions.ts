@@ -2,24 +2,38 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createUserSession, requireUserRole } from "@/lib/auth/server";
+import { createUserSession, getCurrentUserByRole } from "@/lib/auth/server";
 import {
   confirmClientPhoneChange,
   resendClientPhoneChangeCode,
   startClientProfileUpdate
 } from "@/lib/auth/service";
 import { cancelBookingForClient } from "@/lib/booking-service";
+import { logServerActionError } from "@/lib/server-action-log";
 import { bookingIdSchema } from "@/lib/validators";
 import type { AccountProfileState } from "@/app/account/state";
 
 export async function cancelOwnBookingAction(formData: FormData) {
-  const user = await requireUserRole("client", "/login");
-  const payload = bookingIdSchema.parse({
-    bookingId: String(formData.get("bookingId") || "")
-  });
+  const user = await getCurrentUserByRole("client");
 
-  await cancelBookingForClient(payload.bookingId, user.id);
-  revalidatePath("/account");
+  if (!user) {
+    console.warn("[server-action:cancelOwnBookingAction] Missing client session");
+    redirect("/login");
+  }
+
+  try {
+    const payload = bookingIdSchema.parse({
+      bookingId: String(formData.get("bookingId") || "")
+    });
+
+    await cancelBookingForClient(payload.bookingId, user.id);
+    revalidatePath("/account");
+  } catch (error) {
+    logServerActionError("cancelOwnBookingAction", error, {
+      userId: user.id
+    });
+  }
+
   redirect("/account");
 }
 
@@ -35,7 +49,15 @@ export async function startClientProfileUpdateAction(
   previousState: AccountProfileState,
   formData: FormData
 ): Promise<AccountProfileState> {
-  const user = await requireUserRole("client", "/login");
+  const user = await getCurrentUserByRole("client");
+
+  if (!user) {
+    return {
+      ...previousState,
+      status: "error",
+      message: "Сессия истекла. Войдите снова."
+    };
+  }
 
   try {
     const result = await startClientProfileUpdate(user.id, {
@@ -70,6 +92,9 @@ export async function startClientProfileUpdateAction(
       resendAvailableAt: result.resendAvailableAt
     };
   } catch (error) {
+    logServerActionError("startClientProfileUpdateAction", error, {
+      userId: user.id
+    });
     return {
       ...previousState,
       status: "error",
@@ -82,8 +107,16 @@ export async function resendClientPhoneChangeCodeAction(
   previousState: AccountProfileState,
   formData: FormData
 ): Promise<AccountProfileState> {
-  const user = await requireUserRole("client", "/login");
   const phone = String(formData.get("phone") || previousState.pendingPhone || "");
+  const user = await getCurrentUserByRole("client");
+
+  if (!user) {
+    return {
+      ...previousState,
+      status: "error",
+      message: "Сессия истекла. Войдите снова."
+    };
+  }
 
   try {
     const result = await resendClientPhoneChangeCode(user.id, phone);
@@ -98,6 +131,9 @@ export async function resendClientPhoneChangeCodeAction(
       resendAvailableAt: result.resendAvailableAt
     };
   } catch (error) {
+    logServerActionError("resendClientPhoneChangeCodeAction", error, {
+      userId: user.id
+    });
     return {
       ...previousState,
       status: "error",
@@ -110,7 +146,15 @@ export async function confirmClientPhoneChangeAction(
   previousState: AccountProfileState,
   formData: FormData
 ): Promise<AccountProfileState> {
-  const user = await requireUserRole("client", "/login");
+  const user = await getCurrentUserByRole("client");
+
+  if (!user) {
+    return {
+      ...previousState,
+      status: "error",
+      message: "Сессия истекла. Войдите снова."
+    };
+  }
 
   try {
     const updatedUser = await confirmClientPhoneChange(user.id, {
@@ -132,6 +176,9 @@ export async function confirmClientPhoneChangeAction(
       resendAvailableAt: null
     };
   } catch (error) {
+    logServerActionError("confirmClientPhoneChangeAction", error, {
+      userId: user.id
+    });
     return {
       ...previousState,
       status: "error",

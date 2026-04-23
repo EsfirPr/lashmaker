@@ -3,11 +3,9 @@ import Image from "next/image";
 import { DeferredMapEmbed } from "@/components/deferred-map-embed";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
-import { ResilientImage } from "@/components/resilient-image";
 import { ServiceRowCard } from "@/components/service-row-card";
 import { getCurrentUser } from "@/lib/auth/server";
 import {
-  getLandingCertificates,
   getLandingMasterProfile,
   getLandingPortfolioItems,
   getLandingServices
@@ -81,17 +79,15 @@ function getServiceBookingHref(userRole: "master" | "client" | null, style: stri
 
 export default async function HomePage() {
   noStore();
-  const [userResult, profileResult, portfolioResult, certificateResult, servicesResult] = await Promise.allSettled([
+  const [userResult, profileResult, portfolioResult, servicesResult] = await Promise.allSettled([
     getCurrentUser(),
     getLandingMasterProfile(),
     getLandingPortfolioItems(),
-    getLandingCertificates(),
     getLandingServices()
   ]);
   const user = getSettledValue(userResult, null);
   const profile = getSettledValue(profileResult, null);
   const portfolioItems = getSettledValue(portfolioResult, []);
-  const certificates = getSettledValue(certificateResult, []);
   const services = getSettledValue(servicesResult, []);
   const primaryCta = getPrimaryCta(user?.role || null);
   const headerCta = getHeaderCta(user?.role || null);
@@ -243,37 +239,7 @@ export default async function HomePage() {
           </section>
         ) : null}
 
-        <section className="landing-about section-space" id="about">
-          <section className="panel landing-section">
-            <div className="landing-section__heading">
-              <div>
-                <span className="eyebrow">О мастере</span>
-                <h2>{masterName}</h2>
-              </div>
-            </div>
-            <p className="lead">
-              {profile?.bio ||
-                "Работаю в спокойном темпе, уделяю внимание форме глаза, носибельности и чистоте каждой работы, чтобы результат выглядел дорого и гармонично."}
-            </p>
-            <div className="certificates-gallery section-space">
-              {certificates.length > 0 ? (
-                <HorizontalScrollGallery className="certificates-list" showAffordance>
-                  {certificates.map((certificate) => (
-                    <article className="certificate-card" key={certificate.id}>
-                      <ResilientImage
-                        alt="Сертификат мастера"
-                        fallbackSrc="/images/cert-placeholder.svg"
-                        src={certificate.image_url}
-                      />
-                    </article>
-                  ))}
-                </HorizontalScrollGallery>
-              ) : (
-                <p className="muted">Сертификаты скоро появятся.</p>
-              )}
-            </div>
-          </section>
-
+        <section className="section-space">
           <aside className="panel landing-cta">
             <span className="eyebrow">Следующий шаг</span>
             <h2>Запись и история визитов в личном кабинете</h2>

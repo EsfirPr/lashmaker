@@ -35,10 +35,20 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function requireUserRole(role: UserRole, redirectTo: Route) {
+export async function getCurrentUserByRole(role: UserRole) {
   const user = await getCurrentUser();
 
   if (!user || user.role !== role) {
+    return null;
+  }
+
+  return user;
+}
+
+export async function requireUserRole(role: UserRole, redirectTo: Route) {
+  const user = await getCurrentUserByRole(role);
+
+  if (!user) {
     redirect(redirectTo);
   }
 

@@ -1,8 +1,9 @@
 "use server";
 
-import { forbidden } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/server";
 import { cancelBookingByToken, getBookingByToken, resolveBookingAccess } from "@/lib/booking-service";
+import { logServerActionError } from "@/lib/server-action-log";
 
 export async function cancelBookingAction(formData: FormData) {
   const token = String(formData.get("token") || "");
@@ -18,8 +19,16 @@ export async function cancelBookingAction(formData: FormData) {
       viewerRole: viewer?.role ?? null,
       reason: access.reason
     });
-    forbidden();
+    redirect(`/booking/${token}`);
   }
 
-  await cancelBookingByToken(token);
+  try {
+    await cancelBookingByToken(token);
+  } catch (error) {
+    logServerActionError("cancelBookingAction", error, {
+      token
+    });
+  }
+
+  redirect(`/booking/${token}`);
 }

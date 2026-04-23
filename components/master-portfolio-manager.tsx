@@ -22,6 +22,21 @@ type MasterPortfolioManagerProps = {
   profile: MasterProfile;
 };
 
+const allowedUploadTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+const maxUploadSize = 5 * 1024 * 1024;
+
+function validateUploadFile(file: File) {
+  if (!allowedUploadTypes.has(file.type)) {
+    return "Загрузите JPG, PNG или WEBP";
+  }
+
+  if (file.size > maxUploadSize) {
+    return "Файл должен быть не больше 5 МБ";
+  }
+
+  return null;
+}
+
 export function MasterPortfolioManager({
   certificates,
   items,
@@ -41,6 +56,9 @@ export function MasterPortfolioManager({
   const certificateObjectUrlsRef = useRef<string[]>([]);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url || null);
   const [certificatePreviews, setCertificatePreviews] = useState<string[]>([]);
+  const [avatarClientError, setAvatarClientError] = useState("");
+  const [portfolioClientError, setPortfolioClientError] = useState("");
+  const [certificateClientError, setCertificateClientError] = useState("");
 
   function clearAvatarPreviewObjectUrl() {
     if (!avatarObjectUrlRef.current) {
@@ -97,9 +115,19 @@ export function MasterPortfolioManager({
   function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
     clearAvatarPreviewObjectUrl();
     const file = event.target.files?.[0];
+    setAvatarClientError("");
 
     if (!file) {
       setAvatarPreview(profile.avatar_url || null);
+      return;
+    }
+
+    const validationError = validateUploadFile(file);
+
+    if (validationError) {
+      event.target.value = "";
+      setAvatarPreview(profile.avatar_url || null);
+      setAvatarClientError(validationError);
       return;
     }
 
@@ -108,12 +136,38 @@ export function MasterPortfolioManager({
     setAvatarPreview(previewUrl);
   }
 
+  function handlePortfolioImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    setPortfolioClientError("");
+
+    if (!file) {
+      return;
+    }
+
+    const validationError = validateUploadFile(file);
+
+    if (validationError) {
+      event.target.value = "";
+      setPortfolioClientError(validationError);
+    }
+  }
+
   function handleCertificateChange(event: ChangeEvent<HTMLInputElement>) {
     clearCertificatePreviewObjectUrls();
     const files = Array.from(event.target.files || []);
+    setCertificateClientError("");
 
     if (files.length === 0) {
       setCertificatePreviews([]);
+      return;
+    }
+
+    const validationError = files.map(validateUploadFile).find(Boolean);
+
+    if (validationError) {
+      event.target.value = "";
+      setCertificatePreviews([]);
+      setCertificateClientError(validationError);
       return;
     }
 
@@ -213,7 +267,8 @@ export function MasterPortfolioManager({
                 {avatarState.message}
               </div>
             ) : null}
-            <SubmitButton>Сохранить фото</SubmitButton>
+            {avatarClientError ? <div className="message-error">{avatarClientError}</div> : null}
+            <SubmitButton disabled={Boolean(avatarClientError)}>Сохранить фото</SubmitButton>
           </form>
         </div>
       </section>
@@ -228,7 +283,14 @@ export function MasterPortfolioManager({
         <form action={uploadAction} className="form-grid section-space" ref={uploadFormRef}>
           <div className="field">
             <label htmlFor="image">Фото работы</label>
-            <input accept="image/jpeg,image/png,image/webp" id="image" name="image" required type="file" />
+            <input
+              accept="image/jpeg,image/png,image/webp"
+              id="image"
+              name="image"
+              onChange={handlePortfolioImageChange}
+              required
+              type="file"
+            />
           </div>
           <div className="field">
             <label htmlFor="caption">Подпись</label>
@@ -239,7 +301,8 @@ export function MasterPortfolioManager({
               {uploadState.message}
             </div>
           ) : null}
-          <SubmitButton>Загрузить работу</SubmitButton>
+          {portfolioClientError ? <div className="message-error">{portfolioClientError}</div> : null}
+          <SubmitButton disabled={Boolean(portfolioClientError)}>Загрузить работу</SubmitButton>
         </form>
 
         {items.length === 0 ? (
@@ -305,8 +368,8 @@ export function MasterPortfolioManager({
                 {certificateState.message}
               </div>
             ) : null}
-
-            <SubmitButton>Загрузить сертификаты</SubmitButton>
+            {certificateClientError ? <div className="message-error">{certificateClientError}</div> : null}
+            <SubmitButton disabled={Boolean(certificateClientError)}>Загрузить сертификаты</SubmitButton>
           </form>
 
           {certificates.length === 0 ? (

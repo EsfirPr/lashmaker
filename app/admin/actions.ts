@@ -1,7 +1,9 @@
 "use server";
 
-import { requireUserRole } from "@/lib/auth/server";
+import { redirect } from "next/navigation";
+import { getCurrentUserByRole } from "@/lib/auth/server";
 import { createTimeSlot, createTimeSlots, deleteFreeTimeSlot } from "@/lib/booking-service";
+import { logServerActionError } from "@/lib/server-action-log";
 import type { AdminSlotFormState } from "@/app/admin/state";
 
 type SlotSelection = {
@@ -14,8 +16,16 @@ export async function addTimeSlotAction(
   _prevState: AdminSlotFormState,
   formData: FormData
 ): Promise<AdminSlotFormState> {
+  const master = await getCurrentUserByRole("master");
+
+  if (!master) {
+    return {
+      status: "error",
+      message: "Сессия истекла. Войдите снова."
+    };
+  }
+
   try {
-    await requireUserRole("master", "/login");
     const rawSelections = String(formData.get("slotSelections") || "").trim();
 
     if (rawSelections) {
@@ -78,6 +88,9 @@ export async function addTimeSlotAction(
       message: "Окно добавлено"
     };
   } catch (error) {
+    logServerActionError("addTimeSlotAction", error, {
+      userId: master.id
+    });
     return {
       status: "error",
       message: error instanceof Error ? error.message : "Не удалось добавить окно"
@@ -86,6 +99,18 @@ export async function addTimeSlotAction(
 }
 
 export async function deleteTimeSlotAction(formData: FormData) {
-  await requireUserRole("master", "/login");
-  await deleteFreeTimeSlot(String(formData.get("slotId") || ""));
+  const master = await getCurrentUserByRole("master");
+
+  if (!master) {
+    console.warn("[server-action:deleteTimeSlotAction] Missing master session");
+    redirect("/login");
+  }
+
+  try {
+    await deleteFreeTimeSlot(String(formData.get("slotId") || ""));
+  } catch (error) {
+    logServerActionError("deleteTimeSlotAction", error, {
+      userId: master.id
+    });
+  }
 }

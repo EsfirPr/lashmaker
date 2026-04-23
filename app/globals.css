@@ -952,16 +952,6 @@ h2 {
   text-overflow: ellipsis;
 }
 
-.landing-about {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 24px;
-}
-
-.landing-about .landing-section__heading {
-  margin-bottom: 16px;
-}
-
 .landing-cta {
   background:
     radial-gradient(circle at top left, rgba(119, 9, 16, 0.08), transparent 28%),
@@ -1058,11 +1048,6 @@ h2 {
 
 .landing-feature-grid {
   margin-top: 22px;
-}
-
-.certificates-gallery {
-  width: 100%;
-  min-width: 0;
 }
 
 .horizontal-scroll-shell {
@@ -1166,31 +1151,6 @@ h2 {
 .horizontal-scroll-shell.is-hint-visible .horizontal-scroll-hint {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
-}
-
-.certificates-list {
-  --horizontal-scroll-gap: 12px;
-  --horizontal-scroll-padding: 2px 2px 12px;
-}
-
-.certificate-card {
-  flex: 0 0 auto;
-  width: min(64vw, 220px);
-  scroll-snap-align: start;
-  overflow: hidden;
-  border-radius: 22px;
-  border: 1px solid rgba(119, 9, 16, 0.12);
-  background: rgba(255, 251, 247, 0.92);
-  box-shadow: var(--shadow-soft);
-}
-
-.certificate-card img {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
-  border-radius: 18px;
 }
 
 .portfolio-grid {
@@ -3371,7 +3331,6 @@ h2 {
   .booking-layout,
   .account-hero,
   .master-hero,
-  .landing-about,
   .master-portfolio-stack,
   .master-media-grid,
   .master-service-editor__grid {
