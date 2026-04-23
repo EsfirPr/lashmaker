@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
+import Image from "next/image";
 import { DeferredMapEmbed } from "@/components/deferred-map-embed";
 import { HorizontalScrollGallery } from "@/components/horizontal-scroll-gallery";
 import { PortfolioGallery } from "@/components/portfolio-gallery";
@@ -118,14 +119,14 @@ export default async function HomePage() {
           <div className="panel landing-hero__shell">
             <div className="landing-hero__media">
               <div className="landing-hero__frame">
-                <img
+                <Image
                   alt="Портрет девушки в декоративной стилистике"
                   className="landing-hero__illustration"
+                  fill
                   fetchPriority="high"
-                  height={1230}
-                  loading="eager"
-                  src="/images/lady.png"
-                  width={940}
+                  priority
+                  sizes="(max-width: 960px) 100vw, 54vw"
+                  src="/images/lady.webp"
                 />
               </div>
             </div>
@@ -157,14 +158,15 @@ export default async function HomePage() {
               <div className="landing-hero__stats">
                 <article className="landing-hero__stat-card">
                   <div className="landing-hero__stat-bird">
-                    <img
+                    <Image
                       alt=""
                       aria-hidden="true"
                       className="landing-hero__stat-bird-image"
                       height={144}
                       loading="lazy"
-                      src="/images/cockerel.png"
-                      width={104}
+                      sizes="64px"
+                      src="/images/cockerel.webp"
+                      width={98}
                     />
                   </div>
                   <div className="landing-hero__stat-copy">
@@ -175,14 +177,15 @@ export default async function HomePage() {
 
                 <article className="landing-hero__stat-card">
                   <div className="landing-hero__stat-bird">
-                    <img
+                    <Image
                       alt=""
                       aria-hidden="true"
                       className="landing-hero__stat-bird-image"
                       height={144}
                       loading="lazy"
-                      src="/images/cockerel.png"
-                      width={104}
+                      sizes="64px"
+                      src="/images/cockerel.webp"
+                      width={98}
                     />
                   </div>
                   <div className="landing-hero__stat-copy">

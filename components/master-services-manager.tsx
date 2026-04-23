@@ -24,6 +24,9 @@ const priceFormatter = new Intl.NumberFormat("ru-RU", {
 
 const allowedServiceImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxServiceImageSize = 5 * 1024 * 1024;
+const optimizedServiceImageMaxWidth = 720;
+const optimizedServiceImageMaxHeight = 900;
+const optimizedServiceImageQuality = 0.78;
 type ServiceImageVariant = "primary" | "secondary";
 
 type ImageUploadState = {
@@ -48,6 +51,70 @@ function validateServiceImage(file: File) {
   return null;
 }
 
+function getOptimizedServiceImageName(fileName: string) {
+  const nameWithoutExtension = fileName.replace(/\.[^.]+$/, "") || "service-image";
+  return `${nameWithoutExtension}.webp`;
+}
+
+function loadImageFromFile(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new window.Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Не удалось прочитать изображение"));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+function canvasToWebp(canvas: HTMLCanvasElement) {
+  return new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, "image/webp", optimizedServiceImageQuality);
+  });
+}
+
+async function optimizeServiceImageForUpload(file: File) {
+  const image = await loadImageFromFile(file);
+  const scale = Math.min(
+    1,
+    optimizedServiceImageMaxWidth / image.naturalWidth,
+    optimizedServiceImageMaxHeight / image.naturalHeight
+  );
+  const width = Math.max(1, Math.round(image.naturalWidth * scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", {
+    alpha: true
+  });
+
+  if (!context) {
+    return file;
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+  context.drawImage(image, 0, 0, width, height);
+
+  const blob = await canvasToWebp(canvas);
+
+  if (!blob || blob.type !== "image/webp") {
+    return file;
+  }
+
+  return new File([blob], getOptimizedServiceImageName(file.name), {
+    lastModified: Date.now(),
+    type: "image/webp"
+  });
+}
+
 function getServiceImageEndpoint(serviceId: string, variant: ServiceImageVariant) {
   const params = new URLSearchParams();
 
@@ -64,8 +131,14 @@ async function uploadServiceImage(
   file: File,
   variant: ServiceImageVariant = "primary"
 ) {
+  const optimizedFile = await optimizeServiceImageForUpload(file);
+
+  if (optimizedFile.size > maxServiceImageSize) {
+    throw new Error("После оптимизации файл всё ещё больше 5 МБ");
+  }
+
   const formData = new FormData();
-  formData.append("image", file);
+  formData.append("image", optimizedFile);
 
   const response = await fetch(getServiceImageEndpoint(serviceId, variant), {
     method: "POST",
@@ -124,7 +197,7 @@ function MasterServiceRow({ service }: { service: MasterService }) {
 
     setState({
       status: "loading",
-      message: "Фото загружается..."
+      message: "Фото оптимизируется и загружается..."
     });
 
     try {
@@ -198,7 +271,7 @@ function MasterServiceRow({ service }: { service: MasterService }) {
               onChange={(event) => handleServiceImageChange(event, "primary", setImageState)}
               type="file"
             />
-            <p className="helper">JPG, PNG или WEBP до 5 МБ.</p>
+            <p className="helper">JPG, PNG или WEBP до 5 МБ. Перед загрузкой сжимаем в WEBP.</p>
           </div>
         </div>
 
@@ -229,7 +302,7 @@ function MasterServiceRow({ service }: { service: MasterService }) {
               onChange={(event) => handleServiceImageChange(event, "secondary", setSecondaryImageState)}
               type="file"
             />
-            <p className="helper">Показывается на главной поверх основного фото по клику.</p>
+            <p className="helper">Показывается на главной по клику. Тоже сжимаем в WEBP.</p>
           </div>
         </div>
 
@@ -387,7 +460,7 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
     async function uploadSelectedCreateImage() {
       setCreateImageState({
         status: "loading",
-        message: "Фото загружается..."
+        message: "Фото оптимизируется и загружается..."
       });
 
       try {
@@ -494,7 +567,7 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
             onChange={handleCreateImageChange}
             type="file"
           />
-          <p className="helper">Можно добавить сразу или позже. JPG, PNG или WEBP до 5 МБ.</p>
+          <p className="helper">Можно добавить сразу или позже. JPG, PNG или WEBP до 5 МБ, сжимаем в WEBP.</p>
         </div>
 
         <div className="field master-service-editor__image-field">
@@ -505,7 +578,7 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
             onChange={handleCreateSecondaryImageChange}
             type="file"
           />
-          <p className="helper">На главной откроется поверх основного фото по клику.</p>
+          <p className="helper">На главной откроется по клику. Тоже сжимаем в WEBP.</p>
         </div>
 
         {createImageState.status !== "idle" ? (

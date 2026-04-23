@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ResilientImage } from "@/components/resilient-image";
+import { OptimizedServiceImage } from "@/components/optimized-service-image";
 import type { MasterService } from "@/lib/types";
 
 type ServiceRowCardProps = {
@@ -36,25 +36,25 @@ export function ServiceRowCard({ bookingHref, formattedPrice, service }: Service
           }}
           type="button"
         >
-          <ResilientImage
+          <OptimizedServiceImage
             alt={`Фото услуги ${service.name}`}
             className="service-row__image service-row__image--primary"
             fallbackSrc="/images/cert-placeholder.svg"
-            height={260}
+            height={800}
             loading="lazy"
             src={primaryImageUrl}
-            width={320}
+            width={640}
           />
           {service.secondary_image_url && service.image_url ? (
-            <ResilientImage
+            <OptimizedServiceImage
               alt=""
               aria-hidden="true"
               className="service-row__image service-row__image--secondary"
               fallbackSrc="/images/cert-placeholder.svg"
-              height={260}
+              height={800}
               loading="lazy"
               src={service.secondary_image_url}
-              width={320}
+              width={640}
             />
           ) : null}
           {canToggleSecondary ? <span className="service-row__image-hint">Ещё фото</span> : null}
