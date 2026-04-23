@@ -424,23 +424,45 @@ export async function createMasterService(input: {
   price: number;
   duration?: string;
   description?: string;
+  image?: File | null;
 }) {
   const payload = masterServiceInputSchema.parse(input);
   const supabase = getSupabaseAdminClient();
-  const { error } = await supabase.from("master_services").insert({
+  const uploadedImage = input.image ? await uploadImageToBucket(input.ownerId, "services", input.image) : null;
+  const insertPayload: {
+    owner_id: string;
+    name: string;
+    price: number;
+    duration: string | null;
+    description: string | null;
+    image_path?: string;
+    image_url?: string;
+  } = {
     owner_id: input.ownerId,
     name: payload.name,
     price: payload.price,
     duration: payload.duration || null,
     description: payload.description || null
-  });
+  };
+
+  if (uploadedImage) {
+    insertPayload.image_path = uploadedImage.path;
+    insertPayload.image_url = uploadedImage.publicUrl;
+  }
+
+  const { error } = await supabase.from("master_services").insert(insertPayload);
 
   if (error) {
+    if (uploadedImage) {
+      await supabase.storage.from(portfolioBucket).remove([uploadedImage.path]);
+    }
+
     throw new Error(error.message);
   }
 
   revalidatePath("/");
   revalidatePath("/master/dashboard");
+  revalidatePath("/master/profile");
 }
 
 export async function updateMasterService(input: {
@@ -450,32 +472,61 @@ export async function updateMasterService(input: {
   price: number;
   duration?: string;
   description?: string;
+  image?: File | null;
 }) {
   const payload = masterServiceInputSchema.parse(input);
   const parsedId = masterServiceIdSchema.parse({ serviceId: input.serviceId });
   const supabase = getSupabaseAdminClient();
+  const currentService = input.image
+    ? await getMasterServiceById(parsedId.serviceId, input.ownerId)
+    : null;
+  const uploadedImage = input.image ? await uploadImageToBucket(input.ownerId, "services", input.image) : null;
+  const updatePayload: {
+    name: string;
+    price: number;
+    duration: string | null;
+    description: string | null;
+    image_path?: string | null;
+    image_url?: string | null;
+  } = {
+    name: payload.name,
+    price: payload.price,
+    duration: payload.duration || null,
+    description: payload.description || null
+  };
+
+  if (uploadedImage) {
+    updatePayload.image_path = uploadedImage.path;
+    updatePayload.image_url = uploadedImage.publicUrl;
+  }
+
   const { error } = await supabase
     .from("master_services")
-    .update({
-      name: payload.name,
-      price: payload.price,
-      duration: payload.duration || null,
-      description: payload.description || null
-    })
+    .update(updatePayload)
     .eq("id", parsedId.serviceId)
     .eq("owner_id", input.ownerId);
 
   if (error) {
+    if (uploadedImage) {
+      await supabase.storage.from(portfolioBucket).remove([uploadedImage.path]);
+    }
+
     throw new Error(error.message);
+  }
+
+  if (uploadedImage && currentService?.image_path) {
+    await supabase.storage.from(portfolioBucket).remove([currentService.image_path]);
   }
 
   revalidatePath("/");
   revalidatePath("/master/dashboard");
+  revalidatePath("/master/profile");
 }
 
 export async function deleteMasterService(serviceId: string, ownerId: string) {
   const parsedId = masterServiceIdSchema.parse({ serviceId });
   const supabase = getSupabaseAdminClient();
+  const service = await getMasterServiceById(parsedId.serviceId, ownerId);
   const { error } = await supabase
     .from("master_services")
     .delete()
@@ -486,8 +537,62 @@ export async function deleteMasterService(serviceId: string, ownerId: string) {
     throw new Error(error.message);
   }
 
+  if (service?.image_path) {
+    await supabase.storage.from(portfolioBucket).remove([service.image_path]);
+  }
+
   revalidatePath("/");
   revalidatePath("/master/dashboard");
+  revalidatePath("/master/profile");
+}
+
+async function getMasterServiceById(serviceId: string, ownerId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("master_services")
+    .select("*")
+    .eq("id", serviceId)
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as MasterService | null) || null;
+}
+
+export async function deleteMasterServiceImage(serviceId: string, ownerId: string) {
+  const parsedId = masterServiceIdSchema.parse({ serviceId });
+  const supabase = getSupabaseAdminClient();
+  const service = await getMasterServiceById(parsedId.serviceId, ownerId);
+
+  if (!service) {
+    throw new Error("Услуга не найдена");
+  }
+
+  if (!service.image_path) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("master_services")
+    .update({
+      image_path: null,
+      image_url: null
+    })
+    .eq("id", parsedId.serviceId)
+    .eq("owner_id", ownerId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await supabase.storage.from(portfolioBucket).remove([service.image_path]);
+
+  revalidatePath("/");
+  revalidatePath("/master/dashboard");
+  revalidatePath("/master/profile");
 }
 
 export async function deletePortfolioItem(itemId: string, ownerId: string) {

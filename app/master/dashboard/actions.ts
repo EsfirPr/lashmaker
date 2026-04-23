@@ -7,6 +7,7 @@ import {
   deleteMasterCertificate,
   deletePortfolioItem,
   deleteMasterService,
+  deleteMasterServiceImage,
   updateMasterProfile,
   updateMasterService,
   uploadMasterAvatar,
@@ -158,7 +159,8 @@ export async function createMasterServiceAction(
       name: String(formData.get("name") || ""),
       price: Number(formData.get("price") || 0),
       duration: String(formData.get("duration") || ""),
-      description: String(formData.get("description") || "")
+      description: String(formData.get("description") || ""),
+      image: getOptionalImageFile(formData, "image")
     });
 
     return {
@@ -186,7 +188,8 @@ export async function updateMasterServiceAction(
       name: String(formData.get("name") || ""),
       price: Number(formData.get("price") || 0),
       duration: String(formData.get("duration") || ""),
-      description: String(formData.get("description") || "")
+      description: String(formData.get("description") || ""),
+      image: getOptionalImageFile(formData, "image")
     });
 
     return {
@@ -199,6 +202,31 @@ export async function updateMasterServiceAction(
       message: error instanceof Error ? error.message : "Не удалось обновить услугу"
     };
   }
+}
+
+export async function deleteMasterServiceImageAction(
+  _previousState: MasterFormState,
+  formData: FormData
+): Promise<MasterFormState> {
+  try {
+    const master = await requireUserRole("master", "/login");
+    await deleteMasterServiceImage(String(formData.get("serviceId") || ""), master.id);
+
+    return {
+      status: "success",
+      message: "Фото услуги удалено"
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Не удалось удалить фото"
+    };
+  }
+}
+
+function getOptionalImageFile(formData: FormData, fieldName: string) {
+  const image = formData.get(fieldName);
+  return image instanceof File && image.size > 0 ? image : null;
 }
 
 export async function deleteMasterServiceAction(

@@ -2,9 +2,11 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { initialMasterFormState, type MasterFormState } from "@/app/master/dashboard/state";
+import { ResilientImage } from "@/components/resilient-image";
 import { SubmitButton } from "@/components/submit-button";
 import {
   createMasterServiceAction,
+  deleteMasterServiceImageAction,
   deleteMasterServiceAction,
   updateMasterServiceAction
 } from "@/app/master/dashboard/actions";
@@ -22,12 +24,46 @@ const priceFormatter = new Intl.NumberFormat("ru-RU", {
 
 function MasterServiceRow({ service }: { service: MasterService }) {
   const [updateState, updateAction] = useActionState(updateMasterServiceAction, initialMasterFormState);
+  const [deleteImageState, deleteImageAction] = useActionState(
+    deleteMasterServiceImageAction,
+    initialMasterFormState
+  );
   const [deleteState, deleteAction] = useActionState(deleteMasterServiceAction, initialMasterFormState);
 
   return (
     <article className="master-service-editor">
       <form action={updateAction} className="master-service-editor__form">
         <input name="serviceId" type="hidden" value={service.id} />
+        <div className="master-service-editor__media-row">
+          <div className="master-service-editor__image-preview">
+            {service.image_url ? (
+              <ResilientImage
+                alt={`Фото услуги ${service.name}`}
+                className="master-service-editor__image"
+                fallbackSrc="/images/cert-placeholder.svg"
+                height={180}
+                src={service.image_url}
+                width={240}
+              />
+            ) : (
+              <span>Фото услуги</span>
+            )}
+          </div>
+
+          <div className="field master-service-editor__image-field">
+            <label htmlFor={`service-image-${service.id}`}>
+              {service.image_url ? "Заменить фото" : "Добавить фото"}
+            </label>
+            <input
+              accept="image/jpeg,image/png,image/webp"
+              id={`service-image-${service.id}`}
+              name="image"
+              type="file"
+            />
+            <p className="helper">JPG, PNG или WEBP до 5 МБ.</p>
+          </div>
+        </div>
+
         <div className="master-service-editor__grid">
           <div className="field">
             <label htmlFor={`service-name-${service.id}`}>Название</label>
@@ -87,6 +123,18 @@ function MasterServiceRow({ service }: { service: MasterService }) {
         </div>
       </form>
 
+      {service.image_url ? (
+        <form action={deleteImageAction} className="master-service-editor__delete-image">
+          <input name="serviceId" type="hidden" value={service.id} />
+          {deleteImageState.status !== "idle" ? (
+            <div className={deleteImageState.status === "error" ? "message-error" : "message-success"}>
+              {deleteImageState.message}
+            </div>
+          ) : null}
+          <SubmitButton className="ghost-button">Удалить фото</SubmitButton>
+        </form>
+      ) : null}
+
       <form action={deleteAction} className="master-service-editor__delete">
         <input name="serviceId" type="hidden" value={service.id} />
         {deleteState.status !== "idle" ? (
@@ -124,6 +172,17 @@ export function MasterServicesManager({ services }: MasterServicesManagerProps) 
       </p>
 
       <form action={createAction} className="form-grid section-space" ref={createFormRef}>
+        <div className="field master-service-editor__image-field">
+          <label htmlFor="newServiceImage">Фото услуги</label>
+          <input
+            accept="image/jpeg,image/png,image/webp"
+            id="newServiceImage"
+            name="image"
+            type="file"
+          />
+          <p className="helper">Можно добавить сразу или позже. JPG, PNG или WEBP до 5 МБ.</p>
+        </div>
+
         <div className="master-service-editor__grid">
           <div className="field">
             <label htmlFor="newServiceName">Название услуги</label>

@@ -109,5 +109,7 @@ export type MasterService = {
   price: number;
   duration: string | null;
   description: string | null;
+  image_path: string | null;
+  image_url: string | null;
   created_at: string;
 };

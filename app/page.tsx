@@ -226,6 +226,19 @@ export default async function HomePage() {
             <HorizontalScrollGallery className="services-list section-space" showAffordance>
               {services.map((service) => (
                 <article className="service-row" key={service.id}>
+                  {service.image_url ? (
+                    <div className="service-row__image-wrap">
+                      <ResilientImage
+                        alt={`Фото услуги ${service.name}`}
+                        className="service-row__image"
+                        fallbackSrc="/images/cert-placeholder.svg"
+                        height={260}
+                        loading="lazy"
+                        src={service.image_url}
+                        width={320}
+                      />
+                    </div>
+                  ) : null}
                   <div className="service-row__content">
                     <div className="service-row__top">
                       <strong>{service.name}</strong>
