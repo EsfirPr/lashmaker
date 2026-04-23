@@ -139,7 +139,14 @@ export default async function HomePage() {
               </div>
 
               <div aria-hidden="true" className="landing-hero__divider">
-                <span />
+                <img
+                  alt=""
+                  className="landing-hero__divider-image"
+                  height={28}
+                  loading="eager"
+                  src="/images/line.svg"
+                  width={220}
+                />
               </div>
 
               <p className="landing-hero__lead">
@@ -161,7 +168,7 @@ export default async function HomePage() {
                   </div>
                   <div className="landing-hero__stat-copy">
                     <strong>1+</strong>
-                    <span>лет деликатной практики</span>
+                    <span>лет практики</span>
                   </div>
                 </article>
 

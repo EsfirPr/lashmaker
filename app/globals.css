@@ -617,6 +617,7 @@ h2 {
   align-items: stretch;
   min-height: clamp(680px, calc(100svh - 132px), 780px);
   height: 100%;
+  padding: 0;
   background:
     radial-gradient(circle at 8% 8%, rgba(119, 9, 16, 0.08), transparent 24%),
     radial-gradient(circle at 88% 22%, rgba(119, 9, 16, 0.04), transparent 18%),
@@ -662,7 +663,7 @@ h2 {
   height: 100%;
   min-height: 620px;
   border-radius: 28px;
-  border: 1px solid rgba(119, 9, 16, 0.18);
+  border: 0;
   background: transparent;
 }
 
@@ -680,6 +681,12 @@ h2 {
   display: grid;
   align-content: center;
   gap: 18px;
+  padding: 42px 42px 42px 8px;
+}
+
+.landing-hero__content::after {
+  content: none;
+  display: none;
 }
 
 .landing-hero__eyebrow {
@@ -702,27 +709,16 @@ h2 {
 }
 
 .landing-hero__divider {
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: 14px;
+  justify-items: center;
 }
 
-.landing-hero__divider::before,
-.landing-hero__divider::after,
-.landing-hero__divider span {
-  content: "";
+.landing-hero__divider-image {
   display: block;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(119, 9, 16, 0), rgba(119, 9, 16, 0.45), rgba(119, 9, 16, 0));
-}
-
-.landing-hero__divider::before,
-.landing-hero__divider::after {
-  flex: 1;
-}
-
-.landing-hero__divider span {
-  width: 56px;
+  width: min(100%, 220px);
+  height: auto;
+  object-fit: contain;
 }
 
 .landing-hero__lead {
@@ -742,7 +738,7 @@ h2 {
 
 .landing-hero__stat-card {
   display: grid;
-  grid-template-columns: 82px minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 14px;
   align-items: center;
   padding: 16px 18px;
@@ -754,9 +750,9 @@ h2 {
 }
 
 .landing-hero__stat-bird {
-  display: grid;
+  display: inline-grid;
   place-items: center;
-  width: 82px;
+  width: auto;
   height: 88px;
   border-radius: 18px;
   background: transparent;
@@ -3231,6 +3227,7 @@ h2 {
 
   .landing-hero__content {
     order: 1;
+    padding: 34px 34px 0;
   }
 
   .landing-hero__shell {
@@ -3293,7 +3290,6 @@ h2 {
 
   .hero-copy,
   .hero-form,
-  .landing-hero__shell,
   .landing-section,
   .landing-cta,
   .stack-card,
@@ -3330,6 +3326,14 @@ h2 {
     padding: 24px;
   }
 
+  .landing-hero__shell {
+    padding: 0;
+  }
+
+  .landing-hero__content {
+    padding: 28px 24px 0;
+  }
+
   .landing-hero__title {
     font-size: clamp(2.8rem, 14vw, 4rem);
   }
@@ -3343,12 +3347,12 @@ h2 {
   }
 
   .landing-hero__stat-card {
-    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
     padding: 14px 16px;
   }
 
   .landing-hero__stat-bird {
-    width: 64px;
+    width: auto;
     height: 72px;
   }
 
