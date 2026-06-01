@@ -1,0 +1,10 @@
+services:
+  lashmaker:
+    container_name: lashmaker
+    image: itgenio2022/lashmaker:0.1.0
+    pull_policy: always
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:3500:3000"
