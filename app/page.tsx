@@ -67,11 +67,11 @@ function getServiceBookingHref(userRole: "master" | "client" | null, style: stri
   });
 
   if (userRole === "master") {
-    return `/master/dashboard/bookings/new?${params.toString()}`;
+    return "/master/stats#requests";
   }
 
   if (userRole === "client") {
-    return `/account?${params.toString()}#new-booking`;
+    return `/account?${params.toString()}#booking-request`;
   }
 
   return "/register";

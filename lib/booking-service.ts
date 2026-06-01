@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { env } from "@/lib/env";
 import { sendSms, smsProvider } from "@/lib/sms";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import type { AdminSlotView, Booking, BookingWithSlot, DaySchedule, TimeSlot } from "@/lib/types";
+import type { AdminSlotView, Booking, BookingRequest, BookingWithSlot, DaySchedule, TimeSlot } from "@/lib/types";
 import {
   bookingIdSchema,
   bookingInputSchema,
+  bookingRequestInputSchema,
   createSlotSchema,
   deleteSlotSchema,
   tokenSchema
@@ -32,6 +33,14 @@ type CreateBookingInput = {
   date: string;
   slotId: string;
   userId?: string | null;
+};
+
+type CreateBookingRequestInput = {
+  userId: string;
+  name: string;
+  phone: string;
+  style: string;
+  notes?: string;
 };
 
 type CreateSlotInput = {
@@ -530,6 +539,52 @@ export async function createBooking(input: CreateBookingInput) {
   return {
     token: data.public_token
   };
+}
+
+export async function createBookingRequest(input: CreateBookingRequestInput) {
+  const payload = bookingRequestInputSchema.parse(input);
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("booking_requests")
+    .insert({
+      user_id: payload.userId,
+      name: payload.name,
+      phone: payload.phone,
+      style: payload.style,
+      notes: payload.notes || null,
+      status: "pending"
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/account");
+  revalidatePath("/master/stats");
+
+  return {
+    requestId: data.id
+  };
+}
+
+export async function listBookingRequestsForMaster() {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("booking_requests")
+    .select("id, user_id, name, phone, style, notes, status, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (error.code === "42P01") {
+      return [];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return (data || []) as BookingRequest[];
 }
 
 export async function getBookingByToken(token: string) {

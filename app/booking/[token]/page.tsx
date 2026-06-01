@@ -4,7 +4,6 @@ import { unstable_noStore as noStore } from "next/cache";
 import { SubmitButton } from "@/components/submit-button";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getBookingByToken, resolveBookingAccess } from "@/lib/booking-service";
-import { ENABLE_BOOKING } from "@/lib/features";
 import { formatDateLabel, formatSlotRange, formatStatusLabel, isBookingCancelable } from "@/lib/utils";
 import { cancelBookingAction } from "./cancel-action";
 
@@ -43,8 +42,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
     forbidden();
   }
 
-  const canCancel =
-    ENABLE_BOOKING && booking.status === "confirmed" && isBookingCancelable(booking.time_slots);
+  const canCancel = booking.status === "confirmed" && isBookingCancelable(booking.time_slots);
 
   return (
     <main className="page-shell">
@@ -98,7 +96,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
             <p className="muted">{booking.notes || "Пожелания не указаны."}</p>
           </div>
 
-          {!ENABLE_BOOKING ? null : canCancel ? (
+          {canCancel ? (
             <form className="section-space" action={cancelBookingAction}>
               <input type="hidden" name="token" value={booking.public_token} />
               <SubmitButton className="danger-button">Отменить запись</SubmitButton>

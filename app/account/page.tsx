@@ -5,7 +5,6 @@ import { AccountBookingsHistory } from "@/components/account-bookings-history";
 import { AccountProfileSettings } from "@/components/account-profile-settings";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForClient } from "@/lib/booking-service";
-import { ENABLE_BOOKING } from "@/lib/features";
 import { getGreetingByTime } from "@/lib/utils";
 import { STYLE_OPTIONS } from "@/lib/validators";
 
@@ -45,52 +44,45 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               {greeting}, {displayIdentity}
             </h1>
             <div className="account-hero__links">
-              {ENABLE_BOOKING ? (
-                <Link className="button" href="#new-booking">
-                  Новая запись
-                </Link>
-              ) : null}
+              <Link className="button" href="#booking-request">
+                Оставить заявку
+              </Link>
               <Link className="ghost-button" href="/#portfolio">
                 Портфолио
               </Link>
-              {ENABLE_BOOKING ? (
-                <Link
-                  className="ghost-button"
-                  href={bookings[0] ? `/booking/${bookings[0].public_token}` : "/"}
-                >
-                  Последняя запись
-                </Link>
-              ) : null}
+              <Link
+                className="ghost-button"
+                href={bookings[0] ? `/booking/${bookings[0].public_token}` : "/"}
+              >
+                Последняя запись
+              </Link>
             </div>
           </div>
         </section>
 
-        {ENABLE_BOOKING ? (
-          <>
-            <section className="panel stack-card section-space account-section" id="new-booking">
-              <div className="account-section__heading">
-                <div>
-                  <span className="eyebrow">Новая запись</span>
-                  <h2>Запишитесь прямо в кабинете</h2>
-                </div>
-              </div>
-              <p className="muted">
-                Выберите стиль, период и свободное время, затем подтвердите запись.
-              </p>
-              <AccountBookingForm initialStyle={requestedStyle} />
-            </section>
+        <section className="panel stack-card section-space account-section" id="booking-request">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Заявка на запись</span>
+              <h2>Оставьте заявку администратору</h2>
+            </div>
+          </div>
+          <p className="muted">
+            Выберите услугу и отправьте заявку. Администратор свяжется с вами, чтобы согласовать
+            удобные день и время.
+          </p>
+          <AccountBookingForm initialStyle={requestedStyle} />
+        </section>
 
-            <section className="panel stack-card section-space account-section">
-              <div className="account-section__heading">
-                <div>
-                  <span className="eyebrow">Мои записи</span>
-                  <h2>История и текущие визиты</h2>
-                </div>
-              </div>
-              <AccountBookingsHistory bookings={bookings} />
-            </section>
-          </>
-        ) : null}
+        <section className="panel stack-card section-space account-section">
+          <div className="account-section__heading">
+            <div>
+              <span className="eyebrow">Мои записи</span>
+              <h2>История и текущие визиты</h2>
+            </div>
+          </div>
+          <AccountBookingsHistory bookings={bookings} />
+        </section>
       </div>
     </main>
   );

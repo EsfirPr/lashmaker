@@ -1,14 +1,9 @@
-import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { AdminSlotForm } from "@/components/admin-slot-form";
 import { MasterDashboardGreeting } from "@/components/master-dashboard-greeting";
-import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
 import { createMasterIfNotExists } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
-import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
-import { ENABLE_BOOKING } from "@/lib/features";
-import { getMasterProfileForOwner, resolveMasterProfile } from "@/lib/portfolio-service";
+import { listBookingsForMaster } from "@/lib/booking-service";
 import { getSlotEndDate } from "@/lib/utils";
 
 function getBookingVisualState(booking: Awaited<ReturnType<typeof listBookingsForMaster>>[number]) {
@@ -27,68 +22,14 @@ function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
   return result.status === "fulfilled" ? result.value : fallback;
 }
 
-function getSlotDurationMinutes(durationInHours: number | null | undefined) {
-  const numericValue = Number(durationInHours);
-
-  if (!Number.isFinite(numericValue) || numericValue <= 0) {
-    return 120;
-  }
-
-  return Math.max(30, Math.round(numericValue * 60));
-}
-
-function formatDurationLabel(totalMinutes: number) {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  if (hours > 0 && minutes > 0) {
-    return `${hours} ч ${minutes} мин`;
-  }
-
-  if (hours > 0) {
-    return `${hours} ч`;
-  }
-
-  return `${minutes} мин`;
-}
-
-function collectSlots(
-  days: Awaited<ReturnType<typeof listScheduleDays>>
-) {
-  const slots: Awaited<ReturnType<typeof listScheduleDays>>[number]["slots"][number][] = [];
-
-  for (const day of days) {
-    if (!Array.isArray(day.slots)) {
-      continue;
-    }
-
-    for (const slot of day.slots) {
-      slots.push(slot);
-    }
-  }
-
-  return slots;
-}
-
 export default async function MasterDashboardPage() {
   noStore();
   await createMasterIfNotExists();
   const master = await requireUserRole("master", "/login");
 
-  const [daysResult, bookingsResult, profileResult] = await Promise.allSettled([
-    listScheduleDays(),
-    listBookingsForMaster(),
-    getMasterProfileForOwner(master.id)
-  ]);
-  const days = getSettledValue(daysResult, []);
+  const [bookingsResult] = await Promise.allSettled([listBookingsForMaster()]);
   const allBookings = getSettledValue(bookingsResult, []);
-  const profile = resolveMasterProfile(master, getSettledValue(profileResult, null));
-  const slotDurationMinutes = getSlotDurationMinutes(profile.lash_experience_years);
-  const slotDurationLabel = formatDurationLabel(slotDurationMinutes);
-
-  const allSlots = collectSlots(days);
   const activeCount = allBookings.filter((booking) => getBookingVisualState(booking) === "confirmed").length;
-  const freeCount = allSlots.filter((slot) => !slot.activeBooking).length;
 
   return (
     <main className="page-shell">
@@ -98,11 +39,6 @@ export default async function MasterDashboardPage() {
             <div className="master-hero__header">
               <span className="eyebrow master-hero__label">Кабинет мастера</span>
               <div className="master-hero__actions">
-                {ENABLE_BOOKING ? (
-                  <Link className="button" href="/master/dashboard/bookings/new">
-                    Записать клиента
-                  </Link>
-                ) : null}
                 <Link
                   aria-label="Настройки профиля мастера"
                   className="icon-button"
@@ -129,21 +65,9 @@ export default async function MasterDashboardPage() {
             </div>
             <MasterDashboardGreeting nickname={master.nickname || "мастер"} />
             <p className="lead">
-              {ENABLE_BOOKING
-                ? "Здесь собраны расписание, записи, клиенты и быстрые действия."
-                : "Управляйте профилем мастера и просматривайте клиентскую базу."}
+              Новые заявки клиентов, записи и клиентская база собраны на странице статистики.
             </p>
             <div className="master-dashboard-nav">
-              {ENABLE_BOOKING ? (
-                <>
-                  <a className="ghost-button" href="#schedule">
-                    Расписание
-                  </a>
-                  <a className="ghost-button" href="#slots">
-                    Добавить окна
-                  </a>
-                </>
-              ) : null}
               <Link className="ghost-button" href="/master/stats">
                 Статистика
               </Link>
@@ -151,48 +75,15 @@ export default async function MasterDashboardPage() {
           </div>
         </section>
 
-        {ENABLE_BOOKING ? (
-          <>
-            <section className="master-stats-grid section-space">
-              <article className="panel stack-card">
-                <span className="eyebrow">Сводка</span>
-                <div className="stat section-space">
-                  <strong>{activeCount}</strong>
-                  <span className="muted">активных записей</span>
-                </div>
-              </article>
-              <article className="panel stack-card">
-                <span className="eyebrow">Окна</span>
-                <div className="stat section-space">
-                  <strong>{freeCount}</strong>
-                  <span className="muted">свободных слотов</span>
-                </div>
-              </article>
-            </section>
-
-            <section className="panel stack-card section-space master-section" id="schedule">
-              <div className="account-section__heading">
-                <div>
-                  <span className="eyebrow">Расписание</span>
-                  <h2>Календарь мастера</h2>
-                </div>
-              </div>
-              <MasterScheduleCalendar initialDays={days} />
-            </section>
-
-            <section className="panel stack-card master-section section-space" id="slots">
-              <div className="account-section__heading">
-                <div>
-                  <span className="eyebrow">Добавить окна</span>
-                  <h2>Управление доступностью</h2>
-                </div>
-              </div>
-              <div className="section-space">
-                <AdminSlotForm initialDays={days} slotDurationMinutes={slotDurationMinutes} />
-              </div>
-            </section>
-          </>
-        ) : null}
+        <section className="master-stats-grid section-space">
+          <article className="panel stack-card">
+            <span className="eyebrow">Сводка</span>
+            <div className="stat section-space">
+              <strong>{activeCount}</strong>
+              <span className="muted">активных записей</span>
+            </div>
+          </article>
+        </section>
       </div>
     </main>
   );

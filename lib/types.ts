@@ -1,4 +1,5 @@
 export type BookingStatus = "confirmed" | "cancelled";
+export type BookingRequestStatus = "pending" | "processed";
 export type UserRole = "master" | "client";
 
 export type TimeSlot = {
@@ -55,6 +56,17 @@ export type PhoneVerification = {
 
 export type BookingWithSlot = Booking & {
   time_slots: TimeSlot | null;
+};
+
+export type BookingRequest = {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string;
+  style: string;
+  notes: string | null;
+  status: BookingRequestStatus;
+  created_at: string;
 };
 
 export type AdminSlotView = TimeSlot & {

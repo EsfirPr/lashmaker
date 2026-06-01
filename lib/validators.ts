@@ -37,6 +37,19 @@ export const bookingInputSchema = z.object({
   slotId: z.string().uuid("Некорректный слот")
 });
 
+export const bookingRequestInputSchema = z.object({
+  userId: z.string().uuid("Некорректный клиент"),
+  name: z.string().trim().min(2, "Укажите имя").max(100, "Слишком длинное имя"),
+  phone: phoneSchema,
+  style: z
+    .string()
+    .trim()
+    .refine((value) => STYLE_OPTIONS.includes(value as (typeof STYLE_OPTIONS)[number]), {
+      message: "Выберите стиль наращивания"
+    }),
+  notes: z.string().trim().max(500, "Слишком длинные пожелания").optional().default("")
+});
+
 export const createSlotSchema = z
   .object({
     slotDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Введите дату"),

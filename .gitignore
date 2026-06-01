@@ -3,10 +3,12 @@ node_modules
 .env
 .env.local
 .vercel
+.open-next
+.wrangler
+tsconfig.tsbuildinfo
 coverage
 dist
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-

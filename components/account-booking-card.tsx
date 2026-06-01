@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { cancelOwnBookingAction } from "@/app/account/actions";
 import { SubmitButton } from "@/components/submit-button";
-import { ENABLE_BOOKING } from "@/lib/features";
 import type { BookingWithSlot } from "@/lib/types";
 import { formatDateLabel, formatSlotRange, getSlotEndDate, isBookingCancelable } from "@/lib/utils";
 
@@ -91,8 +90,7 @@ function renderStatusIcon(icon: "check" | "cancel" | null) {
 export function AccountBookingCard({ booking }: AccountBookingCardProps) {
   const viewState = getBookingViewState(booking);
   const isActive = booking.status === "confirmed" && viewState.className === "status-confirmed";
-  const canCancel =
-    ENABLE_BOOKING && isActive && booking.time_slots ? isBookingCancelable(booking.time_slots) : false;
+  const canCancel = isActive && booking.time_slots ? isBookingCancelable(booking.time_slots) : false;
 
   return (
     <article className={`account-booking-card ${viewState.className}`}>

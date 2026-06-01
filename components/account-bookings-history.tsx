@@ -1,9 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { AccountBookingCard } from "@/components/account-booking-card";
-import { ENABLE_BOOKING } from "@/lib/features";
 import type { BookingWithSlot } from "@/lib/types";
 import { getSlotEndDate, getSlotStartDate } from "@/lib/utils";
 
@@ -77,7 +75,7 @@ export function AccountBookingsHistory({ bookings }: AccountBookingsHistoryProps
   return (
     <div className="account-bookings-history visits-section">
       <div
-        className="slot-segmented account-bookings-history__filters"
+        className="account-bookings-history__filters"
         aria-label="Фильтр записей"
         role="tablist"
       >
@@ -86,8 +84,8 @@ export function AccountBookingsHistory({ bookings }: AccountBookingsHistoryProps
             aria-selected={filter === option.value}
             className={
               filter === option.value
-                ? "slot-segmented__button account-bookings-history__filter-button is-active"
-                : "slot-segmented__button account-bookings-history__filter-button"
+                ? "account-bookings-history__filter-button is-active"
+                : "account-bookings-history__filter-button"
             }
             key={option.value}
             onClick={() => setFilter(option.value)}
@@ -108,11 +106,6 @@ export function AccountBookingsHistory({ bookings }: AccountBookingsHistoryProps
                 ? "Попробуйте выбрать другую вкладку, чтобы посмотреть остальные визиты."
                 : "Когда вы оформите первую запись, здесь появятся дата, время и статус визита."}
             </p>
-            {ENABLE_BOOKING ? (
-              <Link className="button" href="#new-booking">
-                Создать запись
-              </Link>
-            ) : null}
           </div>
         ) : null}
 
