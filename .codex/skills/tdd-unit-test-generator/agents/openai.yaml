@@ -1,0 +1,4 @@
+interface:
+  display_name: "TDD Unit Test Generator"
+  short_description: "TDD-first tests from requirements"
+  default_prompt: "Use $tdd-unit-test-generator to generate fail-first positive and negative unit tests from the requirement, using source-justified negative cases and project conventions."
