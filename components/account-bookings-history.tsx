@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AccountBookingCard } from "@/components/account-booking-card";
+import { ENABLE_BOOKING } from "@/lib/features";
 import type { BookingWithSlot } from "@/lib/types";
 import { getSlotEndDate, getSlotStartDate } from "@/lib/utils";
 
@@ -107,9 +108,11 @@ export function AccountBookingsHistory({ bookings }: AccountBookingsHistoryProps
                 ? "Попробуйте выбрать другую вкладку, чтобы посмотреть остальные визиты."
                 : "Когда вы оформите первую запись, здесь появятся дата, время и статус визита."}
             </p>
-            <Link className="button" href="#new-booking">
-              Создать запись
-            </Link>
+            {ENABLE_BOOKING ? (
+              <Link className="button" href="#new-booking">
+                Создать запись
+              </Link>
+            ) : null}
           </div>
         ) : null}
 

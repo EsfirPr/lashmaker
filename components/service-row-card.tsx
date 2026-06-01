@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { OptimizedServiceImage } from "@/components/optimized-service-image";
+import { ENABLE_BOOKING } from "@/lib/features";
 import type { MasterService } from "@/lib/types";
 
 type ServiceRowCardProps = {
@@ -69,12 +70,14 @@ export function ServiceRowCard({ bookingHref, formattedPrice, service }: Service
       </div>
       <div className="service-row__side">
         <strong className="service-row__price">{formattedPrice}</strong>
-        <a
-          className="ghost-button service-row__cta"
-          href={bookingHref}
-        >
-          Записаться
-        </a>
+        {ENABLE_BOOKING ? (
+          <a
+            className="ghost-button service-row__cta"
+            href={bookingHref}
+          >
+            Записаться
+          </a>
+        ) : null}
       </div>
     </article>
   );

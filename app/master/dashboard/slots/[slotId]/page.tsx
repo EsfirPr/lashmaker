@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { requireUserRole } from "@/lib/auth/server";
 import { getScheduleSlotDetail } from "@/lib/booking-service";
+import { ENABLE_BOOKING } from "@/lib/features";
 import { formatDateLabel, formatSlotRange } from "@/lib/utils";
 import { deleteTimeSlotFromDetailsAction } from "./actions";
 
@@ -15,6 +16,28 @@ type MasterSlotDetailsPageProps = {
 export default async function MasterSlotDetailsPage({ params }: MasterSlotDetailsPageProps) {
   noStore();
   await requireUserRole("master", "/login");
+
+  if (!ENABLE_BOOKING) {
+    return (
+      <main className="page-shell">
+        <div className="container">
+          <section className="panel stack-card master-section">
+            <span className="eyebrow">Кабинет мастера</span>
+            <h1 className="page-title">Расписание временно отключено</h1>
+            <p className="muted">
+              Управление окнами скрыто на время тестирования интерфейса.
+            </p>
+            <div className="inline-actions section-space">
+              <Link className="ghost-button" href="/master/dashboard">
+                Назад в кабинет
+              </Link>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
   const { slotId } = await params;
   const slot = await getScheduleSlotDetail(slotId);
 

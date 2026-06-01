@@ -7,6 +7,7 @@ import { MasterStatusFilterSelect } from "@/components/master-status-filter-sele
 import { createMasterIfNotExists, listClientsForMaster } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster } from "@/lib/booking-service";
+import { ENABLE_BOOKING } from "@/lib/features";
 import { getSlotEndDate } from "@/lib/utils";
 
 type MasterStatsPageProps = {
@@ -119,20 +120,25 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
                 <Link className="ghost-button" href="/master/dashboard">
                   Назад в кабинет
                 </Link>
-                <Link className="ghost-button" href="/master/dashboard/bookings/new">
-                  Записать клиента
-                </Link>
+                {ENABLE_BOOKING ? (
+                  <Link className="ghost-button" href="/master/dashboard/bookings/new">
+                    Записать клиента
+                  </Link>
+                ) : null}
               </div>
             </div>
             <h1 className="page-title">Статистика</h1>
             <p className="lead">
-              Здесь собраны все записи и клиентская база. Основной кабинет остаётся лёгким и
-              сфокусированным на расписании и быстрых действиях.
+              {ENABLE_BOOKING
+                ? "Здесь собраны все записи и клиентская база. Основной кабинет остаётся лёгким и сфокусированным на расписании и быстрых действиях."
+                : "Здесь собрана клиентская база мастера."}
             </p>
             <div className="master-dashboard-nav">
-              <a className="ghost-button" href="#bookings">
-                Записи
-              </a>
+              {ENABLE_BOOKING ? (
+                <a className="ghost-button" href="#bookings">
+                  Записи
+                </a>
+              ) : null}
               <a className="ghost-button" href="#clients">
                 Клиенты
               </a>
@@ -141,13 +147,15 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
         </section>
 
         <section className="master-stats-grid section-space">
-          <article className="panel stack-card">
-            <span className="eyebrow">Отмены</span>
-            <div className="stat section-space">
-              <strong>{cancelledCount}</strong>
-              <span className="muted">отменённых записей</span>
-            </div>
-          </article>
+          {ENABLE_BOOKING ? (
+            <article className="panel stack-card">
+              <span className="eyebrow">Отмены</span>
+              <div className="stat section-space">
+                <strong>{cancelledCount}</strong>
+                <span className="muted">отменённых записей</span>
+              </div>
+            </article>
+          ) : null}
           <article className="panel stack-card">
             <span className="eyebrow">Клиенты</span>
             <div className="stat section-space">
@@ -157,7 +165,8 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
           </article>
         </section>
 
-        <section className="panel stack-card section-space master-section" id="bookings">
+        {ENABLE_BOOKING ? (
+          <section className="panel stack-card section-space master-section" id="bookings">
           <div className="account-section__heading">
             <div>
               <span className="eyebrow">Записи</span>
@@ -268,7 +277,8 @@ export default async function MasterStatsPage({ searchParams }: MasterStatsPageP
               </div>
             </nav>
           ) : null}
-        </section>
+          </section>
+        ) : null}
 
         <section className="panel stack-card section-space master-section" id="clients">
           <div className="account-section__heading">

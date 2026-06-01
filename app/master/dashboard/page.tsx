@@ -7,6 +7,7 @@ import { MasterScheduleCalendar } from "@/components/master-schedule-calendar";
 import { createMasterIfNotExists } from "@/lib/auth/service";
 import { requireUserRole } from "@/lib/auth/server";
 import { listBookingsForMaster, listScheduleDays } from "@/lib/booking-service";
+import { ENABLE_BOOKING } from "@/lib/features";
 import { getMasterProfileForOwner, resolveMasterProfile } from "@/lib/portfolio-service";
 import { getSlotEndDate } from "@/lib/utils";
 
@@ -97,9 +98,11 @@ export default async function MasterDashboardPage() {
             <div className="master-hero__header">
               <span className="eyebrow master-hero__label">Кабинет мастера</span>
               <div className="master-hero__actions">
-                <Link className="button" href="/master/dashboard/bookings/new">
-                  Записать клиента
-                </Link>
+                {ENABLE_BOOKING ? (
+                  <Link className="button" href="/master/dashboard/bookings/new">
+                    Записать клиента
+                  </Link>
+                ) : null}
                 <Link
                   aria-label="Настройки профиля мастера"
                   className="icon-button"
@@ -126,15 +129,21 @@ export default async function MasterDashboardPage() {
             </div>
             <MasterDashboardGreeting nickname={master.nickname || "мастер"} />
             <p className="lead">
-              Здесь собраны расписание, записи, клиенты и быстрые действия.
+              {ENABLE_BOOKING
+                ? "Здесь собраны расписание, записи, клиенты и быстрые действия."
+                : "Управляйте профилем мастера и просматривайте клиентскую базу."}
             </p>
             <div className="master-dashboard-nav">
-              <a className="ghost-button" href="#schedule">
-                Расписание
-              </a>
-              <a className="ghost-button" href="#slots">
-                Добавить окна
-              </a>
+              {ENABLE_BOOKING ? (
+                <>
+                  <a className="ghost-button" href="#schedule">
+                    Расписание
+                  </a>
+                  <a className="ghost-button" href="#slots">
+                    Добавить окна
+                  </a>
+                </>
+              ) : null}
               <Link className="ghost-button" href="/master/stats">
                 Статистика
               </Link>
@@ -142,44 +151,48 @@ export default async function MasterDashboardPage() {
           </div>
         </section>
 
-        <section className="master-stats-grid section-space">
-          <article className="panel stack-card">
-            <span className="eyebrow">Сводка</span>
-            <div className="stat section-space">
-              <strong>{activeCount}</strong>
-              <span className="muted">активных записей</span>
-            </div>
-          </article>
-          <article className="panel stack-card">
-            <span className="eyebrow">Окна</span>
-            <div className="stat section-space">
-              <strong>{freeCount}</strong>
-              <span className="muted">свободных слотов</span>
-            </div>
-          </article>
-        </section>
+        {ENABLE_BOOKING ? (
+          <>
+            <section className="master-stats-grid section-space">
+              <article className="panel stack-card">
+                <span className="eyebrow">Сводка</span>
+                <div className="stat section-space">
+                  <strong>{activeCount}</strong>
+                  <span className="muted">активных записей</span>
+                </div>
+              </article>
+              <article className="panel stack-card">
+                <span className="eyebrow">Окна</span>
+                <div className="stat section-space">
+                  <strong>{freeCount}</strong>
+                  <span className="muted">свободных слотов</span>
+                </div>
+              </article>
+            </section>
 
-        <section className="panel stack-card section-space master-section" id="schedule">
-          <div className="account-section__heading">
-            <div>
-              <span className="eyebrow">Расписание</span>
-              <h2>Календарь мастера</h2>
-            </div>
-          </div>
-          <MasterScheduleCalendar initialDays={days} />
-        </section>
+            <section className="panel stack-card section-space master-section" id="schedule">
+              <div className="account-section__heading">
+                <div>
+                  <span className="eyebrow">Расписание</span>
+                  <h2>Календарь мастера</h2>
+                </div>
+              </div>
+              <MasterScheduleCalendar initialDays={days} />
+            </section>
 
-        <section className="panel stack-card master-section section-space" id="slots">
-          <div className="account-section__heading">
-            <div>
-              <span className="eyebrow">Добавить окна</span>
-              <h2>Управление доступностью</h2>
-            </div>
-          </div>
-          <div className="section-space">
-            <AdminSlotForm initialDays={days} slotDurationMinutes={slotDurationMinutes} />
-          </div>
-        </section>
+            <section className="panel stack-card master-section section-space" id="slots">
+              <div className="account-section__heading">
+                <div>
+                  <span className="eyebrow">Добавить окна</span>
+                  <h2>Управление доступностью</h2>
+                </div>
+              </div>
+              <div className="section-space">
+                <AdminSlotForm initialDays={days} slotDurationMinutes={slotDurationMinutes} />
+              </div>
+            </section>
+          </>
+        ) : null}
       </div>
     </main>
   );
